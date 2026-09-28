@@ -65,14 +65,14 @@ Como integrante da equipe, quero uma configuração inicial de execução local 
 
 ### Functional Requirements
 
-- **FR-001**: O repositório MUST disponibilizar uma estrutura inicial de áreas principais que separe claramente aplicações, infraestrutura e documentação.
-- **FR-002**: A área de documentação MUST organizar, de forma navegável, conteúdos distintos para decisões arquiteturais, acompanhamento de issues e marcos do projeto.
-- **FR-003**: O repositório MUST incluir um exemplo centralizado de configuração de ambiente com parâmetros padronizados para orientar configurações locais futuras.
-- **FR-004**: O repositório MUST incluir regras de exclusão de artefatos locais e temporários compatíveis com os ecossistemas utilizados no projeto e com estados gerados pela execução local de containers.
-- **FR-005**: A infraestrutura versionada MUST fornecer um ponto de entrada base para a execução local do ambiente compartilhado do projeto.
-- **FR-006**: A infraestrutura versionada MUST fornecer uma definição separada dos serviços centrais necessários para iniciar a base compartilhada do projeto.
+- **FR-001**: O repositório MUST disponibilizar uma organização inicial previsível que separe claramente áreas de aplicações, infraestrutura compartilhada e documentação do projeto.
+- **FR-002**: A experiência documental MUST permitir que colaboradores naveguem de forma explícita entre decisões arquiteturais, acompanhamento de trabalho e marcos do projeto.
+- **FR-003**: O repositório MUST fornecer uma referência compartilhada de configuração local com parâmetros padronizados para orientar novos módulos e ambientes de desenvolvimento.
+- **FR-004**: O repositório MUST definir uma política de versionamento que impeça artefatos locais e temporários dos ecossistemas suportados de poluírem a revisão do estado do projeto.
+- **FR-005**: A base versionada MUST permitir validar um ambiente local compartilhado antes da existência de aplicações completas no monorepo.
+- **FR-006**: A base versionada MUST separar as definições operacionais comuns das definições dos serviços centrais necessários ao ecossistema local.
 - **FR-007**: A documentação principal do repositório MUST explicar a finalidade da estrutura inicial do monorepo e orientar a navegação para as áreas documentais disponíveis.
-- **FR-008**: Os artefatos iniciais MUST permitir que a equipe valide a presença da estrutura esperada por meio da inspeção do estado versionado do repositório.
+- **FR-008**: Os artefatos iniciais MUST permitir que a equipe confirme, em uma única revisão do repositório, que a base esperada do monorepo está presente e coerente.
 
 ## Success Criteria *(mandatory)*
 

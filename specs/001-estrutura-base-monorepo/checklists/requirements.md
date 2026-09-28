@@ -31,4 +31,4 @@
 
 ## Notes
 
-- Validation completed in one iteration. The specification stays at the repository-structure and user-outcome level while still capturing the required onboarding, environment-template, documentation, and local-core-services goals.
+- Validation completed after aligning the requirements to repository outcomes instead of concrete implementation artifacts. The specification now stays at the onboarding, navigation and shared-environment capability level, while the detailed file and tooling decisions live in the planning artifacts.
