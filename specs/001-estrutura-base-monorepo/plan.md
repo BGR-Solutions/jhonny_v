@@ -16,7 +16,7 @@ Estabelecer uma base inicial de monorepo com áreas raiz previsíveis para aplic
 
 **Storage**: Arquivos versionados no repositório e volumes gerenciados por containers para serviços core locais
 
-**Testing**: Validação manual por revisão do `git status`, leitura renderizada da documentação e comando `docker compose -f infra/compose.yml -f infra/compose.core.yml config`
+**Testing**: Validação manual por revisão do `git status`, leitura renderizada da documentação e comando `docker compose -f infra/compose.yaml -f infra/compose.core.yaml config`
 
 **Target Platform**: Estações de desenvolvimento com Git e Docker Compose em Linux, macOS ou Windows
 
@@ -62,8 +62,8 @@ apps/
 └── worker/
 
 infra/
-├── compose.yml
-└── compose.core.yml
+├── compose.yaml
+└── compose.core.yaml
 
 docs/
 ├── README.md
@@ -76,7 +76,7 @@ README.md
 .gitignore
 ```
 
-**Structure Decision**: Adotar um layout raiz orientado por domínio, com `apps/` para aplicações futuras, `infra/` para orquestração e artefatos operacionais compartilhados, e `docs/` como hub navegável da documentação do projeto. O ponto de entrada local usará `infra/compose.yml` combinado com `infra/compose.core.yml`, preservando a possibilidade de novos overlays especializados sem inflar a configuração base.
+**Structure Decision**: Adotar um layout raiz orientado por domínio, com `apps/` para aplicações futuras, `infra/` para orquestração e artefatos operacionais compartilhados, e `docs/` como hub navegável da documentação do projeto. O ponto de entrada local usará `infra/compose.yaml` combinado com `infra/compose.core.yaml`, preservando a possibilidade de novos overlays especializados sem inflar a configuração base.
 
 ## Complexity Tracking
 

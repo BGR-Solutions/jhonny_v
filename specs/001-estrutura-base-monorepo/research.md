@@ -26,15 +26,15 @@
 
 ## Decision 4: Modelo de Docker Compose em camadas
 
-- **Decision**: Definir `infra/compose.yml` como arquivo base e `infra/compose.core.yml` como overlay obrigatório dos serviços centrais, com execução prevista via `docker compose -f infra/compose.yml -f infra/compose.core.yml up -d`.
+- **Decision**: Definir `infra/compose.yaml` como arquivo base e `infra/compose.core.yaml` como overlay obrigatório dos serviços centrais, com execução prevista via `docker compose -f infra/compose.yaml -f infra/compose.core.yaml up -d`.
 - **Rationale**: Esse modelo separa configuração compartilhada (nome do projeto, redes, volumes, defaults) da definição efetiva dos serviços core, o que torna a base extensível para overlays futuros sem acoplar tudo a um único arquivo. Também facilita validação por `docker compose config` usando a mesma ordem de arquivos.
 - **Alternatives considered**:
-  - Concentrar tudo em um único `compose.yml` — rejeitado por conflitar com a exigência explícita de um arquivo dedicado aos serviços core.
+  - Concentrar tudo em um único `compose.yaml` — rejeitado por conflitar com a exigência explícita de um arquivo dedicado aos serviços core.
   - Usar `include` já nesta etapa — rejeitado por ser mais complexo do que o necessário para o bootstrap inicial.
 
 ## Decision 5: Escopo dos serviços core
 
-- **Decision**: Planejar `compose.core.yml` para conter apenas os serviços compartilhados de base local do ecossistema — banco de dados, cache e mensageria — deixando LLM proxy, observabilidade e outras stacks especializadas para arquivos e issues futuras.
+- **Decision**: Planejar `compose.core.yaml` para conter apenas os serviços compartilhados de base local do ecossistema — banco de dados, cache e mensageria — deixando LLM proxy, observabilidade e outras stacks especializadas para arquivos e issues futuras.
 - **Rationale**: A milestone já separa esses temas em entregas independentes. Limitar o escopo dos serviços core evita inflar a primeira configuração operacional do monorepo e preserva clareza sobre o que toda aplicação futura poderá reutilizar.
 - **Alternatives considered**:
   - Incluir observabilidade e serviços de IA já no core — rejeitado para manter a issue pequena e coerente com o roadmap.

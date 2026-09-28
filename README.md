@@ -47,11 +47,11 @@ Armazena as especificações, planos, tarefas e demais artefatos produzidos pelo
 2. Revise os valores locais necessários em `.env`.
 3. Valide a composição consolidada:
    ```bash
-   docker compose -f infra/compose.yml -f infra/compose.core.yml config
+   docker compose -f infra/compose.yaml -f infra/compose.core.yaml config
    ```
 4. Inicie os serviços core:
    ```bash
-   docker compose -f infra/compose.yml -f infra/compose.core.yml up -d
+   docker compose -f infra/compose.yaml -f infra/compose.core.yaml up -d
    ```
 
 ## Navegação da documentação

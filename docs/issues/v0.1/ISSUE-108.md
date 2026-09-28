@@ -58,12 +58,12 @@ Todos os comandos combinam os fragments base, core, LLM, observabilidade, interf
 
 ```bash
 docker compose --env-file .env \
-	-f infra/compose.yml \
-	-f infra/compose.core.yml \
-	-f infra/compose.llm.yml \
-	-f infra/compose.obs.yml \
-	-f infra/compose.interfaces.yml \
-	-f infra/compose.metrics.yml \
+	-f infra/compose.yaml \
+	-f infra/compose.core.yaml \
+	-f infra/compose.llm.yaml \
+	-f infra/compose.obs.yaml \
+	-f infra/compose.interfaces.yaml \
+	-f infra/compose.metrics.yaml \
 	--profile full-cloud-linux up -d
 ```
 
@@ -75,13 +75,13 @@ Instale `windows_exporter`, habilite os collectors `cpu`, `cs`, `logical_disk`, 
 
 ```powershell
 docker compose --env-file .env `
-	-f infra/compose.yml `
-	-f infra/compose.core.yml `
-	-f infra/compose.llm.yml `
-	-f infra/compose.obs.yml `
-	-f infra/compose.interfaces.yml `
-	-f infra/compose.metrics.yml `
-	-f infra/compose.metrics.windows.yml `
+	-f infra/compose.yaml `
+	-f infra/compose.core.yaml `
+	-f infra/compose.llm.yaml `
+	-f infra/compose.obs.yaml `
+	-f infra/compose.interfaces.yaml `
+	-f infra/compose.metrics.yaml `
+	-f infra/compose.metrics.windows.yaml `
 	--profile full-windows up -d
 ```
 
@@ -100,13 +100,13 @@ Se o exporter estiver configurado como um pacote Python com `pyproject.toml`, a 
 
 ```bash
 docker compose --env-file .env \
-	-f infra/compose.yml \
-	-f infra/compose.core.yml \
-	-f infra/compose.llm.yml \
-	-f infra/compose.obs.yml \
-	-f infra/compose.interfaces.yml \
-	-f infra/compose.metrics.yml \
-	-f infra/compose.metrics.macos.yml \
+	-f infra/compose.yaml \
+	-f infra/compose.core.yaml \
+	-f infra/compose.llm.yaml \
+	-f infra/compose.obs.yaml \
+	-f infra/compose.interfaces.yaml \
+	-f infra/compose.metrics.yaml \
+	-f infra/compose.metrics.macos.yaml \
 	--profile full-macos-m4 up -d
 ```
 

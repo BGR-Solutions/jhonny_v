@@ -19,7 +19,7 @@
 **Purpose**: Criar os artefatos-base que destravam a implementação das histórias sem ainda detalhar todo o comportamento final.
 
 - [X] T001 Create application-area placeholders in `apps/README.md`, `apps/mcp-server/README.md`, `apps/agent-orchestrator/README.md`, and `apps/worker/README.md`
-- [X] T002 [P] Create infrastructure bootstrap files in `infra/compose.yml` and `infra/compose.core.yml`
+- [X] T002 [P] Create infrastructure bootstrap files in `infra/compose.yaml` and `infra/compose.core.yaml`
 - [X] T003 [P] Create the shared environment template scaffold in `.env.example`
 
 ---
@@ -31,8 +31,8 @@
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
 - [X] T004 Expand local-artifact coverage for Python, Node.js, and Docker state in `.gitignore`
-- [X] T005 Define shared Compose metadata, networks, volumes, and extension anchors in `infra/compose.yml`
-- [X] T006 Align variable names, placeholder defaults, and service comments across `.env.example`, `infra/compose.yml`, and `infra/compose.core.yml`
+- [X] T005 Define shared Compose metadata, networks, volumes, and extension anchors in `infra/compose.yaml`
+- [X] T006 Align variable names, placeholder defaults, and service comments across `.env.example`, `infra/compose.yaml`, and `infra/compose.core.yaml`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in priority order
 
@@ -76,14 +76,14 @@
 
 **Goal**: Entregar o contrato inicial de ambiente local e a composição em camadas necessária para subir os serviços core compartilhados do monorepo.
 
-**Independent Test**: A equipe consegue copiar `.env.example` para `.env`, executar `docker compose -f infra/compose.yml -f infra/compose.core.yml config` e subir a stack core definida sem arquivos adicionais fora do contrato documentado.
+**Independent Test**: A equipe consegue copiar `.env.example` para `.env`, executar `docker compose -f infra/compose.yaml -f infra/compose.core.yaml config` e subir a stack core definida sem arquivos adicionais fora do contrato documentado.
 
 ### Implementation for User Story 3
 
 - [X] T015 [US3] Populate grouped bootstrap, core-service, observability, and future-integration variables in `.env.example`
-- [X] T016 [US3] Implement the base Compose layer for shared project defaults in `infra/compose.yml`
-- [X] T017 [US3] Implement the core database, cache, and messaging service definitions in `infra/compose.core.yml`
-- [X] T018 [US3] Validate the local-stack contract for `.env.example`, `infra/compose.yml`, and `infra/compose.core.yml` using the configuration and startup flows in `specs/001-estrutura-base-monorepo/quickstart.md`
+- [X] T016 [US3] Implement the base Compose layer for shared project defaults in `infra/compose.yaml`
+- [X] T017 [US3] Implement the core database, cache, and messaging service definitions in `infra/compose.core.yaml`
+- [X] T018 [US3] Validate the local-stack contract for `.env.example`, `infra/compose.yaml`, and `infra/compose.core.yaml` using the configuration and startup flows in `specs/001-estrutura-base-monorepo/quickstart.md`
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -94,7 +94,7 @@
 **Purpose**: Reconciliar documentação, comandos e validações finais antes de concluir a issue.
 
 - [X] T019 [P] Reconcile final command examples and file locations across `README.md`, `docs/README.md`, and `specs/001-estrutura-base-monorepo/quickstart.md`
-- [X] T020 Run the final acceptance pass across `.env.example`, `.gitignore`, `README.md`, `infra/compose.yml`, and `infra/compose.core.yml`
+- [X] T020 Run the final acceptance pass across `.env.example`, `.gitignore`, `README.md`, `infra/compose.yaml`, and `infra/compose.core.yaml`
 
 ---
 
@@ -144,7 +144,7 @@ Task: "Normalize introductory copy in docs/adr/README.md, docs/issues/README.md,
 
 ```bash
 Task: "Populate grouped bootstrap, core-service, observability, and future-integration variables in .env.example"
-Task: "Implement the base Compose layer for shared project defaults in infra/compose.yml"
+Task: "Implement the base Compose layer for shared project defaults in infra/compose.yaml"
 ```
 
 ---

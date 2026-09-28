@@ -21,7 +21,7 @@ Configurar o Redis para cache persistente e o RabbitMQ como mensageria de alta c
 ## 🔐 Configuração dos Secrets
 Os valores continuam sendo fornecidos pelo ambiente do host ou pelo arquivo `.env`, mas o Compose os materializa como arquivos somente leitura em `/run/secrets` dentro de cada contêiner. Use `.env.example` como referência e substitua todos os valores de desenvolvimento antes de executar a stack fora do ambiente local.
 
-Secrets declarados em `infra/compose.yml`:
+Secrets declarados em `infra/compose.yaml`:
 
 | Secret | Variável de origem | Consumidor |
 |---|---|---|

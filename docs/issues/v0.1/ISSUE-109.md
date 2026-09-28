@@ -63,9 +63,9 @@ Validação runtime após iniciar o profile:
 
 ```bash
 docker compose \
-	-f infra/compose.yml \
-	-f infra/compose.obs.yml \
-	-f infra/compose.metrics.yml \
+	-f infra/compose.yaml \
+	-f infra/compose.obs.yaml \
+	-f infra/compose.metrics.yaml \
 	--profile issue-109 up -d --build --wait
 
 python infra/grafana/validation/validate_dashboards.py --runtime-profile issue-109

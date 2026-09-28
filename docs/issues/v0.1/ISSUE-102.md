@@ -8,7 +8,7 @@
 Configurar o contêiner do LiteLLM Proxy no Compose, permitindo desacoplar a escolha dos modelos (Ollama local e Provedores Cloud) do código das aplicações.
 
 ## 📥 Tarefas
-- [ ] Adicionar serviço `litellm` no `infra/compose.llm.yml`.
+- [ ] Adicionar serviço `litellm` no `infra/compose.llm.yaml`.
 - [ ] Criar arquivo de configuração `infra/litellm/config.yaml`.
 - [ ] Configurar rotas para o Ollama local e modelos alternativos (OpenAI, Anthropic).
 - [ ] Configurar chave master de autenticação do proxy via `.env`.

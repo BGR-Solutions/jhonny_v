@@ -242,4 +242,4 @@ pnpm-debug.log*
 postgres-data/
 redis-data/
 rabbitmq-data/
-compose.override.yml
+compose.override.yaml

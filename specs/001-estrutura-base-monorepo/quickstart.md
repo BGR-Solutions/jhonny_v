@@ -43,14 +43,14 @@ Consulte também:
 
 ### Scenario 3: Validação da composição local
 
-1. Executar `docker compose -f infra/compose.yml -f infra/compose.core.yml config`.
+1. Executar `docker compose -f infra/compose.yaml -f infra/compose.core.yaml config`.
 2. Revisar a composição gerada para redes, volumes e serviços core.
 
 **Expected outcome**: A combinação dos arquivos Compose é válida e reflete a separação entre base compartilhada e serviços core.
 
 ### Scenario 4: Inicialização dos serviços core
 
-1. Executar `docker compose -f infra/compose.yml -f infra/compose.core.yml up -d`.
+1. Executar `docker compose -f infra/compose.yaml -f infra/compose.core.yaml up -d`.
 2. Aguardar a criação dos serviços definidos como core.
 3. Revisar `docker compose ps` para confirmar o estado dos containers.
 

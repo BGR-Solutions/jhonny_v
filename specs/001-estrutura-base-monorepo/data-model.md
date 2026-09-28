@@ -51,7 +51,7 @@
 
 - **Description**: Representa um arquivo Compose e sua responsabilidade na orquestração local.
 - **Fields**:
-  - `file_name`: nome do arquivo (`compose.yml` ou `compose.core.yml`)
+  - `file_name`: nome do arquivo (`compose.yaml` ou `compose.core.yaml`)
   - `role`: responsabilidade do arquivo (base compartilhada ou serviços core)
   - `invocation_order`: ordem esperada na execução combinada
   - `shared_resources`: redes, volumes ou defaults definidos pela camada
@@ -59,8 +59,8 @@
   - Pertence à área `infra`
   - Pode agrupar múltiplas entidades `Core Service Definition`
 - **Validation Rules**:
-  - `compose.yml` deve ser o ponto de entrada base
-  - `compose.core.yml` deve complementar, não substituir, a camada base
+  - `compose.yaml` deve ser o ponto de entrada base
+  - `compose.core.yaml` deve complementar, não substituir, a camada base
 
 ## Entity: Core Service Definition
 
