@@ -11,11 +11,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-jhonny_v}
       POSTGRES_USER: ${POSTGRES_USER:-jhonny}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_postgres}
-      PGDATA: ${POSTGRES_DATA_DIR:-/var/lib/postgresql/data}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres-data:${POSTGRES_DATA_DIR:-/var/lib/postgresql/data}
+      - postgres-data:/var/lib/postgresql/data
     networks:
       - jhonny-core
     healthcheck:
@@ -33,7 +32,7 @@ services:
     ports:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
-      - redis-data:${REDIS_DATA_DIR:-/data}
+      - redis-data:/data
     networks:
       - jhonny-core
     healthcheck:
@@ -54,7 +53,7 @@ services:
       - "${RABBITMQ_PORT:-5672}:5672"
       - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
     volumes:
-      - rabbitmq-data:${RABBITMQ_DATA_DIR:-/var/lib/rabbitmq}
+      - rabbitmq-data:/var/lib/rabbitmq
     networks:
       - jhonny-core
     healthcheck:
