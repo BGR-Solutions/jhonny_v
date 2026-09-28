@@ -1,6 +1,6 @@
-# 🗺️ Planejamento de Milestones — `jhonny-v`
+# 🗺️ Planejamento de Milestones — `jhonny_v`
 
-Este diretório contém o roadmap cronológico e arquitetural do projeto **`jhonny-v`**. Cada milestone representa uma camada funcional completa e testável do ecossistema, conectando infraestrutura, aplicações e integrações.
+Este diretório contém o roadmap cronológico e arquitetural do projeto **`jhonny_v`**. Cada milestone representa uma camada funcional completa e testável do ecossistema, conectando infraestrutura, aplicações e integrações.
 
 ## Como usar este índice
 

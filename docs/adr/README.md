@@ -1,6 +1,6 @@
-# 🏛️ Architecture Decision Records (ADRs) — `jhonny-v`
+# 🏛️ Architecture Decision Records (ADRs) — `jhonny_v`
 
-Este diretório contém os Registros de Decisões de Arquitetura (ADRs) do projeto **`jhonny-v`**. Cada documento registra uma escolha arquitetural relevante, com o contexto do problema, alternativas avaliadas, racional da decisão e suas consequências.
+Este diretório contém os Registros de Decisões de Arquitetura (ADRs) do projeto **`jhonny_v`**. Cada documento registra uma escolha arquitetural relevante, com o contexto do problema, alternativas avaliadas, racional da decisão e suas consequências.
 
 ## Quando consultar esta área
 

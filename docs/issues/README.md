@@ -1,6 +1,6 @@
-# 📋 Rastreamento de Issues & Tarefas — `jhonny-v`
+# 📋 Rastreamento de Issues & Tarefas — `jhonny_v`
 
-Este diretório contém o detalhamento técnico e os critérios de aceite das issues do projeto **`jhonny-v`**, organizadas por milestones evolutivas.
+Este diretório contém o detalhamento técnico e os critérios de aceite das issues do projeto **`jhonny_v`**, organizadas por milestones evolutivas.
 
 ## Como navegar
 
