@@ -1,4 +1,4 @@
-name: ${COMPOSE_PROJECT_NAME:-jhonny-v}
+name: ${COMPOSE_PROJECT_NAME:-jhonny_v}
 
 x-common-environment: &common-environment
   TZ: ${TZ:-UTC}
@@ -6,13 +6,13 @@ x-common-environment: &common-environment
 
 networks:
   jhonny-core:
-    name: ${COMPOSE_PROJECT_NAME:-jhonny-v}-core
+    name: ${COMPOSE_PROJECT_NAME:-jhonny_v}-core
     driver: bridge
 
 volumes:
   postgres-data:
-    name: ${COMPOSE_PROJECT_NAME:-jhonny-v}-postgres-data
+    name: ${COMPOSE_PROJECT_NAME:-jhonny_v}-postgres-data
   redis-data:
-    name: ${COMPOSE_PROJECT_NAME:-jhonny-v}-redis-data
+    name: ${COMPOSE_PROJECT_NAME:-jhonny_v}-redis-data
   rabbitmq-data:
-    name: ${COMPOSE_PROJECT_NAME:-jhonny-v}-rabbitmq-data
+    name: ${COMPOSE_PROJECT_NAME:-jhonny_v}-rabbitmq-data

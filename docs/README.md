@@ -1,4 +1,4 @@
-# Documentação do jhonny-v
+# Documentação do jhonny_v
 
 Este diretório é o hub central de documentação do monorepo **`jhonny_v`**. Aqui ficam as decisões arquiteturais, o planejamento incremental das entregas e os índices que orientam o roadmap técnico do projeto.
 

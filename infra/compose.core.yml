@@ -49,12 +49,12 @@ services:
       <<: *common-environment
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-jhonny}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-change_me_rabbitmq}
-      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST:-jhonny-v}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST:-jhonny_v}
     ports:
       - "${RABBITMQ_PORT:-5672}:5672"
       - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
     volumes:
-      - rabbitmq-data:${RABBITMQ_DATA_DIR:-/var/lib/rabbitmq}
+      - rabbitmq-data:${RABBITMQ_DATA_DIR:-/var/lib/rabbitmq/mnesia}
     networks:
       - jhonny-core
     healthcheck:

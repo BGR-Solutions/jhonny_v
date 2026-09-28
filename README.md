@@ -1,6 +1,6 @@
 # jhonny_v
 
-`jhonny_v` é um monorepo em construção para a stack do ecossistema **jhonny-v**, reunindo aplicações, infraestrutura compartilhada e documentação técnica em uma única base versionada.
+`jhonny_v` é um monorepo em construção para o ecossistema **`jhonny_v`**, reunindo aplicações, infraestrutura compartilhada e documentação técnica em uma única base versionada.
 
 ## Visão geral do monorepo
 
@@ -67,5 +67,5 @@ A entrega inicial prioriza a milestone **v0.1 — Infra Core & Observabilidade**
 
 Consulte também:
 - [Milestone v0.1](./docs/milestones/v0.1-infra-core.md)
-- [Issue #101](./docs/issues/v0.1/ISSUE-101.md)
+- [Índice de issues](./docs/issues/README.md)
 - [Especificação da feature](./specs/001-estrutura-base-monorepo/spec.md)
