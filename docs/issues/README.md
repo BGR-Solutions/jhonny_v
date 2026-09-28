@@ -1,6 +1,12 @@
-# 📋 Rastreamento de Issues & Tarefas — `jhonny-core`
+# 📋 Rastreamento de Issues & Tarefas — `jhonny_v`
 
-Este diretório contém o detalhamento técnico e os critérios de aceite de todas as tarefas (Issues) do projeto **`jhonny-core`**, organizadas por milestones evolutivas.
+Este diretório contém o detalhamento técnico e os critérios de aceite das issues do projeto **`jhonny_v`**, organizadas por milestones evolutivas.
+
+## Como navegar
+
+- Use a matriz de rastreabilidade para localizar a issue correta por milestone
+- Consulte as ADRs vinculadas quando uma entrega depender de uma decisão arquitetural prévia
+- Retorne ao [README principal](../../README.md) quando precisar da visão geral do monorepo
 
 ---
 

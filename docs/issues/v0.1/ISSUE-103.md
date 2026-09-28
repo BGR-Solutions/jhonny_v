@@ -8,8 +8,8 @@
 Configurar a coleta unificada de logs de contêineres capturando saídas `stdout`/`stderr` e enviando para o Loki através do Promtail.
 
 ## 📥 Tarefas
-- [ ] Adicionar serviço `loki` no `infra/compose.obs.yml`.
-- [ ] Adicionar serviço `promtail` no `infra/compose.obs.yml` montando o socket do Docker (`/var/run/docker.sock`).
+- [ ] Adicionar serviço `loki` no `infra/compose.obs.yaml`.
+- [ ] Adicionar serviço `promtail` no `infra/compose.obs.yaml` montando o socket do Docker (`/var/run/docker.sock`).
 - [ ] Criar arquivo `infra/promtail/config.yaml` mapeando labels dinâmicos de contêiner.
 - [ ] Criar arquivo `infra/loki/config.yaml`.
 

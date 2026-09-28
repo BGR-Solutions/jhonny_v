@@ -11,8 +11,8 @@ Criar a estrutura física do Monorepo com a definição das pastas principais, a
 - [ ] Criar diretórios `apps/`, `infra/`, `docs/` (`adr`, `issues`, `milestones`).
 - [ ] Criar arquivo `.env.example` central com parâmetros padronizados.
 - [ ] Criar `.gitignore` contemplando ambientes Python, Node e arquivos de estado do Docker.
-- [ ] Adicionar configuração base no `infra/compose.yml`.
-- [ ] Adicionar serviços core no `infra/compose.core.yml`.
+- [ ] Adicionar configuração base no `infra/compose.yaml`.
+- [ ] Adicionar serviços core no `infra/compose.core.yaml`.
 
 ## ✅ Critérios de Aceite
 - Estrutura de diretórios criada e validada pelo git status.

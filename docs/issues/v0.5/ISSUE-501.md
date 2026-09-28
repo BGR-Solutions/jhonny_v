@@ -5,7 +5,7 @@
 * **ADRs Vinculadas:** N/A
 
 ## 🎯 Descrição
-Adicionar e configurar a interface do Open WebUI no `infra/docker-compose.yml`, conectando-a ao endpoint `/v1` do `agent-orchestrator`.
+Adicionar e configurar a interface do Open WebUI no `infra/compose.interfaces.yaml`, conectando-a ao endpoint `/v1` do `agent-orchestrator`.
 
 ## 📥 Tarefas
 - [ ] Adicionar serviço `open-webui` no Compose.

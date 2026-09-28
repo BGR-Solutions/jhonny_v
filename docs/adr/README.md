@@ -1,6 +1,12 @@
-# 🏛️ Architecture Decision Records (ADRs) — `jhonny-core`
+# 🏛️ Architecture Decision Records (ADRs) — `jhonny_v`
 
-Este diretório contém os Registros de Decisões de Arquitetura (ADRs) do projeto **`jhonny-core`**. Cada documento descreve uma escolha arquitetural relevante, contextualizando os problemas identificados, as alternativas avaliadas, as justificativas técnicas e suas consequências.
+Este diretório contém os Registros de Decisões de Arquitetura (ADRs) do projeto **`jhonny_v`**. Cada documento registra uma escolha arquitetural relevante, com o contexto do problema, alternativas avaliadas, racional da decisão e suas consequências.
+
+## Quando consultar esta área
+
+- Para entender decisões estruturais que impactam múltiplas milestones
+- Para relacionar escolhas de infraestrutura, observabilidade e aplicações futuras
+- Para rastrear o motivo de padrões já aceitos no roadmap
 
 ---
 
@@ -19,8 +25,8 @@ Este diretório contém os Registros de Decisões de Arquitetura (ADRs) do proje
 ## 📐 Estrutura do Formato MADR
 
 Cada ADR adota o seguinte modelo:
-* **Status**: *Proposto*, *Aceito*, *Depreciado* ou *Substituído*.
-* **Contexto**: O problema ou desafio técnico enfrentado.
-* **Opções Consideradas**: As soluções alternativas analisadas.
-* **Decisão**: A escolha realizada e o motivo determinante.
-* **Consequências**: Os impactos positivos, negativos e mitigantes resultantes.
+- **Status**: *Proposto*, *Aceito*, *Depreciado* ou *Substituído*
+- **Contexto**: o problema ou desafio técnico enfrentado
+- **Opções Consideradas**: as alternativas analisadas
+- **Decisão**: a escolha realizada e o motivo determinante
+- **Consequências**: os impactos positivos, negativos e mitigantes resultantes

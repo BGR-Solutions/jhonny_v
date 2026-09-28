@@ -8,7 +8,7 @@
 Instalar e configurar o Grafana Tempo para recepção e consulta de distributed traces das aplicações e grafos de agentes. A integração usa OTLP gRPC/HTTP para ingestão, armazenamento local persistente e o dashboard global do Grafana para consulta via TraceQL.
 
 ## 📥 Tarefas
-- [ ] Adicionar serviço `tempo` no `infra/compose.obs.yml`.
+- [ ] Adicionar serviço `tempo` no `infra/compose.obs.yaml`.
 - [ ] Criar arquivo de configuração `infra/tempo/config.yaml` para receber traces gRPC/HTTP OTLP.
 - [ ] Incluir Tempo, Grafana, Loki e Prometheus no profile `issue-105` e Tempo no profile `v0.1`.
 - [ ] Persistir WAL e blocos no volume `tempodata`.
