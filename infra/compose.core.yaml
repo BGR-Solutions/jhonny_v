@@ -33,7 +33,7 @@ services:
     environment:
       <<: *common-environment
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${HOST_IP:-127.0.0.1}:${REDIS_PORT:-6379}:6379"
     volumes:
       - redis-data:/data
     networks:
@@ -53,8 +53,8 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-change_me_rabbitmq}
       RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST:-jhonny_v}
     ports:
-      - "${RABBITMQ_PORT:-5672}:5672"
-      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+      - "${HOST_IP:-127.0.0.1}:${RABBITMQ_PORT:-5672}:5672"
+      - "${HOST_IP:-127.0.0.1}:${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     networks:
