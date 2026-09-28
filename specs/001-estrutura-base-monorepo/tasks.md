@@ -18,9 +18,9 @@
 
 **Purpose**: Criar os artefatos-base que destravam a implementação das histórias sem ainda detalhar todo o comportamento final.
 
-- [ ] T001 Create application-area placeholders in `apps/README.md`, `apps/mcp-server/README.md`, `apps/agent-orchestrator/README.md`, and `apps/worker/README.md`
-- [ ] T002 [P] Create infrastructure bootstrap files in `infra/compose.yml` and `infra/compose.core.yml`
-- [ ] T003 [P] Create the shared environment template scaffold in `.env.example`
+- [X] T001 Create application-area placeholders in `apps/README.md`, `apps/mcp-server/README.md`, `apps/agent-orchestrator/README.md`, and `apps/worker/README.md`
+- [X] T002 [P] Create infrastructure bootstrap files in `infra/compose.yml` and `infra/compose.core.yml`
+- [X] T003 [P] Create the shared environment template scaffold in `.env.example`
 
 ---
 
@@ -30,9 +30,9 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Expand local-artifact coverage for Python, Node.js, and Docker state in `.gitignore`
-- [ ] T005 Define shared Compose metadata, networks, volumes, and extension anchors in `infra/compose.yml`
-- [ ] T006 Align variable names, placeholder defaults, and service comments across `.env.example`, `infra/compose.yml`, and `infra/compose.core.yml`
+- [X] T004 Expand local-artifact coverage for Python, Node.js, and Docker state in `.gitignore`
+- [X] T005 Define shared Compose metadata, networks, volumes, and extension anchors in `infra/compose.yml`
+- [X] T006 Align variable names, placeholder defaults, and service comments across `.env.example`, `infra/compose.yml`, and `infra/compose.core.yml`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in priority order
 
@@ -46,10 +46,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Transform the repository map and onboarding summary in `README.md` to explain `apps/`, `infra/`, and `docs/`
-- [ ] T008 [P] [US1] Add purpose statements for the monorepo areas in `apps/README.md`, `apps/mcp-server/README.md`, `apps/agent-orchestrator/README.md`, and `apps/worker/README.md`
-- [ ] T009 [US1] Finalize structure-tracking and local-artifact guidance in `.gitignore` and `README.md`
-- [ ] T010 [US1] Verify structural discoverability for `README.md`, `apps/`, `infra/`, and `.gitignore` using the `git status --short` flow described in `specs/001-estrutura-base-monorepo/quickstart.md`
+- [X] T007 [US1] Transform the repository map and onboarding summary in `README.md` to explain `apps/`, `infra/`, and `docs/`
+- [X] T008 [P] [US1] Add purpose statements for the monorepo areas in `apps/README.md`, `apps/mcp-server/README.md`, `apps/agent-orchestrator/README.md`, and `apps/worker/README.md`
+- [X] T009 [US1] Finalize structure-tracking and local-artifact guidance in `.gitignore` and `README.md`
+- [X] T010 [US1] Verify structural discoverability for `README.md`, `apps/`, `infra/`, and `.gitignore` using the `git status --short` flow described in `specs/001-estrutura-base-monorepo/quickstart.md`
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -63,10 +63,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T011 [US2] Expand the main onboarding narrative and quickstart sections in `README.md`
-- [ ] T012 [P] [US2] Update the documentation hub cross-links in `docs/README.md` to reflect the root README and the monorepo structure
-- [ ] T013 [P] [US2] Normalize introductory copy in `docs/adr/README.md`, `docs/issues/README.md`, and `docs/milestones/README.md` for first-time navigation clarity
-- [ ] T014 [US2] Validate rendered navigation paths across `README.md` and `docs/README.md` against the expected destinations in `docs/adr/README.md`, `docs/issues/README.md`, and `docs/milestones/README.md`
+- [X] T011 [US2] Expand the main onboarding narrative and quickstart sections in `README.md`
+- [X] T012 [P] [US2] Update the documentation hub cross-links in `docs/README.md` to reflect the root README and the monorepo structure
+- [X] T013 [P] [US2] Normalize introductory copy in `docs/adr/README.md`, `docs/issues/README.md`, and `docs/milestones/README.md` for first-time navigation clarity
+- [X] T014 [US2] Validate rendered navigation paths across `README.md` and `docs/README.md` against the expected destinations in `docs/adr/README.md`, `docs/issues/README.md`, and `docs/milestones/README.md`
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -80,10 +80,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T015 [US3] Populate grouped bootstrap, core-service, observability, and future-integration variables in `.env.example`
-- [ ] T016 [US3] Implement the base Compose layer for shared project defaults in `infra/compose.yml`
-- [ ] T017 [US3] Implement the core database, cache, and messaging service definitions in `infra/compose.core.yml`
-- [ ] T018 [US3] Validate the local-stack contract for `.env.example`, `infra/compose.yml`, and `infra/compose.core.yml` using the configuration and startup flows in `specs/001-estrutura-base-monorepo/quickstart.md`
+- [X] T015 [US3] Populate grouped bootstrap, core-service, observability, and future-integration variables in `.env.example`
+- [X] T016 [US3] Implement the base Compose layer for shared project defaults in `infra/compose.yml`
+- [X] T017 [US3] Implement the core database, cache, and messaging service definitions in `infra/compose.core.yml`
+- [X] T018 [US3] Validate the local-stack contract for `.env.example`, `infra/compose.yml`, and `infra/compose.core.yml` using the configuration and startup flows in `specs/001-estrutura-base-monorepo/quickstart.md`
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -93,8 +93,8 @@
 
 **Purpose**: Reconciliar documentação, comandos e validações finais antes de concluir a issue.
 
-- [ ] T019 [P] Reconcile final command examples and file locations across `README.md`, `docs/README.md`, and `specs/001-estrutura-base-monorepo/quickstart.md`
-- [ ] T020 Run the final acceptance pass across `.env.example`, `.gitignore`, `README.md`, `infra/compose.yml`, and `infra/compose.core.yml`
+- [X] T019 [P] Reconcile final command examples and file locations across `README.md`, `docs/README.md`, and `specs/001-estrutura-base-monorepo/quickstart.md`
+- [X] T020 Run the final acceptance pass across `.env.example`, `.gitignore`, `README.md`, `infra/compose.yml`, and `infra/compose.core.yml`
 
 ---
 

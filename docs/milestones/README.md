@@ -1,6 +1,12 @@
 # 🗺️ Planejamento de Milestones — `jhonny-v`
 
-Este diretório contém o roadmap cronológico e arquitetural do projeto **`jhonny-v`**. O desenvolvimento é guiado por marcos (milestones) evolutivos, onde cada milestone representa uma camada funcional completa e testável do ecossistema.
+Este diretório contém o roadmap cronológico e arquitetural do projeto **`jhonny-v`**. Cada milestone representa uma camada funcional completa e testável do ecossistema, conectando infraestrutura, aplicações e integrações.
+
+## Como usar este índice
+
+- Comece por este arquivo para entender a sequência geral de entregas
+- Abra o arquivo da milestone correspondente para ver o foco e os entregáveis
+- Cruze o roadmap com [issues](../issues/README.md) e [ADRs](../adr/README.md) quando precisar de contexto adicional
 
 ---
 
@@ -59,8 +65,8 @@ Este diretório contém o roadmap cronológico e arquitetural do projeto **`jhon
 
 ## 📂 Detalhamento por Arquivo
 
-* [**v0.1 - Infra Core & Observabilidade**](./v0.1-infra-core.md)
-* [**v0.2 - MCP Server & Skills**](./v0.2-mcp-server.md)
-* [**v0.3 - Agent Orchestrator**](./v0.3-agent-orchestrator.md)
-* [**v0.4 - Worker Assíncrono**](./v0.4-worker-async.md)
-* [**v0.5 - Interfaces & Clients**](./v0.5-clients-integration.md)
+- [**v0.1 - Infra Core & Observabilidade**](./v0.1-infra-core.md)
+- [**v0.2 - MCP Server & Skills**](./v0.2-mcp-server.md)
+- [**v0.3 - Agent Orchestrator**](./v0.3-agent-orchestrator.md)
+- [**v0.4 - Worker Assíncrono**](./v0.4-worker-async.md)
+- [**v0.5 - Interfaces & Clients**](./v0.5-clients-integration.md)

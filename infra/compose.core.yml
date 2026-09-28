@@ -1,0 +1,65 @@
+x-common-environment: &common-environment
+  TZ: ${TZ:-UTC}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      <<: *common-environment
+      POSTGRES_DB: ${POSTGRES_DB:-jhonny_v}
+      POSTGRES_USER: ${POSTGRES_USER:-jhonny}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_postgres}
+      PGDATA: ${POSTGRES_DATA_DIR:-/var/lib/postgresql/data}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:${POSTGRES_DATA_DIR:-/var/lib/postgresql/data}
+    networks:
+      - jhonny-core
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jhonny} -d ${POSTGRES_DB:-jhonny_v}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "${REDIS_APPENDONLY:-yes}"]
+    environment:
+      <<: *common-environment
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:${REDIS_DATA_DIR:-/data}
+    networks:
+      - jhonny-core
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    environment:
+      <<: *common-environment
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-jhonny}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-change_me_rabbitmq}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST:-jhonny-v}
+      RABBITMQ_MNESIA_BASE: ${RABBITMQ_DATA_DIR:-/var/lib/rabbitmq}/mnesia
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq-data:${RABBITMQ_DATA_DIR:-/var/lib/rabbitmq}
+    networks:
+      - jhonny-core
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
