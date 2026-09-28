@@ -19,6 +19,8 @@ Consulte também:
 
 1. Abrir o `README.md` na raiz do repositório.
 2. Copiar `.env.example` para `.env` na raiz do projeto.
+   - Linux/macOS: `cp .env.example .env`
+   - Windows PowerShell: `Copy-Item .env.example .env`
 3. Revisar `docs/README.md` para confirmar os caminhos de documentação.
 
 ## Validation Scenarios

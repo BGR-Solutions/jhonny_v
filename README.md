@@ -40,6 +40,10 @@ Armazena as especificações, planos, tarefas e demais artefatos produzidos pelo
    ```bash
    cp .env.example .env
    ```
+   No Windows PowerShell:
+   ```powershell
+   Copy-Item .env.example .env
+   ```
 2. Revise os valores locais necessários em `.env`.
 3. Valide a composição consolidada:
    ```bash

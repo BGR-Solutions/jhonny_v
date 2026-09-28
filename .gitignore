@@ -233,6 +233,7 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Local environment contracts
+.env
 .env.*
 !.env.example
 
