@@ -181,7 +181,7 @@ With multiple developers:
 
 ## Notes
 
-- Todos os itens seguem o formato obrigatório `- [ ] Txxx ...` com caminhos explícitos
+- Todos os itens seguem o formato obrigatório `- [X] Txxx ...` com caminhos explícitos
 - Nenhuma tarefa de teste automatizado foi gerada porque a specification não exige TDD ou suíte nova nesta etapa
 - As validações operacionais reutilizam `specs/001-estrutura-base-monorepo/quickstart.md`
 - A entrega incremental recomendada para MVP é encerrar após a conclusão da User Story 1
