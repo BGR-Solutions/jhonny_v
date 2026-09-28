@@ -16,4 +16,5 @@ coverage/
 .env.local
 .env.*.local
 docs/_build/
+secrets/
 specs/
