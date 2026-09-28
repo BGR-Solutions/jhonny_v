@@ -8,9 +8,9 @@
 Implementar conjunto de ferramentas para leitura, listagem e manipulação segura de arquivos locais dentro de diretórios autorizados.
 
 ## 📥 Tarefas
-- [x] Criar ferramenta `read_file`, `write_file`, `list_directory` e `search_files`.
-- [x] Aplicar validação de sandbox para impedir navegação fora do diretório delimitado (*path traversal protection*).
-- [x] Marcar metadados de ferramentas de escrita/exclusão com flag de ação crítica.
+- [ ] Criar ferramenta `read_file`, `write_file`, `list_directory` e `search_files`.
+- [ ] Aplicar validação de sandbox para impedir navegação fora do diretório delimitado (*path traversal protection*).
+- [ ] Marcar metadados de ferramentas de escrita/exclusão com flag de ação crítica.
 
 ## ✅ Critérios de Aceite
 - Leitura e escrita de arquivos funcionais com limites de permissão validados por testes unitários.

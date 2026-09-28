@@ -29,7 +29,7 @@ O assistente requer persistência de longo prazo para os históricos e checkpoin
 ---
 
 ## Decisão
-Adotar o **PostgreSQL** com a extensão **`pgvector`** ativada como solução unificada de persistência relacional (checkpoints do LangGraph) e armazenamento vetorial do projeto **`jhonny-core`**[cite: 9, 10, 230, 238].
+Adotar o **PostgreSQL** com a extensão **`pgvector`** ativada como solução unificada de persistência relacional (checkpoints do LangGraph) e armazenamento vetorial do projeto **`jhonny-v`**[cite: 9, 10, 230, 238].
 
 ---
 

@@ -8,7 +8,7 @@
 ---
 
 ## Contexto e Problema
-[cite_start]O assistente **`jhonny-core`** utiliza Modelos de Linguagem (LLMs) para raciocínio ReAct e chamada de ferramentas (*Function Calling*)[cite: 1, 115, 125]. [cite_start]Durante o desenvolvimento ou em execução em hardware local limitado (CPU/GPU), um modelo executado pelo Ollama pode apresentar latência elevada ou limitação de janela de contexto[cite: 115, 165]. [cite_start]Nesses cenários, é necessário trocar temporariamente o provedor por APIs em nuvem (ex: OpenAI, Anthropic, Gemini) sem alterar o código das aplicações ou interromper o serviço[cite: 116, 117].
+[cite_start]O assistente **`jhonny-v`** utiliza Modelos de Linguagem (LLMs) para raciocínio ReAct e chamada de ferramentas (*Function Calling*)[cite: 1, 115, 125]. [cite_start]Durante o desenvolvimento ou em execução em hardware local limitado (CPU/GPU), um modelo executado pelo Ollama pode apresentar latência elevada ou limitação de janela de contexto[cite: 115, 165]. [cite_start]Nesses cenários, é necessário trocar temporariamente o provedor por APIs em nuvem (ex: OpenAI, Anthropic, Gemini) sem alterar o código das aplicações ou interromper o serviço[cite: 116, 117].
 
 ---
 
@@ -25,7 +25,7 @@
 ---
 
 ## Decisão
-[cite_start]Adotar o **LiteLLM Proxy** como gateway centralizador e exclusivo para todas as chamadas de modelos de linguagem no ecossistema **`jhonny-core`**[cite: 9, 116]. [cite_start]O `apps/agent-orchestrator` comunicará estritamente com o LiteLLM, delegando a ele as regras de roteamento e resiliência entre o Ollama local e modelos Cloud[cite: 9, 10, 11, 117].
+[cite_start]Adotar o **LiteLLM Proxy** como gateway centralizador e exclusivo para todas as chamadas de modelos de linguagem no ecossistema **`jhonny-v`**[cite: 9, 116]. [cite_start]O `apps/agent-orchestrator` comunicará estritamente com o LiteLLM, delegando a ele as regras de roteamento e resiliência entre o Ollama local e modelos Cloud[cite: 9, 10, 11, 117].
 
 ---
 

@@ -8,9 +8,9 @@
 Inicializar o subrepositório do servidor MCP em Python, configurando dependências do SDK oficial e estrutura básica do projeto.
 
 ## 📥 Tarefas
-- [x] Criar estrutura interna em `apps/mcp-server/` (`src/`, `tests/`, `README.md`).
-- [x] Configurar `pyproject.toml` / `requirements.txt` com SDK do MCP e Pytest.
-- [x] Implementar entrypoint inicial com logging estruturado direcionado para `stdout`.
+- [ ] Criar estrutura interna em `apps/mcp-server/` (`src/`, `tests/`, `README.md`).
+- [ ] Configurar `pyproject.toml` com SDK do MCP e Pytest.
+- [ ] Implementar entrypoint inicial com logging estruturado direcionado para `stdout`.
 
 ## ✅ Critérios de Aceite
 - Execução do servidor MCP via CLI sem falhas de importação.
