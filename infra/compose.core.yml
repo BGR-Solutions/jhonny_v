@@ -29,7 +29,7 @@ services:
     command:
       - redis-server
       - --appendonly
-      - ${REDIS_APPENDONLY_MODE:-yes}
+      - "${REDIS_APPENDONLY_MODE:-yes}"
     environment:
       <<: *common-environment
     ports:
