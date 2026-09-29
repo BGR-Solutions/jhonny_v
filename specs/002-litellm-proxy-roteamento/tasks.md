@@ -180,7 +180,7 @@ Task: "Após concluir a task anterior, configurar referências de credenciais cl
 ### Parallel Team Strategy
 
 1. Time A: Compose/infra (`infra/compose.llm.yaml`)
-2. Time B: Configuração de rotas (`infra/litellm/config.yaml`)
+2. Time B: Configuração de rotas (`infra/litellm/config.yaml`) com execução sequencial interna no mesmo arquivo
 3. Time C: Validação e documentação (`specs/002-litellm-proxy-roteamento/quickstart.md`)
 4. Integrar resultados por fase e checkpoints independentes
 

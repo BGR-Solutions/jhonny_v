@@ -82,11 +82,12 @@ Como responsável por operação do ambiente, quero controlar o acesso ao proxy 
 - **FR-004**: O proxy MUST aceitar solicitações de chat para rotas válidas e retornar resposta de sucesso quando os pré-requisitos de autenticação e rota forem atendidos.
 - **FR-005**: O controle de acesso ao proxy MUST depender de uma chave mestre definida por variável de ambiente, sem hardcode de credenciais no versionamento.
 - **FR-006**: O projeto MUST incluir uma configuração versionada do proxy separada do código das aplicações, para permitir evolução de rotas sem alterações no domínio das apps.
-- **FR-007**: A configuração inicial MUST manter aliases de rotas locais e cloud documentados e estáveis para consumo uniforme pelas aplicações.
+- **FR-007**: A configuração inicial MUST manter aliases de rotas locais e cloud documentados com versionamento explícito de configuração para evitar quebra de contrato entre revisões.
 - **FR-008**: Quando credenciais cloud não estiverem definidas, o proxy MUST iniciar com rotas locais disponíveis e marcar rotas cloud como indisponíveis sem interromper o ambiente local.
 - **FR-009**: O proxy MUST exigir autenticação por chave mestre em todos os endpoints expostos, incluindo listagem de modelos e execução de chat.
 - **FR-010**: Quando uma rota cloud estiver configurada, mas indisponível por ausência de credenciais, o proxy MUST retornar status de indisponibilidade (503) nas chamadas de chat para essa rota.
 - **FR-011**: Quando uma rota cloud falhar em runtime por timeout ou erro do provedor, o proxy MUST retornar erro da rota solicitada sem fallback automático para rota local.
+- **FR-012**: Quando uma rota solicitada não existir na configuração ativa, o proxy MUST retornar erro de rota inexistente distinto do erro `503` de indisponibilidade por credencial.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -100,9 +101,9 @@ Como responsável por operação do ambiente, quero controlar o acesso ao proxy 
 
 - **SC-001**: Em uma janela de 10 inicializações locais consecutivas com configuração válida, o endpoint de listagem de modelos do proxy fica disponível com sucesso em 100% dos casos (10/10).
 - **SC-002**: Na mesma janela de 10 inicializações consecutivas, o tempo até a primeira resposta bem-sucedida de listagem de modelos permanece em até 30 segundos em pelo menos 90% dos casos (9/10).
-- **SC-003**: A equipe consegue executar com sucesso uma chamada de chat para uma rota válida do proxy durante a validação da entrega.
+- **SC-003**: Em uma janela de 10 chamadas consecutivas autenticadas para rota válida, pelo menos 90% das requisições (9/10) retornam sucesso no endpoint de chat do proxy.
 - **SC-004**: Em 20 chamadas consecutivas sem credencial válida, 100% das requisições para endpoints protegidos do proxy são bloqueadas.
-- **SC-005**: Em ausência de credenciais cloud, o ambiente local mantém disponibilidade de rotas locais e permanece operacional para validação dos endpoints de aceite.
+- **SC-005**: Em uma janela de 10 chamadas consecutivas sem credenciais cloud configuradas, 100% das requisições para rotas locais seguem funcionais e os endpoints de aceite permanecem operacionais.
 - **SC-006**: Em 20 chamadas consecutivas com chave ausente ou inválida distribuídas entre `/v1/models` e `/v1/chat/completions`, 100% das requisições são rejeitadas.
 - **SC-007**: Em 10 chamadas consecutivas para rota cloud sem credencial, 100% das respostas retornam `503`, mantendo distinção explícita de erro para rota inexistente.
 - **SC-008**: Em falhas runtime de rotas cloud, o retorno preserva o erro da rota alvo sem redirecionamento automático para rota local.
