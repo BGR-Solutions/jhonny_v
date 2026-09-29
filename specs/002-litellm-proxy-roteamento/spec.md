@@ -15,6 +15,7 @@
 - Q: Quando as chaves dos provedores cloud (OpenAI/Anthropic) não estiverem definidas, o proxy deve subir mantendo apenas as rotas locais ativas? → A: Subir normalmente e expor apenas rotas locais; rotas cloud ficam indisponíveis.
 - Q: A autenticação por chave mestre deve ser obrigatória também no endpoint de listagem de modelos (`/v1/models`)? → A: Exigir chave mestre em todos os endpoints do proxy, incluindo `/v1/models` e `/v1/chat/completions`.
 - Q: Quando uma rota cloud estiver configurada, mas indisponível por ausência de credenciais, qual resultado o proxy deve retornar na chamada de chat? → A: Tratar como rota indisponível por configuração/credencial (503).
+- Q: Quando uma rota cloud falhar em runtime (timeout/erro do provedor), o proxy deve tentar fallback automático para uma rota local equivalente? → A: Não, retornar erro da rota solicitada sem fallback automático.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -69,6 +70,7 @@ Como responsável por operação do ambiente, quero controlar o acesso ao proxy 
 - Como o proxy deve responder quando uma rota solicitada não existe na configuração ativa?
 - Como garantir comportamento previsível quando a chave mestre não estiver definida no ambiente?
 - Como diferenciar, na resposta de erro, rota cloud indisponível por credencial ausente (503) versus rota inexistente (404)?
+- Como manter previsibilidade quando uma rota cloud falha em runtime sem fallback automático para rota local?
 
 ## Requirements *(mandatory)*
 
@@ -84,6 +86,7 @@ Como responsável por operação do ambiente, quero controlar o acesso ao proxy 
 - **FR-008**: Quando credenciais cloud não estiverem definidas, o proxy MUST iniciar com rotas locais disponíveis e marcar rotas cloud como indisponíveis sem interromper o ambiente local.
 - **FR-009**: O proxy MUST exigir autenticação por chave mestre em todos os endpoints expostos, incluindo listagem de modelos e execução de chat.
 - **FR-010**: Quando uma rota cloud estiver configurada, mas indisponível por ausência de credenciais, o proxy MUST retornar status de indisponibilidade (503) nas chamadas de chat para essa rota.
+- **FR-011**: Quando uma rota cloud falhar em runtime por timeout ou erro do provedor, o proxy MUST retornar erro da rota solicitada sem fallback automático para rota local.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -102,6 +105,7 @@ Como responsável por operação do ambiente, quero controlar o acesso ao proxy 
 - **SC-005**: Em ausência de credenciais cloud, o ambiente local mantém disponibilidade de rotas locais e permanece operacional para validação dos endpoints de aceite.
 - **SC-006**: Chamadas sem chave mestre válida para endpoints de listagem e chat são rejeitadas consistentemente durante os testes de validação.
 - **SC-007**: Chamadas para rotas cloud sem credenciais recebem retorno consistente de indisponibilidade (503), distinto de rota inexistente.
+- **SC-008**: Em falhas runtime de rotas cloud, o retorno preserva o erro da rota alvo sem redirecionamento automático para rota local.
 
 ## Assumptions
 
