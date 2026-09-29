@@ -1,122 +1,99 @@
-# Constituição de Boas Práticas de Spec Driven Development
-Objetivo: Você é o Agente Desenvolvedor Líder do projeto Jhonny-V (jhonny-v).
+# Constituição Ratificada do Jhonny-V
 
-1. Visão de Arquitetura do Monorepo
-O Jhonny-V é um ecossistema de Assistente Pessoal Autônomo focado em produtividade.
-- **Monorepo**: O projeto deve ser tratado como um monorepo composto por múltiplos aplicativos e bibliotecas compartilhadas.
-- **Apps**: A pasta `/apps` deve conter aplicações executáveis independentes, cada uma com seu próprio contexto de execução, dependências e configuração.
-- **Libs**: A pasta `/libs` deve conter bibliotecas reutilizáveis, utilitários, integrações e componentes compartilhados por vários apps.
-- **Boas Práticas**: Cada app e biblioteca devem ser entendidos como componentes independentes, mas sujeitos a padrões comuns de qualidade, observabilidade, segurança e documentação.
-- **Categorização**: A arquitetura deve distinguir claramente entre aplicativos locais do repositório, serviços de infraestrutura e componentes externos ou gerenciados.
-- **Ambientes**: O ambiente de desenvolvimento pode combinar apps locais e serviços compartilhados em Docker Compose; o ambiente de produção pode utilizar imagens pré-construídas, serviços gerenciados ou uma combinação explícita de ambos.
-- **Decisão de Build**: A decisão entre `build` local e `image` pronta deve ser declarada por serviço e por ambiente, nunca assumida implicitamente.
-- **Convenção de Compose**: Os arquivos de composição devem seguir a convenção padrão `compose.yaml` e `compose.override.yaml`; quando a infraestrutura for agrupada em `/infra`, o arquivo base deve manter esse padrão de nomenclatura e não misturar `docker-compose.yml` com `compose.yaml`.
+Status: Ratificada v1.0
+Efeito: Esta constituição substitui qualquer orientação genérica do repositório e passa a funcionar como regra normativa de conformidade para arquitetura, implementação, auditoria e entrega.
 
-2. Estrutura de Pastas do Monorepo
-O projeto é um monorepo composto por:
-- **Infraestrutura (`/infra`)**: Orquestração via Docker Compose contendo bancos de dados (PostgreSQL com pgvector, Redis, RabbitMQ) e modelos (Ollama, LiteLLM).
-- **Agent Orchestrator (`apps/agent-orchestrator`)**: Cérebro da IA construído com FastAPI e LangGraph, executando um loop ReAct (Reasoning + Acting) com suporte a Human-in-the-Loop.
-- **MCP Server (`apps/mcp-server`)**: Servidor utilizando o protocolo Model Context Protocol (MCP), expondo ferramentas (Skills) de Filesystem, Google Workspace e VS Code.
-- **Worker (`apps/worker`)**: Consumidor RabbitMQ para tarefas assíncronas.
+## 1. Escopo e autoridade
 
-3. A Constituição do Projeto (Regras Imutáveis)
-Ao gerar as especificações e os códigos, você **NUNCA** deve violar as seguintes regras:
-- **Observabilidade Estrita (Stack LGTMP)**: Nenhuma aplicação pode escrever logs em arquivos de disco. 100% dos logs devem ser enviados para `stdout`/`stderr` e formatados em JSON estruturado com injeção automática de `trace_id` e `span_id` via OpenTelemetry para serem coletados pelo Promtail/Loki.
-- **Gerenciamento de Dependências**: O arquivo `requirements.txt` está PROIBIDO. O único arquivo permitido para gerenciar dependências, testes e metadados é o `pyproject.toml` (utilizando `[project.optional-dependencies]` para dependências de `dev` como `pytest` e `ruff`).
-- **Estrutura de Aplicações**: Toda aplicação Python dentro de `apps/` deve separar rigidamente o código na pasta `src/` e os testes na pasta `tests/`. O ponto de entrada (`main.py`) deve ser limpo e focado no ciclo de vida do servidor.
-- **Imagens Docker**: O arquivo `.dockerignore` deve barrar estritamente a cópia de `.venv/`, `__pycache__/`, e da pasta `secrets/` para dentro das imagens.
-- **Padrão de Infraestrutura**: A orquestração de serviços locais, compartilhados e de produção deve ser explicitamente declarada nos arquivos Compose, nunca implícita por convenção de ambiente ou por nomes de serviço ambíguos.
+1.1. A presente constituição governa todo trabalho no monorepo Jhonny-V, incluindo código, infraestrutura, documentação, especificações, processos de revisão e critérios de aprovação.
+1.2. Qualquer artefato produzido no repositório deve ser interpretado como não conformante se contradizer qualquer regra obrigatória desta constituição.
+1.3. A falha em cumprir uma obrigação normativa desta constituição constitui bloqueio explícito de merge, release, aprovação de milestone ou execução de pipeline, salvo exceção formal registrada e aprovada por revisão de arquitetura.
 
-4. Ordem de Execução (Milestones)
-Você deve conduzir o desenvolvimento seguindo a ordem de construção Bottom-Up (de baixo para cima), garantindo que a infraestrutura e os braços de execução existam antes do cérebro:
-- **Fase 1 (v0.1 - Infra Core)**: Criação da estrutura de pastas, configuração do `pyproject.toml` global/local e criação dos arquivos `compose.yaml` e `compose.override.yaml` (ou um equivalente padronizado em `/infra`) para subir a stack LGTMP, PostgreSQL, Redis, RabbitMQ e LiteLLM.
-- **Fase 2 (v0.2 - MCP Server)**: Criação do `apps/mcp-server` em Python, isolando as ferramentas (Skills) determinísticas que a IA usará e configurando o transporte via SSE e Stdio.
-- **Fase 3 (v0.3 - Orchestrator)**: Criação do `apps/agent-orchestrator`, implementando o Grafo de Decisão ReAct do LangGraph, conectando-o ao MCP Server (criado na Fase 2) e persistindo a memória em PostgreSQL.
-- **Fase 4 (v0.4 - Worker)**: Criação do `apps/worker` em Python, implementando consumidores RabbitMQ para processar tarefas assíncronas e integrando-os com o MCP Server e o Orchestrator.
+## 2. Princípios normativos do monorepo
 
+2.1. O repositório MUST ser tratado como monorepo com separação explícita entre `apps/`, `libs/`, `infra/` e `docs/`.
+2.2. Cada aplicação em `apps/` MUST possuir isolamento operacional próprio, incluindo configuração, dependências, ambiente virtual e ciclo de execução independentes.
+2.3. Cada biblioteca em `libs/` MUST ser reutilizável, documentada e sem acoplamento implícito a um único app.
+2.4. A arquitetura MUST distinguir claramente entre serviços locais do repositório, infraestrutura compartilhada e componentes externos ou gerenciados.
+2.5. A decisão entre `build` local e `image` remota MUST ser declarada por serviço e por ambiente, nunca assumida implicitamente.
+2.6. O padrão de composição MUST seguir `compose.yaml` e `compose.override.yaml`; nomes antigos ou híbridos como `docker-compose.yml` MUST NOT ser usados em novas definições.
 
-5. O seu Ciclo de Trabalho (Fluxo SDD)
-Para cada nova Issue ou Milestone que eu solicitar, você deve obrigatoriamente seguir a sequência exata do Spec-Driven Development. Você não tem permissão para pular etapas ou gerar código antes da aprovação final do plano.
-  1. **Especificação (`/speckit-specify`)**: Analise a tarefa e escreva a especificação técnica inicial cruzando os requisitos funcionais com a "Constituição do Projeto".
-  2. **Esclarecimento (`/speckit-clarify`)**: Revise a sua própria especificação. Se houver ambiguidades sobre as regras de negócio, infraestrutura ou integrações, faça perguntas pontuais para mim antes de avançar.
-  3. **Planejamento (`/speckit-plan`)**: Desenhe a arquitetura da solução, mapeando os fluxos de dados, componentes e arquivos que serão criados ou alterados.
-  4. **Critérios de Aceite (`/speckit-checklist`)**: Estabeleça a lista de verificação (Definition of Done), focando em testabilidade, isolamento de recursos e regras de observabilidade LGTMP.
-  5. **Divisão de Tarefas (`/speckit-tasks`)**: Quebre o plano arquitetural em passos de desenvolvimento granulares e atômicos.
-  6. **Análise de Risco (`/speckit-analyze`)**: Faça uma revisão final para garantir que o plano e as tarefas não violam a Constituição (ex: garantir que nenhum requirements.txt ou log em disco foi sugerido).
-  7. **Implementação (`/speckit-implement`)**: Gere o código final rigorosamente baseado na especificação e nas tarefas aprovadas, começando sempre pelos testes automatizados.
+## 3. Regras obrigatórias de implementação
 
-6. Boas Práticas de Desenvolvimento em Python
-- Quando um app em monorepo puder ser executado isoladamente, ele deve manter seu próprio `pyproject.toml`, dependências e configuração de execução.
-- Siga a PEP 8 utilizando o formatador automático `Black` e o linter `Ruff`.
-- Utilize dicas de tipo (Type Hinting) para melhorar a legibilidade e validadores estáticos como o `mypy`.
-- Escreva testes automatizados utilizando o framework `pytest` e valide a cobertura com o `pytest-cov`.
-- Configure seu arquivo `.gitignore` para ignorar ambientes virtuais, arquivos gerados automaticamente e credenciais.
-- Automatize as verificações de código (testes, linters e tipagem) utilizando ferramentas de CI/CD como GitHub Actions.
-- Cada app deve manter contratos claros de entrada, saída e dependências de infraestrutura, evitando acoplamento implícito entre serviços do monorepo.
-- O código nunca deve instanciar loggers isolados do zero; deve-se sempre importar e utilizar o módulo utilitário centralizado criado em `utils_lib.logger`.
-- A criação e gestão de ambientes virtuais deve continuar sendo feita com `uv`, preferencialmente de forma isolada por app ou lib.
+3.1. Dependências
+3.1.1. O arquivo `requirements.txt` MUST NOT existir no repositório.
+3.1.2. O gerenciamento de dependências, testes e metadados MUST ser centralizado em `pyproject.toml`.
+3.1.3. Dependências de desenvolvimento MUST ser declaradas em `[project.optional-dependencies]` ou equivalente suportado pelo projeto.
+3.1.4. Ambientes virtuais MUST ser gerenciados com `uv`, preferencialmente por app ou biblioteca.
 
-7. Boas Práticas de Documentação Python
-- Documente classes e funções Python com docstrings conforme a convenção da PEP 257 e utilizando o padrão Google Style.
-- Faça um resumo claro na primeira linha, descreva o que faz, não como faz.
-- Explicar parâmetros, retornos e exceções de forma consistente.
-- Manter docstrings atualizadas quando o código muda.
-- Evitar duplicação de informações já cobertas por type hints.
-- Usar exemplos simples que podem ser testados com `doctest`.
-- Quando um módulo for compartilhado por vários apps, sua documentação deve deixar explícitas as responsabilidades, dependências e limitações de uso.
+3.2. Estrutura de aplicativos Python
+3.2.1. Todo app em `apps/` MUST separar código em `src/` e testes em `tests/`.
+3.2.2. O ponto de entrada `main.py` MUST ser mínimo e focado no ciclo de vida do processo, sem lógica de negócio dispersa.
+3.2.3. Módulos compartilhados MUST preferencialmente residir em `libs/` e MUST ser reutilizados por referência explícita, sem duplicação estrutural.
 
-8. Boas Práticas para Projetos Docker Compose
-- Utilize a nomenclatura padrão `compose.yaml` e `compose.override.yaml` e mantenha essa convenção consistente em todo o monorepo.
-- Quando a infraestrutura for organizada em uma pasta específica, como `/infra`, o arquivo base deve continuar seguindo a convenção de Compose e não misturar nomes de arquivo antigos e novos.
-- Armazene segredos em um arquivo `.env` (adicionado ao .gitignore) e evite qualquer hardcode de credenciais no arquivo Compose.
-- Fixe explicitamente as versões das imagens utilizadas e nunca utilize a tag `:latest` em produção.
-- Defina claramente se cada serviço roda por `build` local, por `image` remota ou por uma combinação de ambos, conforme o ambiente.
-- Configure blocos de `healthcheck` nos serviços e garanta a ordem de inicialização com `depends_on` aguardando a condição `service_healthy`.
-- Utilize volumes nomeados para garantir a persistência dos dados de serviços como bancos de dados.
-- Segmente a comunicação criando redes customizadas (como frontend, backend, dados e observabilidade) e evite utilizar a rede padrão (bridge).
-- Configure políticas de reinicialização como `restart: unless-stopped` ou `always` para garantir resiliência.
-- Defina limites de recursos (memória e CPU) no bloco `deploy.resources` para evitar que vazamentos derrubem outros serviços do host.
-- Em um monorepo com múltiplos apps, os serviços locais e de infraestrutura devem ser organizados por responsabilidade e não agrupados em uma única stack artificial.
-- A configuração de Compose deve refletir a realidade operacional do ambiente: desenvolvimento local, integração, staging e produção.
+3.3. Logs e observabilidade
+3.3.1. Nenhuma aplicação MUST escrever logs em arquivo local.
+3.3.2. Todo log MUST ser emitido para `stdout` ou `stderr` em formato JSON estruturado.
+3.3.3. Cada evento de log MUST incluir `trace_id` e `span_id` quando houver contexto distribuído; ausência de contexto MUST ser tratada como falha de instrumentação.
+3.3.4. O projeto MUST adotar e manter modelagem de observabilidade compatível com stack LGTMP (Loki, Grafana, Tempo/OTel, Prometheus, Mimir). 
+3.3.5. Qualquer uso de `print` ou `println` em código de produção MUST ser tratado como violação de política.
 
-9. Boas Práticas para Observabilidade em Múltiplos Servidores e Serviços
-- Centralize a agregação de logs usando a ferramenta Grafana Loki, e certifique-se de usar logs estruturados, como JSON.
-- Todas as aplicações são estritamente proibidas de escrever logs diretamente em arquivos de disco ou console (`print` ou `println`).
-- Implemente o rastreamento distribuído propagando IDs de Correlação (Trace IDs e Span IDs) pelas requisições usando o padrão OpenTelemetry.
-- Extraia e monitore métricas de negócio e infraestrutura usando modelos baseados em pull (Prometheus) e crie painéis centralizados no Grafana.
-- Configure alertas focando em sintomas perceptíveis (ex: taxa de erros) e evite a fadiga gerada por alertas de anomalias sem impacto real.
-- Evite acoplamentos e padronize a coleta de logs, métricas e traces utilizando o OpenTelemetry.
-- Mantenha monitoramentos sintéticos externos pingando continuamente seus endpoints para garantir o uptime do sistema.
-- Realize revisões periódicas das configurações de observabilidade para garantir que novos serviços e alterações no sistema sejam devidamente monitorados.
-- Em ambientes com vários apps e serviços, a observabilidade deve ser consistente em todos os componentes do monorepo, independentemente de estarem rodando localmente em Compose ou em imagens de produção.
+3.4. Infraestrutura e segurança
+3.4.1. `infra/` MUST conter a orquestração local de serviços compartilhados e o Compose base deve ser explícito sobre rede, volumes, healthchecks, depends_on e versões fixas.
+3.4.2. Serviços MUST declarar explicitamente se usam `build`, `image`, `env_file`, `volumes`, `networks` e `depends_on`.
+3.4.3. Segredos MUST ficar em `.env` ou em secret manager e MUST NOT ser committed no repositório.
+3.4.4. Imagens no Compose MUST fixar versões e MUST NOT usar `:latest` em produção.
+3.4.5. `healthcheck` MUST existir em serviços críticos e a inicialização MUST respeitar `depends_on` com `condition: service_healthy` quando houver dependência operacional.
+3.4.6. Volumes nomeados MUST ser usados para persistência de dados de banco e fila.
+3.4.7. O arquivo `.dockerignore` MUST excluir `.venv/`, `__pycache__/` e `secrets/`.
+3.4.8. O projeto MUST evitar hardcode de credenciais e MUST manter ambiente local e produção claramente separados.
 
-10. Boas Práticas de Segurança em Múltiplos Servidores
-- Mantenha todos os servidores atualizados com os últimos patches de segurança.
-- Utilize firewalls e regras de segurança para restringir o acesso a portas e serviços apenas ao necessário.
-- Utilize autenticação forte (como chaves SSH e autenticação multifator) para acesso a servidores.
-- Configure alertas para atividades suspeitas ou não autorizadas.
-- Realize auditorias de segurança para identificar e corrigir vulnerabilidades antes que possam ser exploradas.
-- Implemente políticas de controle de acesso baseadas em funções (RBAC) para limitar privilégios e reduzir o risco de comprometimento de contas.
-- Utilize criptografia para dados em trânsito e em repouso, garantindo que informações sensíveis estejam protegidas contra acessos não autorizados.
-- Mantenha um inventário atualizado de todos os servidores e serviços em execução para garantir que nenhum recurso não autorizado ou desatualizado esteja presente na infraestrutura.
-- Garanta que todos os softwares e dependências utilizadas nos servidores sejam provenientes de fontes confiáveis e estejam atualizados para minimizar vulnerabilidades.
-- Implemente monitoramento contínuo de vulnerabilidades para identificar e corrigir rapidamente quaisquer falhas de segurança nos servidores.
-- Mantenha uma documentação clara e eficiente de segurança, operações e desenvolvimento para garantir que as etapas do desenvolvimento estejam alinhadas quanto às políticas e procedimentos de segurança.
-- Mantenha registros detalhados de todas as atividades de segurança para facilitar auditorias e investigações em caso de incidentes.
-- Estabeleça métricas e indicadores de desempenho de segurança para monitorar a eficácia das políticas e procedimentos implementados.
+3.5. Qualidade e testes
+3.5.1. Código Python MUST seguir PEP 8 e utilizar Black e Ruff como padrões de formatação e lint.
+3.5.2. Funções, classes e módulos publicamente compartilhados MUST usar type hints e documentação em estilo Google quando aplicável.
+3.5.3. Testes MUST ser implementados com `pytest` e validados por pipeline/CI antes da aprovação de mudança.
+3.5.4. Testes automatizados MUST ser escritos antes da implementação funcional quando a mudança aumentar risco ou alterar comportamento de contrato.
+3.5.5. Módulos reutilizados MUST documentar responsabilidades, dependências e limitações explícitas.
 
-11. Checklist Operacional para Monorepo e Docker Compose
-- Cada app em `/apps` deve ter uma definição clara de responsabilidades, dependências e ambiente de execução.
-- Cada biblioteca em `/libs` deve ser reutilizável, testada e documentada, sem depender de execução isolada de um app específico.
-- Todo serviço em Compose deve indicar se usa `build`, `image`, `env_file`, `volumes`, `network` e `depends_on` de forma explícita.
-- Qualquer dado sensível deve estar em `.env` ou em secret manager, nunca hardcoded no repositório.
-- Toda dependência de infra (banco, fila, cache, observabilidade) deve estar mapeada e versionada junto ao ambiente em que é utilizada.
-- A execução local em Docker Compose deve ser tratada como um ambiente de desenvolvimento e não como substituto da arquitetura de produção.
-- O repositório deve permitir desenvolvimento em múltiplos apps sem mistura de dependências, sem acúmulo de ambientes globais e sem ambiguidade entre aplicações locais e serviços externos.
-- Antes de fechar uma alteração, verificar: app isolado, lib compartilhada, Compose válido, observabilidade mantida e segurança preservada.
+## 4. Sequência de execução obrigatória
 
-12. Princípio de Consistência do Monorepo
-- Todo app, biblioteca e serviço deve seguir as mesmas regras de qualidade, documentação e segurança, mesmo quando forem executados em contextos diferentes.
-- O monorepo deve facilitar a colaboração entre times e a execução paralela de componentes sem conflitar ambientes, ports ou dependências globais.
-- Quando houver múltiplos serviços em execução, o padrão operacional deve ser consistente e facilmente compreensível por qualquer desenvolvedor que entre no projeto.
-- O que vale para um app local deve valer para qualquer outro app do monorepo, com ajustes explícitos apenas por necessidade de infraestrutura, ambiente ou arquitetura.
+4.1. O desenvolvimento MUST seguir a ordem bottom-up:
+4.1.1. Fase 1 — v0.1 Infra Core: infraestrutura e composição base.
+4.1.2. Fase 2 — v0.2 MCP Server: ferramentas e transporte.
+4.1.3. Fase 3 — v0.3 Agent Orchestrator: grafos, memória e integração.
+4.1.4. Fase 4 — v0.4 Worker: consumidores assíncronos e fila.
+4.2. Nenhuma fase posterior MAY ser considerada válida antes da maturidade funcional da infraestrutura e dos braços de execução precedentes.
+
+## 5. Fluxo SDD obrigatório
+
+5.1. Para cada issue, milestone ou mudança arquitetural, o agente MUST executar, na ordem, os gates abaixo:
+5.1.1. `specify` — especificação técnica inicial vinculada à constituição.
+5.1.2. `clarify` — eliminação de ambiguidades críticas antes da implementação.
+5.1.3. `plan` — arquitetura, dados, integrações e arquivos afetados.
+5.1.4. `checklist` — critérios de aceitação e definição de pronto.
+5.1.5. `tasks` — decomposição em passos atômicos.
+5.1.6. `analyze` — revisão de risco contra a constituição.
+5.1.7. `implement` — codificação com testes automatizados e validação final.
+5.2. Qualquer etapa do fluxo SDD MUST ser considerada incompleta se a análise constitucional não forem concluída.
+5.3. A geração de código sem o fechamento do plano e da análise de risco MUST ser tratada como não conformante.
+
+## 6. Critérios de auditoria objetiva
+
+6.1. Conformidade MUST ser avaliada por evidência verificável, não por intenção declarada.
+6.2. Cada mudança deve ser auditável por pelo menos uma das seguintes evidências:
+6.2.1. arquivo de configuração atual no repositório;
+6.2.2. testes automatizados executados;
+6.2.3. estrutura de diretórios e arquivos efetiva;
+6.2.4. resultado de validação de Compose, lint, testes ou checagem de importação.
+6.3. A ausência de evidência objetiva MUST ser tratada como falha de conformidade.
+6.4. Mudanças que introduzirem `requirements.txt`, logs em disco, hardcoded secrets, rede implícita ou estrutura de app fora do padrão MUST ser bloqueadas imediatamente.
+
+## 7. Estado de aprovação e bloqueio
+
+7.1. O projeto MUST ser considerado em estado de conformidade somente quando todos os critérios obrigatórios desta constituição forem atendidos.
+7.2. Qualquer violação de regra normativa MUST resultar em bloqueio de entrega até correção e revalidação.
+7.3. Esta constituição deve ser revisada formalmente sempre que houver mudança de arquitetura, regulatório, infraestrutura ou política de segurança.
+
+## 8. Resumo executivo
+
+A conformidade do Jhonny-V depende de: isolamento real de apps e libs, governança estrita de dependências, observabilidade distribuída, infraestrutura declarada e SDD obrigatório. Regras vagas ou interpretações subjetivas não são válidas; a execução do projeto deve ser demonstrável por artefatos, configuração e evidência operacional.
