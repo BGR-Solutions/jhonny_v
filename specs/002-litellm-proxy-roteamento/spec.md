@@ -8,6 +8,12 @@
 
 **Input**: User description: "Configurar o contêiner do LiteLLM Proxy no Compose, permitindo desacoplar a escolha dos modelos (Ollama local e Provedores Cloud) do código das aplicações."
 
+## Clarifications
+
+### Session 2026-09-29
+
+- Q: Quando as chaves dos provedores cloud (OpenAI/Anthropic) não estiverem definidas, o proxy deve subir mantendo apenas as rotas locais ativas? → A: Subir normalmente e expor apenas rotas locais; rotas cloud ficam indisponíveis.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Disponibilizar o proxy de modelos no ambiente local (Priority: P1)
@@ -72,6 +78,7 @@ Como responsável por operação do ambiente, quero controlar o acesso ao proxy 
 - **FR-005**: O controle de acesso ao proxy MUST depender de uma chave mestre definida por variável de ambiente, sem hardcode de credenciais no versionamento.
 - **FR-006**: O projeto MUST incluir uma configuração versionada do proxy separada do código das aplicações, para permitir evolução de rotas sem alterações no domínio das apps.
 - **FR-007**: A configuração inicial MUST contemplar rotas para execução local e alternativas cloud em uma única fonte de configuração.
+- **FR-008**: Quando credenciais cloud não estiverem definidas, o proxy MUST iniciar com rotas locais disponíveis e marcar rotas cloud como indisponíveis sem interromper o ambiente local.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -87,10 +94,12 @@ Como responsável por operação do ambiente, quero controlar o acesso ao proxy 
 - **SC-002**: A equipe consegue listar os modelos configurados no proxy em até 30 segundos após a inicialização do serviço.
 - **SC-003**: A equipe consegue executar com sucesso uma chamada de chat para uma rota válida do proxy durante a validação da entrega.
 - **SC-004**: Chamadas sem credencial válida são bloqueadas de forma consistente durante os testes de acesso ao proxy.
+- **SC-005**: Em ausência de credenciais cloud, o ambiente local mantém disponibilidade de rotas locais e permanece operacional para validação dos endpoints de aceite.
 
 ## Assumptions
 
 - O ambiente local já dispõe dos pré-requisitos para executar os serviços de infraestrutura compartilhados do projeto.
 - Credenciais de provedores cloud serão fornecidas por variáveis de ambiente quando a equipe optar por validar rotas externas.
+- Quando credenciais cloud não forem fornecidas, a validação de aceite seguirá com rotas locais sem bloquear a inicialização do proxy.
 - A entrega atual cobre a configuração inicial e validação operacional do proxy, não incluindo ajustes de código nas aplicações consumidoras.
 - A validação manual por cURL ou ferramenta equivalente é suficiente para comprovar o aceite desta issue.
