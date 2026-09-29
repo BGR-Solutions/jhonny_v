@@ -13,6 +13,7 @@
 ### Session 2026-09-29
 
 - Q: Quando as chaves dos provedores cloud (OpenAI/Anthropic) não estiverem definidas, o proxy deve subir mantendo apenas as rotas locais ativas? → A: Subir normalmente e expor apenas rotas locais; rotas cloud ficam indisponíveis.
+- Q: A autenticação por chave mestre deve ser obrigatória também no endpoint de listagem de modelos (`/v1/models`)? → A: Exigir chave mestre em todos os endpoints do proxy, incluindo `/v1/models` e `/v1/chat/completions`.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -79,6 +80,7 @@ Como responsável por operação do ambiente, quero controlar o acesso ao proxy 
 - **FR-006**: O projeto MUST incluir uma configuração versionada do proxy separada do código das aplicações, para permitir evolução de rotas sem alterações no domínio das apps.
 - **FR-007**: A configuração inicial MUST contemplar rotas para execução local e alternativas cloud em uma única fonte de configuração.
 - **FR-008**: Quando credenciais cloud não estiverem definidas, o proxy MUST iniciar com rotas locais disponíveis e marcar rotas cloud como indisponíveis sem interromper o ambiente local.
+- **FR-009**: O proxy MUST exigir autenticação por chave mestre em todos os endpoints expostos, incluindo listagem de modelos e execução de chat.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -95,6 +97,7 @@ Como responsável por operação do ambiente, quero controlar o acesso ao proxy 
 - **SC-003**: A equipe consegue executar com sucesso uma chamada de chat para uma rota válida do proxy durante a validação da entrega.
 - **SC-004**: Chamadas sem credencial válida são bloqueadas de forma consistente durante os testes de acesso ao proxy.
 - **SC-005**: Em ausência de credenciais cloud, o ambiente local mantém disponibilidade de rotas locais e permanece operacional para validação dos endpoints de aceite.
+- **SC-006**: Chamadas sem chave mestre válida para endpoints de listagem e chat são rejeitadas consistentemente durante os testes de validação.
 
 ## Assumptions
 
