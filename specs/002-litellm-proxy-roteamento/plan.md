@@ -32,11 +32,12 @@ Configurar uma camada dedicada de proxy de modelos na infraestrutura local para 
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- O arquivo `.specify/memory/constitution.md` permanece como template sem princípios ratificados para gates automáticos.
-- Gates aplicados para esta feature a partir das diretrizes do repositório:
+- Constituição operacional adotada da branch `feature/copilot-development` (arquivo `.github/copilot-instructions.md`) para reger arquitetura, segurança e fluxo SDD desta feature.
+- Gates aplicados para esta feature a partir da constituição e diretrizes do repositório:
   - Manter a convenção de Compose em arquivos `.yaml` sob `infra/` com base em `infra/compose.yaml` e overlays explícitos.
   - Preservar desacoplamento entre configuração de modelos e código das aplicações.
-  - Garantir que autenticação e credenciais fiquem em variáveis de ambiente, sem segredos versionados.
+  - Garantir autenticação por chave mestre e credenciais via variáveis de ambiente, sem segredos versionados.
+  - Validar que comportamento de falha mantém previsibilidade operacional (sem fallback implícito de rota cloud para local).
 - **Status pré-pesquisa**: PASS
 - **Status pós-design**: PASS — os artefatos de design mantêm o escopo em infraestrutura/configuração e critérios de validação operacionais.
 

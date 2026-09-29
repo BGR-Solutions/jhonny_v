@@ -66,11 +66,11 @@ Como responsável por operação do ambiente, quero controlar o acesso ao proxy 
 
 ### Edge Cases
 
-- Como o sistema deve se comportar quando a configuração de rota aponta para um provedor indisponível?
-- Como o proxy deve responder quando uma rota solicitada não existe na configuração ativa?
-- Como garantir comportamento previsível quando a chave mestre não estiver definida no ambiente?
-- Como diferenciar, na resposta de erro, rota cloud indisponível por credencial ausente (503) versus rota inexistente (404)?
-- Como manter previsibilidade quando uma rota cloud falha em runtime sem fallback automático para rota local?
+- Quando a configuração de rota apontar para provedor indisponível em runtime, o proxy deve retornar erro da rota alvo sem fallback automático para rota local.
+- Quando uma rota solicitada não existir na configuração ativa, o proxy deve retornar erro de rota inexistente distinto do erro `503` de indisponibilidade por credencial.
+- Quando a chave mestre não estiver definida ou estiver inválida, os endpoints protegidos devem negar acesso de forma consistente.
+- Quando uma rota cloud existir, mas não tiver credencial disponível, o proxy deve responder com indisponibilidade (`503`) para chamadas dessa rota.
+- Quando ocorrer falha runtime em rota cloud (timeout/erro do provedor), o proxy deve preservar o erro da rota solicitada sem redirecionamento implícito.
 
 ## Requirements *(mandatory)*
 
@@ -82,7 +82,7 @@ Como responsável por operação do ambiente, quero controlar o acesso ao proxy 
 - **FR-004**: O proxy MUST aceitar solicitações de chat para rotas válidas e retornar resposta de sucesso quando os pré-requisitos de autenticação e rota forem atendidos.
 - **FR-005**: O controle de acesso ao proxy MUST depender de uma chave mestre definida por variável de ambiente, sem hardcode de credenciais no versionamento.
 - **FR-006**: O projeto MUST incluir uma configuração versionada do proxy separada do código das aplicações, para permitir evolução de rotas sem alterações no domínio das apps.
-- **FR-007**: A configuração inicial MUST contemplar rotas para execução local e alternativas cloud em uma única fonte de configuração.
+- **FR-007**: A configuração inicial MUST manter aliases de rotas locais e cloud documentados e estáveis para consumo uniforme pelas aplicações.
 - **FR-008**: Quando credenciais cloud não estiverem definidas, o proxy MUST iniciar com rotas locais disponíveis e marcar rotas cloud como indisponíveis sem interromper o ambiente local.
 - **FR-009**: O proxy MUST exigir autenticação por chave mestre em todos os endpoints expostos, incluindo listagem de modelos e execução de chat.
 - **FR-010**: Quando uma rota cloud estiver configurada, mas indisponível por ausência de credenciais, o proxy MUST retornar status de indisponibilidade (503) nas chamadas de chat para essa rota.
@@ -98,13 +98,13 @@ Como responsável por operação do ambiente, quero controlar o acesso ao proxy 
 
 ### Measurable Outcomes
 
-- **SC-001**: 100% das inicializações locais do ambiente, com configuração válida, disponibilizam com sucesso o endpoint de listagem de modelos do proxy.
-- **SC-002**: A equipe consegue listar os modelos configurados no proxy em até 30 segundos após a inicialização do serviço.
+- **SC-001**: Em uma janela de 10 inicializações locais consecutivas com configuração válida, o endpoint de listagem de modelos do proxy fica disponível com sucesso em 100% dos casos (10/10).
+- **SC-002**: Na mesma janela de 10 inicializações consecutivas, o tempo até a primeira resposta bem-sucedida de listagem de modelos permanece em até 30 segundos em pelo menos 90% dos casos (9/10).
 - **SC-003**: A equipe consegue executar com sucesso uma chamada de chat para uma rota válida do proxy durante a validação da entrega.
-- **SC-004**: Chamadas sem credencial válida são bloqueadas de forma consistente durante os testes de acesso ao proxy.
+- **SC-004**: Em 20 chamadas consecutivas sem credencial válida, 100% das requisições para endpoints protegidos do proxy são bloqueadas.
 - **SC-005**: Em ausência de credenciais cloud, o ambiente local mantém disponibilidade de rotas locais e permanece operacional para validação dos endpoints de aceite.
-- **SC-006**: Chamadas sem chave mestre válida para endpoints de listagem e chat são rejeitadas consistentemente durante os testes de validação.
-- **SC-007**: Chamadas para rotas cloud sem credenciais recebem retorno consistente de indisponibilidade (503), distinto de rota inexistente.
+- **SC-006**: Em 20 chamadas consecutivas com chave ausente ou inválida distribuídas entre `/v1/models` e `/v1/chat/completions`, 100% das requisições são rejeitadas.
+- **SC-007**: Em 10 chamadas consecutivas para rota cloud sem credencial, 100% das respostas retornam `503`, mantendo distinção explícita de erro para rota inexistente.
 - **SC-008**: Em falhas runtime de rotas cloud, o retorno preserva o erro da rota alvo sem redirecionamento automático para rota local.
 
 ## Assumptions

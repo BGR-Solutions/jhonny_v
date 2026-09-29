@@ -40,8 +40,8 @@
 
 - [ ] T005 Definir serviço `litellm` em `infra/compose.llm.yaml` com integração à rede compartilhada e fonte de configuração versionada
 - [ ] T006 Definir política de inicialização do serviço `litellm` em `infra/compose.llm.yaml` para execução local estável
-- [ ] T007 [P] Definir estrutura de roteamento inicial em `infra/litellm/config.yaml` (aliases, provedores e destinos)
-- [ ] T008 [P] Definir política de autenticação por chave mestre no `infra/litellm/config.yaml` para todos os endpoints do proxy
+- [ ] T007 Definir estrutura de roteamento inicial em `infra/litellm/config.yaml` (aliases, provedores e destinos)
+- [ ] T008 Definir política de autenticação por chave mestre no `infra/litellm/config.yaml` para todos os endpoints do proxy
 - [ ] T009 Validar consistência entre `infra/compose.yaml` e `infra/compose.llm.yaml` quanto a convenções de nomes, rede e variáveis
 - [ ] T010 Validar sintaxe consolidada do Compose para stack LLM com `docker compose -f infra/compose.yaml -f infra/compose.llm.yaml config`
 
@@ -58,7 +58,7 @@
 ### Implementation for User Story 1
 
 - [ ] T011 [US1] Declarar mapeamento de porta e endpoint do proxy em `infra/compose.llm.yaml` para acesso local em `localhost:4000`
-- [ ] T012 [P] [US1] Registrar rotas de modelos locais no `infra/litellm/config.yaml`
+- [ ] T012 [US1] Registrar rotas de modelos locais no `infra/litellm/config.yaml`
 - [ ] T013 [US1] Garantir montagem/leitura do arquivo `infra/litellm/config.yaml` pelo serviço `litellm` em `infra/compose.llm.yaml`
 - [ ] T014 [US1] Validar subida do serviço e disponibilidade básica com `docker compose -f infra/compose.yaml -f infra/compose.llm.yaml up -d`
 - [ ] T015 [US1] Validar aceite do endpoint `GET /v1/models` conforme cenário descrito em `specs/002-litellm-proxy-roteamento/quickstart.md`
@@ -75,7 +75,7 @@
 
 ### Implementation for User Story 2
 
-- [ ] T016 [P] [US2] Definir rotas cloud (OpenAI e Anthropic) no `infra/litellm/config.yaml` com aliases explícitos
+- [ ] T016 [US2] Definir rotas cloud (OpenAI e Anthropic) no `infra/litellm/config.yaml` com aliases explícitos
 - [ ] T017 [US2] Configurar referências de credenciais cloud por variável de ambiente no `infra/litellm/config.yaml`
 - [ ] T018 [US2] Implementar política de indisponibilidade de rota cloud sem credencial (retorno `503`) no `infra/litellm/config.yaml`
 - [ ] T019 [US2] Garantir distinção de semântica entre rota inexistente e rota indisponível no `infra/litellm/config.yaml`
@@ -111,7 +111,13 @@
 - [ ] T027 [P] Revisar consistência entre `specs/002-litellm-proxy-roteamento/spec.md`, `specs/002-litellm-proxy-roteamento/contracts/litellm-proxy-contract.md` e configurações em `infra/`
 - [ ] T028 Atualizar `specs/002-litellm-proxy-roteamento/quickstart.md` se os comandos finais de validação divergirem do executado
 - [ ] T029 Executar checklist de validação manual final da feature em `specs/002-litellm-proxy-roteamento/quickstart.md`
-- [ ] T030 Validar que nenhum segredo real foi versionado em `.env.example` e `infra/litellm/config.yaml`
+- [ ] T030 [P] Validar que nenhum segredo real foi versionado em `.env.example` e `infra/litellm/config.yaml`
+- [ ] T031 Executar validação temporal de startup/listagem em `specs/002-litellm-proxy-roteamento/quickstart.md` para comprovar janela de 10 inicializações e limite de 30 segundos
+- [ ] T032 Adicionar cenário de edge case no `specs/002-litellm-proxy-roteamento/quickstart.md` para rota inexistente com erro distinto de `503`
+- [ ] T033 Adicionar cenário de edge case no `specs/002-litellm-proxy-roteamento/quickstart.md` para rota cloud sem credencial com retorno `503`
+- [ ] T034 Adicionar cenário de edge case no `specs/002-litellm-proxy-roteamento/quickstart.md` para chave mestre ausente/inválida em endpoints protegidos
+- [ ] T035 Adicionar cenário de edge case no `specs/002-litellm-proxy-roteamento/quickstart.md` para falha runtime em rota cloud sem fallback automático
+- [ ] T036 Adicionar cenário de edge case no `specs/002-litellm-proxy-roteamento/quickstart.md` para indisponibilidade de provedor mantendo erro da rota alvo
 
 ---
 
@@ -140,9 +146,6 @@
 
 ### Parallel Opportunities
 
-- **Phase 2**: T007 e T008 em paralelo
-- **US1**: T012 em paralelo com ajustes não conflitantes de compose
-- **US2**: T016 em paralelo com preparação de validação operacional
 - **Polish**: T027 e T030 em paralelo
 
 ---
@@ -150,9 +153,9 @@
 ## Parallel Example: User Story 2
 
 ```bash
-# Preparação paralela de rotas cloud e credenciais
+# US2 usa o mesmo arquivo de configuração e deve seguir execução sequencial
 Task: "Definir rotas cloud (OpenAI e Anthropic) no infra/litellm/config.yaml"
-Task: "Configurar referências de credenciais cloud por variável de ambiente no infra/litellm/config.yaml"
+Task: "Após concluir a task anterior, configurar referências de credenciais cloud por variável de ambiente no infra/litellm/config.yaml"
 ```
 
 ---
