@@ -20,7 +20,8 @@ Consulte também:
 1. Copiar `.env.example` para `.env`.
 2. Definir chave mestre do proxy no `.env`.
 3. (Opcional) Definir credenciais cloud para ativar rotas externas.
-4. Validar composição consolidada:
+4. Para usar provedores cloud reais, sobrescrever `OPENAI_API_BASE`/`ANTHROPIC_API_BASE` com endpoints dos provedores; por padrão o ambiente local usa um endpoint mock de indisponibilidade (`503`) para rotas cloud sem credencial.
+5. Validar composição consolidada:
    - `docker compose -f infra/compose.yaml -f infra/compose.llm.yaml config`
 
 ## Validation Scenarios
@@ -122,5 +123,11 @@ Resumo por rodada:
 ### Known Environment Constraints (pending validations)
 
 - Cenário de chat local (`local-ollama-llama3`) retornou `500` neste ambiente por indisponibilidade de endpoint Ollama local em `host.docker.internal:11434`.
-- Cenário cloud sem credencial retornou `500` (erro de conexão com provedor externo no ambiente atual), impedindo confirmação prática de retorno `503` definido no requisito.
+- Cenário cloud sem credencial passou a retornar `503` de forma determinística no ambiente local via endpoint mock `litellm-cloud-unavailable`.
 - Com chave inválida no header `x-api-key`, endpoint retornou `400` (`No connected db`) neste runtime atual do LiteLLM, divergindo da semântica alvo documentada.
+
+### Cloud Without Credential Evidence (SC-007)
+
+- Request: `POST /v1/chat/completions` com `model=cloud-openai-gpt-4o-mini`, sem `OPENAI_API_KEY` configurada.
+- Response: `503`
+- Body excerpt: `cloud_route_unavailable_without_credentials`

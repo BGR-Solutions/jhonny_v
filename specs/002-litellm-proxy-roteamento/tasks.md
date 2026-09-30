@@ -77,10 +77,10 @@
 
 - [X] T016 [US2] Definir rotas cloud (OpenAI e Anthropic) no `infra/litellm/config.yaml` com aliases explícitos
 - [X] T017 [US2] Configurar referências de credenciais cloud por variável de ambiente no `infra/litellm/config.yaml`
-- [ ] T018 [US2] Implementar política de indisponibilidade de rota cloud sem credencial (retorno `503`) no `infra/litellm/config.yaml`
+- [X] T018 [US2] Implementar política de indisponibilidade de rota cloud sem credencial (retorno `503`) no `infra/litellm/config.yaml`
 - [X] T019 [US2] Garantir distinção de semântica entre rota inexistente e rota indisponível no `infra/litellm/config.yaml`
 - [ ] T020 [US2] Validar cenário de chat em rota local com `POST /v1/chat/completions` conforme `specs/002-litellm-proxy-roteamento/quickstart.md`
-- [ ] T021 [US2] Validar cenário de rota cloud sem credencial e retorno `503` conforme `specs/002-litellm-proxy-roteamento/quickstart.md`
+- [X] T021 [US2] Validar cenário de rota cloud sem credencial e retorno `503` conforme `specs/002-litellm-proxy-roteamento/quickstart.md`
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
