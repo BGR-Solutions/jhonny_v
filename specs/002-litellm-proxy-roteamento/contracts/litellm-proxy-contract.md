@@ -8,8 +8,28 @@ Definir o contrato funcional e operacional do proxy de modelos para descoberta, 
 
 | Endpoint | Authentication | Expected Behavior | Failure Contract |
 |----------|----------------|-------------------|------------------|
-| `GET /v1/models` | Obrigatória (chave mestre) | Lista rotas/modelos disponíveis para consumo | Sem chave válida: acesso negado |
-| `POST /v1/chat/completions` | Obrigatória (chave mestre) | Executa chamada para rota válida configurada | Sem chave válida: acesso negado |
+| `GET /v1/models` | Obrigatória (chave mestre) | Lista rotas/modelos disponíveis para consumo | Sem chave: `401`; chave malformada: `401`; chave inválida: `403` |
+| `POST /v1/chat/completions` | Obrigatória (chave mestre) | Executa chamada para rota válida configurada | Sem chave: `401`; chave malformada: `401`; chave inválida: `403` |
+
+## Authorization & Error Matrix
+
+| Condition | Expected Status | Notes |
+|----------|------------------|-------|
+| Header ausente | `401` | Rejeição antes de qualquer validação de rota |
+| Header malformado | `401` | Rejeição antes de qualquer validação de rota |
+| Chave inválida | `403` | Rejeição antes de qualquer validação de rota |
+| Alias malformado/não suportado no payload | `400` | Erro de requisição inválida |
+| Rota inexistente | `404` | Distinto de `503` |
+| Rota cloud sem credencial | `503` | Indisponibilidade por credencial |
+| Falha runtime de provedor cloud | `5xx` da rota solicitada | Sem fallback automático |
+
+## Error Precedence Contract
+
+1. Autenticação falha (`401`/`403`) sempre tem prioridade sobre erros de rota.
+2. Erros de payload/alias (`400`) são avaliados antes de existência de rota (`404`) ou indisponibilidade por credencial (`503`).
+3. `404` (rota inexistente) prevalece sobre `503` quando a rota não existe.
+4. `503` aplica-se somente a rota cloud existente sem credencial.
+5. Falha runtime preserva erro da rota alvo (sem fallback para local).
 
 ## Routing Contract
 
@@ -23,8 +43,10 @@ Definir o contrato funcional e operacional do proxy de modelos para descoberta, 
 | Scenario | Contractual Result |
 |----------|--------------------|
 | Rota inexistente | Erro de rota não encontrada (distinto de indisponibilidade por credencial) |
+| Alias/payload inválido | Erro de requisição inválida (`400`) |
 | Rota cloud sem credencial | Retorno de indisponibilidade (`503`) |
 | Falha runtime em rota cloud | Retorno de erro da rota solicitada, sem fallback automático |
+| Falha combinada (auth + rota) | Erro de autenticação conforme precedência |
 
 ## Configuration Contract
 
@@ -39,3 +61,4 @@ Definir o contrato funcional e operacional do proxy de modelos para descoberta, 
 - Este contrato cobre apenas configuração e validação operacional do proxy no ambiente local.
 - Não cobre alterações em código das aplicações consumidoras.
 - Não cobre política de fallback avançada ou orquestração multi-região de provedores.
+- Não cobre rate limiting, abuse protection ou rotação de chave mestre com garantia para requisições em voo nesta release.

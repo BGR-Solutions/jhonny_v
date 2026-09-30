@@ -71,6 +71,30 @@ infra/
 
 **Structure Decision**: Evoluir o padrão já adotado de infraestrutura em camadas, adicionando `infra/compose.llm.yaml` para o serviço LiteLLM e `infra/litellm/config.yaml` para roteamento. Esse recorte evita acoplamento com apps e mantém os contratos operacionais concentrados na camada de infraestrutura.
 
+## Ownership & Configuration Boundaries
+
+### File Ownership
+
+| File | Owner | Responsibility Boundary |
+|------|-------|--------------------------|
+| `infra/compose.llm.yaml` | Plataforma/Infra | Ciclo de vida do serviço, rede, montagem de config e injeção de variáveis |
+| `infra/litellm/config.yaml` | Plataforma/AI Enablement | Rotas, aliases, provedores, políticas de disponibilidade e semântica de erro |
+| `.env.example` | Plataforma/Security | Contrato de variáveis required/optional e instruções de preenchimento seguro |
+
+### Environment Variable Dependency Matrix
+
+| Variable | Required | Owner | Provisioning | Rotation/Revocation |
+|----------|----------|-------|--------------|---------------------|
+| `LITELLM_MASTER_KEY` | Sim | Security/Plataforma | Manual via `.env` local | Rotação planejada fora do escopo desta release |
+| `OPENAI_API_KEY` | Opcional (rotas cloud OpenAI) | Plataforma/Integrações | `.env` quando modo híbrido for usado | Governança de rotação pelo provedor/segurança |
+| `ANTHROPIC_API_KEY` | Opcional (rotas cloud Anthropic) | Plataforma/Integrações | `.env` quando modo híbrido for usado | Governança de rotação pelo provedor/segurança |
+
+### Release Modes
+
+- **Local-only mode**: sem credenciais cloud; somente rotas locais devem operar.
+- **Hybrid mode**: com credenciais cloud; rotas locais e cloud devem operar conforme contrato.
+- Ambos os modos devem produzir evidência repetível para aprovação de release.
+
 ## Complexity Tracking
 
 Nenhuma violação de constituição identificada; complexidade mantida em um único overlay adicional e um arquivo de configuração dedicado ao proxy.

@@ -194,3 +194,15 @@ Task: "Após concluir a task anterior, configurar referências de credenciais cl
 - Commit after each task or logical group
 - Stop at checkpoints to validate story independently
 - Avoid same-file conflicts during parallel execution
+
+## Traceability Rule (Mandatory)
+
+- Toda alteração de implementação MUST citar ao menos um ID de requisito (`FR-###`) e um critério de sucesso (`SC-###`) no contexto da task correspondente.
+- Toda evidência operacional no `quickstart.md` MUST referenciar os IDs de `SC` aplicáveis.
+- Toda pendência de checklist (`CHK###`) resolvida por ajuste de artefato MUST registrar vínculo explícito com `FR/SC` e com a task de manutenção documental.
+
+## Traceability Maintenance Tasks
+
+- [ ] T037 Atualizar vínculos de rastreabilidade FR/SC em `specs/002-litellm-proxy-roteamento/quickstart.md` para todos os cenários de validação.
+- [ ] T038 Atualizar vínculos de checklist CHK→FR/SC em `specs/002-litellm-proxy-roteamento/checklists/security.md` após ajustes documentais.
+- [ ] T039 Revisar consistência final de rastreabilidade entre `spec.md`, `tasks.md`, `quickstart.md` e `contracts/litellm-proxy-contract.md`.

@@ -35,9 +35,9 @@ Consulte também:
 ### Scenario 2: Listagem de modelos com autenticação
 
 1. Chamar `GET /v1/models` com chave mestre válida.
-2. Repetir chamada sem chave ou com chave inválida.
+2. Repetir chamada sem chave, com chave malformada e com chave inválida.
 
-**Expected outcome**: Com chave válida, listagem responde com sucesso; sem chave válida, acesso é negado.
+**Expected outcome**: Com chave válida, listagem responde com sucesso; sem chave ou chave malformada retorna `401`; chave inválida retorna `403`.
 
 ### Scenario 3: Chat em rota válida
 
@@ -58,3 +58,42 @@ Consulte também:
 2. Repetir chamada de chat para a mesma rota.
 
 **Expected outcome**: Proxy retorna erro da rota solicitada sem redirecionar automaticamente para rota local.
+
+### Scenario 6: Alias malformado e rota inexistente
+
+1. Executar `POST /v1/chat/completions` com alias malformado/não suportado.
+2. Executar `POST /v1/chat/completions` com alias bem formado, porém inexistente.
+
+**Expected outcome**: Alias malformado retorna `400`; rota inexistente retorna `404`; ambos distintos de `503`.
+
+### Scenario 7: Precedência de erros em falha combinada
+
+1. Enviar requisição com chave inválida e alias inexistente.
+2. Enviar requisição autenticada para rota cloud sem credencial.
+
+**Expected outcome**: No caso combinado, prevalece erro de autenticação (`401`/`403`); com autenticação válida, aplica-se semântica de rota (`404`/`503`).
+
+### Scenario 8: Recuperação após falha transitória cloud
+
+1. Forçar falha transitória de provedor cloud.
+2. Restabelecer disponibilidade do provedor.
+3. Repetir chamada para a mesma rota cloud.
+
+**Expected outcome**: Após normalização do provedor, rota volta a responder sem alterações manuais de configuração.
+
+## Release Evidence (Mandatory)
+
+Para cada cenário executado, registrar:
+
+1. Comando executado (exato).
+2. Timestamp da execução.
+3. Resultado observado (status HTTP e resumo da resposta).
+4. Índice da rodada (ex.: run 3/10).
+
+## Pass/Fail Rules
+
+- SC-001/SC-002: executar 10 rodadas de startup/listagem.
+- SC-003/SC-005/SC-007/SC-008: executar 10 chamadas por cenário.
+- SC-004/SC-006/SC-010: executar 20 chamadas por cenário.
+- Se qualquer limiar mínimo não for atingido, status do gate é **FAIL**.
+- Em resultado misto, reprovar até correção e nova rodada completa.
