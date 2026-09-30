@@ -66,6 +66,38 @@
 - [ ] CHK030 Are there unresolved conflicts between release-gate rigor and assumptions that rely on manual, non-repeatable validation? [Conflict, Spec §Assumptions, Quickstart §Validation Scenarios]
 - [ ] CHK031 Is a requirement/acceptance ID traceability rule explicitly defined for future checklist and task linkage? [Traceability, Gap]
 
+## Release-Gate Rigor Addendum (Security/Platform)
+
+### Requirement Completeness
+
+- [ ] CHK032 Are explicit requirements documented for master-key behavior under clock-skewed token issuance assumptions, or is this intentionally out of scope? [Gap, Assumption, Spec §FR-005]
+- [ ] CHK033 Are requirements documented for provider-credential ownership boundaries (provisioning, rotation trigger, revocation responsibility) across platform and application teams? [Completeness, Dependency, Plan §Technical Context]
+
+### Requirement Clarity
+
+- [ ] CHK034 Is the meaning of “rota válida” constrained by objective prerequisites (alias existence, credential state, auth state) without interpretive overlap? [Clarity, Spec §FR-004, Spec §FR-010, Spec §FR-012]
+- [ ] CHK035 Is “interromper o ambiente local” in degraded cloud mode defined with measurable operational boundaries for release approval? [Ambiguity, Spec §FR-008, Spec §SC-005]
+
+### Requirement Consistency
+
+- [ ] CHK036 Do security requirements remain internally consistent between mandatory authentication for all endpoints and assumptions about local operational convenience? [Consistency, Spec §FR-009, Spec §Assumptions]
+- [ ] CHK037 Do error-semantics requirements remain consistent between contracts and success criteria for distinguishing `503` from non-existent-route errors? [Consistency, Contract §Error Semantics Contract, Spec §SC-007, Spec §FR-012]
+
+### Acceptance Criteria Quality
+
+- [ ] CHK038 Are release-gate acceptance thresholds explicitly tied to repeatable evidence artifacts (request logs, command outputs, run counts) rather than reviewer interpretation? [Measurability, Spec §SC-001-008, Gap]
+- [ ] CHK039 Are pass/fail boundaries defined for mixed-result runs (e.g., partial failure across 10-call windows) to avoid discretionary approval drift? [Acceptance Criteria, Ambiguity, Spec §SC-001-008]
+
+### Scenario & Edge Coverage
+
+- [ ] CHK040 Are exception requirements specified for simultaneous auth failure and route failure, including precedence of returned error semantics? [Coverage, Edge Case, Gap]
+- [ ] CHK041 Are recovery requirements specified for restoring cloud credential availability without requiring undocumented configuration side effects? [Recovery, Gap, Spec §FR-008]
+
+### Governance & Traceability
+
+- [ ] CHK042 Is there an explicit requirement-quality traceability rule linking FR/SC identifiers to checklist findings and task updates for auditability? [Traceability, Gap, Spec §FR-001-012, Tasks]
+- [ ] CHK043 Are constitution-mandated security constraints (no hardcoded secrets, explicit auth controls) mapped to concrete requirement clauses without relying on implicit project knowledge? [Consistency, Constitution §IV-V, Spec §FR-005, Spec §FR-009]
+
 ## Notes
 
 - Mark items `[x]` only after review confirms the requirement-quality criterion is satisfied
