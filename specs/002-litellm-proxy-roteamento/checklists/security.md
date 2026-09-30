@@ -11,35 +11,35 @@
 ## Requirement Completeness
 
 - [ ] CHK001 Are authentication requirements explicitly specified for every exposed proxy endpoint beyond the two exemplos principais? [Completeness, Spec §FR-009, Contract §Endpoint Contract]
-- [ ] CHK002 Are requirements defined for how cloud routes are represented as unavailable when provider credentials are absent? [Completeness, Spec §FR-008, Data Model §Model Route]
+- [x] CHK002 Are requirements defined for how cloud routes are represented as unavailable when provider credentials are absent? [Completeness, Spec §FR-008, Data Model §Model Route]
 - [ ] CHK003 Are requirements documented for configuration ownership and update boundaries between `compose.llm.yaml` and `litellm/config.yaml`? [Completeness, Plan §Project Structure]
 - [ ] CHK004 Are release-gate requirements defined for both local-only mode and hybrid local+cloud mode? [Coverage, Gap]
 
 ## Requirement Clarity
 
 - [ ] CHK005 Is “acesso negado” translated into explicit expected authorization outcomes for invalid, missing, and malformed master key credentials? [Clarity, Spec §SC-006, Contract §Endpoint Contract]
-- [ ] CHK006 Is the distinction between “rota inexistente” and “rota indisponível por credencial” defined with unambiguous response semantics? [Clarity, Spec §FR-010, Contract §Error Semantics Contract]
-- [ ] CHK007 Is “sem fallback automático” specified with clear boundaries that exclude implicit retry/redirection behavior? [Clarity, Spec §FR-011, Spec §SC-008]
+- [x] CHK006 Is the distinction between “rota inexistente” and “rota indisponível por credencial” defined with unambiguous response semantics? [Clarity, Spec §FR-010, Contract §Error Semantics Contract]
+- [x] CHK007 Is “sem fallback automático” specified with clear boundaries that exclude implicit retry/redirection behavior? [Clarity, Spec §FR-011, Spec §SC-008]
 - [ ] CHK008 Is the 30-second startup expectation tied to a clearly stated measurement boundary and environment assumption? [Clarity, Spec §SC-002, Assumption]
 
 ## Requirement Consistency
 
-- [ ] CHK009 Do security requirements in the spec and endpoint contract align on mandatory authentication for both `/v1/models` and `/v1/chat/completions`? [Consistency, Spec §FR-009, Contract §Endpoint Contract]
-- [ ] CHK010 Do route-availability requirements align across spec, data model, and contract terminology for “indisponível por credencial”? [Consistency, Spec §FR-008, Data Model §Model Route, Contract §Routing Contract]
-- [ ] CHK011 Are failure-mode requirements consistent between runtime provider errors and credential-missing errors without overlap or contradiction? [Consistency, Spec §FR-010, Spec §FR-011]
-- [ ] CHK012 Are assumptions about optional cloud credentials consistent with release criteria and non-blocking startup requirements? [Consistency, Spec §Assumptions, Spec §SC-005]
+- [x] CHK009 Do security requirements in the spec and endpoint contract align on mandatory authentication for both `/v1/models` and `/v1/chat/completions`? [Consistency, Spec §FR-009, Contract §Endpoint Contract]
+- [x] CHK010 Do route-availability requirements align across spec, data model, and contract terminology for “indisponível por credencial”? [Consistency, Spec §FR-008, Data Model §Model Route, Contract §Routing Contract]
+- [x] CHK011 Are failure-mode requirements consistent between runtime provider errors and credential-missing errors without overlap or contradiction? [Consistency, Spec §FR-010, Spec §FR-011]
+- [x] CHK012 Are assumptions about optional cloud credentials consistent with release criteria and non-blocking startup requirements? [Consistency, Spec §Assumptions, Spec §SC-005]
 
 ## Acceptance Criteria Quality
 
-- [ ] CHK013 Are all security-related success criteria objectively measurable without implementation-specific interpretation? [Measurability, Spec §SC-004, Spec §SC-006, Spec §SC-007, Spec §SC-008]
+- [x] CHK013 Are all security-related success criteria objectively measurable without implementation-specific interpretation? [Measurability, Spec §SC-004, Spec §SC-006, Spec §SC-007, Spec §SC-008]
 - [ ] CHK014 Do acceptance criteria define what evidence is sufficient for “rejeição consistente” across repeated requests and endpoints? [Acceptance Criteria, Ambiguity, Spec §SC-006]
-- [ ] CHK015 Are acceptance criteria complete for both positive and negative authorization paths in a release decision context? [Completeness, Spec §SC-003, Spec §SC-004, Spec §SC-006]
+- [x] CHK015 Are acceptance criteria complete for both positive and negative authorization paths in a release decision context? [Completeness, Spec §SC-003, Spec §SC-004, Spec §SC-006]
 
 ## Scenario Coverage
 
-- [ ] CHK016 Are requirements specified for primary operational scenarios: authenticated model listing, authenticated local chat, and authenticated cloud chat? [Coverage, Spec §User Story 1-2]
-- [ ] CHK017 Are alternate scenarios specified for operation when cloud credentials are intentionally omitted? [Coverage, Spec §FR-008, Spec §SC-005]
-- [ ] CHK018 Are exception scenarios specified for provider timeout/error conditions without fallback behavior drift? [Coverage, Spec §FR-011, Contract §Error Semantics Contract]
+- [x] CHK016 Are requirements specified for primary operational scenarios: authenticated model listing, authenticated local chat, and authenticated cloud chat? [Coverage, Spec §User Story 1-2]
+- [x] CHK017 Are alternate scenarios specified for operation when cloud credentials are intentionally omitted? [Coverage, Spec §FR-008, Spec §SC-005]
+- [x] CHK018 Are exception scenarios specified for provider timeout/error conditions without fallback behavior drift? [Coverage, Spec §FR-011, Contract §Error Semantics Contract]
 - [ ] CHK019 Are recovery expectations specified after transient cloud-provider failure states? [Recovery, Gap]
 
 ## Edge Case Coverage
@@ -75,18 +75,18 @@
 
 ### Requirement Clarity
 
-- [ ] CHK034 Is the meaning of “rota válida” constrained by objective prerequisites (alias existence, credential state, auth state) without interpretive overlap? [Clarity, Spec §FR-004, Spec §FR-010, Spec §FR-012]
+- [x] CHK034 Is the meaning of “rota válida” constrained by objective prerequisites (alias existence, credential state, auth state) without interpretive overlap? [Clarity, Spec §FR-004, Spec §FR-010, Spec §FR-012]
 - [ ] CHK035 Is “interromper o ambiente local” in degraded cloud mode defined with measurable operational boundaries for release approval? [Ambiguity, Spec §FR-008, Spec §SC-005]
 
 ### Requirement Consistency
 
-- [ ] CHK036 Do security requirements remain internally consistent between mandatory authentication for all endpoints and assumptions about local operational convenience? [Consistency, Spec §FR-009, Spec §Assumptions]
-- [ ] CHK037 Do error-semantics requirements remain consistent between contracts and success criteria for distinguishing `503` from non-existent-route errors? [Consistency, Contract §Error Semantics Contract, Spec §SC-007, Spec §FR-012]
+- [x] CHK036 Do security requirements remain internally consistent between mandatory authentication for all endpoints and assumptions about local operational convenience? [Consistency, Spec §FR-009, Spec §Assumptions]
+- [x] CHK037 Do error-semantics requirements remain consistent between contracts and success criteria for distinguishing `503` from non-existent-route errors? [Consistency, Contract §Error Semantics Contract, Spec §SC-007, Spec §FR-012]
 
 ### Acceptance Criteria Quality
 
 - [ ] CHK038 Are release-gate acceptance thresholds explicitly tied to repeatable evidence artifacts (request logs, command outputs, run counts) rather than reviewer interpretation? [Measurability, Spec §SC-001-008, Gap]
-- [ ] CHK039 Are pass/fail boundaries defined for mixed-result runs (e.g., partial failure across 10-call windows) to avoid discretionary approval drift? [Acceptance Criteria, Ambiguity, Spec §SC-001-008]
+- [x] CHK039 Are pass/fail boundaries defined for mixed-result runs (e.g., partial failure across 10-call windows) to avoid discretionary approval drift? [Acceptance Criteria, Ambiguity, Spec §SC-001-008]
 
 ### Scenario & Edge Coverage
 
@@ -96,7 +96,7 @@
 ### Governance & Traceability
 
 - [ ] CHK042 Is there an explicit requirement-quality traceability rule linking FR/SC identifiers to checklist findings and task updates for auditability? [Traceability, Gap, Spec §FR-001-012, Tasks]
-- [ ] CHK043 Are constitution-mandated security constraints (no hardcoded secrets, explicit auth controls) mapped to concrete requirement clauses without relying on implicit project knowledge? [Consistency, Constitution §IV-V, Spec §FR-005, Spec §FR-009]
+- [x] CHK043 Are constitution-mandated security constraints (no hardcoded secrets, explicit auth controls) mapped to concrete requirement clauses without relying on implicit project knowledge? [Consistency, Constitution §IV-V, Spec §FR-005, Spec §FR-009]
 
 ## Notes
 
