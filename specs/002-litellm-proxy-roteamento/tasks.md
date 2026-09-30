@@ -25,10 +25,10 @@
 
 **Purpose**: Preparar base de arquivos e pontos de integração para a stack LiteLLM.
 
-- [ ] T001 Criar diretório de configuração do proxy em `infra/litellm/`
-- [ ] T002 Criar arquivo base de configuração em `infra/litellm/config.yaml`
-- [ ] T003 Criar overlay de infraestrutura LLM em `infra/compose.llm.yaml`
-- [ ] T004 Atualizar contrato de variáveis em `.env.example` com campos necessários para chave mestre do proxy e credenciais opcionais cloud
+- [X] T001 Criar diretório de configuração do proxy em `infra/litellm/`
+- [X] T002 Criar arquivo base de configuração em `infra/litellm/config.yaml`
+- [X] T003 Criar overlay de infraestrutura LLM em `infra/compose.llm.yaml`
+- [X] T004 Atualizar contrato de variáveis em `.env.example` com campos necessários para chave mestre do proxy e credenciais opcionais cloud
 
 ---
 
@@ -38,12 +38,12 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Definir serviço `litellm` em `infra/compose.llm.yaml` com integração à rede compartilhada e fonte de configuração versionada
-- [ ] T006 Definir política de inicialização do serviço `litellm` em `infra/compose.llm.yaml` para execução local estável
-- [ ] T007 Definir estrutura de roteamento inicial em `infra/litellm/config.yaml` (aliases, provedores e destinos)
-- [ ] T008 Definir política de autenticação por chave mestre no `infra/litellm/config.yaml` para todos os endpoints do proxy
-- [ ] T009 Validar consistência entre `infra/compose.yaml` e `infra/compose.llm.yaml` quanto a convenções de nomes, rede e variáveis
-- [ ] T010 Validar sintaxe consolidada do Compose para stack LLM com `docker compose -f infra/compose.yaml -f infra/compose.llm.yaml config`
+- [X] T005 Definir serviço `litellm` em `infra/compose.llm.yaml` com integração à rede compartilhada e fonte de configuração versionada
+- [X] T006 Definir política de inicialização do serviço `litellm` em `infra/compose.llm.yaml` para execução local estável
+- [X] T007 Definir estrutura de roteamento inicial em `infra/litellm/config.yaml` (aliases, provedores e destinos)
+- [X] T008 Definir política de autenticação por chave mestre no `infra/litellm/config.yaml` para todos os endpoints do proxy
+- [X] T009 Validar consistência entre `infra/compose.yaml` e `infra/compose.llm.yaml` quanto a convenções de nomes, rede e variáveis
+- [X] T010 Validar sintaxe consolidada do Compose para stack LLM com `docker compose -f infra/compose.yaml -f infra/compose.llm.yaml config`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -57,11 +57,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Declarar mapeamento de porta e endpoint do proxy em `infra/compose.llm.yaml` para acesso local em `localhost:4000`
-- [ ] T012 [US1] Registrar rotas de modelos locais no `infra/litellm/config.yaml`
-- [ ] T013 [US1] Garantir montagem/leitura do arquivo `infra/litellm/config.yaml` pelo serviço `litellm` em `infra/compose.llm.yaml`
-- [ ] T014 [US1] Validar subida do serviço e disponibilidade básica com `docker compose -f infra/compose.yaml -f infra/compose.llm.yaml up -d`
-- [ ] T015 [US1] Validar aceite do endpoint `GET /v1/models` conforme cenário descrito em `specs/002-litellm-proxy-roteamento/quickstart.md`
+- [X] T011 [US1] Declarar mapeamento de porta e endpoint do proxy em `infra/compose.llm.yaml` para acesso local em `localhost:4000`
+- [X] T012 [US1] Registrar rotas de modelos locais no `infra/litellm/config.yaml`
+- [X] T013 [US1] Garantir montagem/leitura do arquivo `infra/litellm/config.yaml` pelo serviço `litellm` em `infra/compose.llm.yaml`
+- [X] T014 [US1] Validar subida do serviço e disponibilidade básica com `docker compose -f infra/compose.yaml -f infra/compose.llm.yaml up -d`
+- [X] T015 [US1] Validar aceite do endpoint `GET /v1/models` conforme cenário descrito em `specs/002-litellm-proxy-roteamento/quickstart.md`
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -75,10 +75,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Definir rotas cloud (OpenAI e Anthropic) no `infra/litellm/config.yaml` com aliases explícitos
-- [ ] T017 [US2] Configurar referências de credenciais cloud por variável de ambiente no `infra/litellm/config.yaml`
+- [X] T016 [US2] Definir rotas cloud (OpenAI e Anthropic) no `infra/litellm/config.yaml` com aliases explícitos
+- [X] T017 [US2] Configurar referências de credenciais cloud por variável de ambiente no `infra/litellm/config.yaml`
 - [ ] T018 [US2] Implementar política de indisponibilidade de rota cloud sem credencial (retorno `503`) no `infra/litellm/config.yaml`
-- [ ] T019 [US2] Garantir distinção de semântica entre rota inexistente e rota indisponível no `infra/litellm/config.yaml`
+- [X] T019 [US2] Garantir distinção de semântica entre rota inexistente e rota indisponível no `infra/litellm/config.yaml`
 - [ ] T020 [US2] Validar cenário de chat em rota local com `POST /v1/chat/completions` conforme `specs/002-litellm-proxy-roteamento/quickstart.md`
 - [ ] T021 [US2] Validar cenário de rota cloud sem credencial e retorno `503` conforme `specs/002-litellm-proxy-roteamento/quickstart.md`
 
@@ -94,10 +94,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T022 [US3] Definir variável de chave mestre e documentação de uso em `.env.example`
-- [ ] T023 [US3] Configurar injeção da chave mestre no serviço `litellm` em `infra/compose.llm.yaml`
-- [ ] T024 [US3] Reforçar política de autenticação obrigatória para `/v1/models` e `/v1/chat/completions` no `infra/litellm/config.yaml`
-- [ ] T025 [US3] Validar cenários de acesso negado com chave ausente/inválida conforme `specs/002-litellm-proxy-roteamento/quickstart.md`
+- [X] T022 [US3] Definir variável de chave mestre e documentação de uso em `.env.example`
+- [X] T023 [US3] Configurar injeção da chave mestre no serviço `litellm` em `infra/compose.llm.yaml`
+- [X] T024 [US3] Reforçar política de autenticação obrigatória para `/v1/models` e `/v1/chat/completions` no `infra/litellm/config.yaml`
+- [X] T025 [US3] Validar cenários de acesso negado com chave ausente/inválida conforme `specs/002-litellm-proxy-roteamento/quickstart.md`
 - [ ] T026 [US3] Validar cenários de acesso autorizado com chave válida conforme `specs/002-litellm-proxy-roteamento/quickstart.md`
 
 **Checkpoint**: All user stories should now be independently functional
@@ -108,16 +108,16 @@
 
 **Purpose**: Consolidar qualidade operacional, documentação e validação final da feature.
 
-- [ ] T027 [P] Revisar consistência entre `specs/002-litellm-proxy-roteamento/spec.md`, `specs/002-litellm-proxy-roteamento/contracts/litellm-proxy-contract.md` e configurações em `infra/`
-- [ ] T028 Atualizar `specs/002-litellm-proxy-roteamento/quickstart.md` se os comandos finais de validação divergirem do executado
-- [ ] T029 Executar checklist de validação manual final da feature em `specs/002-litellm-proxy-roteamento/quickstart.md`
-- [ ] T030 [P] Validar que nenhum segredo real foi versionado em `.env.example` e `infra/litellm/config.yaml`
+- [X] T027 [P] Revisar consistência entre `specs/002-litellm-proxy-roteamento/spec.md`, `specs/002-litellm-proxy-roteamento/contracts/litellm-proxy-contract.md` e configurações em `infra/`
+- [X] T028 Atualizar `specs/002-litellm-proxy-roteamento/quickstart.md` se os comandos finais de validação divergirem do executado
+- [X] T029 Executar checklist de validação manual final da feature em `specs/002-litellm-proxy-roteamento/quickstart.md`
+- [X] T030 [P] Validar que nenhum segredo real foi versionado em `.env.example` e `infra/litellm/config.yaml`
 - [ ] T031 Executar validação temporal de startup/listagem em `specs/002-litellm-proxy-roteamento/quickstart.md` para comprovar janela de 10 inicializações e limite de 30 segundos
-- [ ] T032 Adicionar cenário de edge case no `specs/002-litellm-proxy-roteamento/quickstart.md` para rota inexistente com erro distinto de `503`
-- [ ] T033 Adicionar cenário de edge case no `specs/002-litellm-proxy-roteamento/quickstart.md` para rota cloud sem credencial com retorno `503`
-- [ ] T034 Adicionar cenário de edge case no `specs/002-litellm-proxy-roteamento/quickstart.md` para chave mestre ausente/inválida em endpoints protegidos
-- [ ] T035 Adicionar cenário de edge case no `specs/002-litellm-proxy-roteamento/quickstart.md` para falha runtime em rota cloud sem fallback automático
-- [ ] T036 Adicionar cenário de edge case no `specs/002-litellm-proxy-roteamento/quickstart.md` para indisponibilidade de provedor mantendo erro da rota alvo
+- [X] T032 Adicionar cenário de edge case no `specs/002-litellm-proxy-roteamento/quickstart.md` para rota inexistente com erro distinto de `503`
+- [X] T033 Adicionar cenário de edge case no `specs/002-litellm-proxy-roteamento/quickstart.md` para rota cloud sem credencial com retorno `503`
+- [X] T034 Adicionar cenário de edge case no `specs/002-litellm-proxy-roteamento/quickstart.md` para chave mestre ausente/inválida em endpoints protegidos
+- [X] T035 Adicionar cenário de edge case no `specs/002-litellm-proxy-roteamento/quickstart.md` para falha runtime em rota cloud sem fallback automático
+- [X] T036 Adicionar cenário de edge case no `specs/002-litellm-proxy-roteamento/quickstart.md` para indisponibilidade de provedor mantendo erro da rota alvo
 
 ---
 
@@ -203,6 +203,6 @@ Task: "Após concluir a task anterior, configurar referências de credenciais cl
 
 ## Traceability Maintenance Tasks
 
-- [ ] T037 Atualizar vínculos de rastreabilidade FR/SC em `specs/002-litellm-proxy-roteamento/quickstart.md` para todos os cenários de validação.
-- [ ] T038 Atualizar vínculos de checklist CHK→FR/SC em `specs/002-litellm-proxy-roteamento/checklists/security.md` após ajustes documentais.
-- [ ] T039 Revisar consistência final de rastreabilidade entre `spec.md`, `tasks.md`, `quickstart.md` e `contracts/litellm-proxy-contract.md`.
+- [X] T037 Atualizar vínculos de rastreabilidade FR/SC em `specs/002-litellm-proxy-roteamento/quickstart.md` para todos os cenários de validação.
+- [X] T038 Atualizar vínculos de checklist CHK→FR/SC em `specs/002-litellm-proxy-roteamento/checklists/security.md` após ajustes documentais.
+- [X] T039 Revisar consistência final de rastreabilidade entre `spec.md`, `tasks.md`, `quickstart.md` e `contracts/litellm-proxy-contract.md`.
