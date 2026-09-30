@@ -78,11 +78,11 @@ Como responsável por operação do ambiente, quero controlar o acesso ao proxy 
 
 - **FR-001**: O ambiente MUST disponibilizar um serviço dedicado de proxy de modelos que possa ser iniciado junto da infraestrutura local compartilhada.
 - **FR-002**: O proxy MUST expor uma listagem de modelos configurados que permita à equipe verificar as rotas disponíveis.
-- **FR-003**: A configuração do proxy MUST definir rotas para pelo menos um modelo local e modelos alternativos de provedores cloud, mantendo o consumo uniforme pelas aplicações.
+- **FR-003**: O proxy MUST disponibilizar roteamento funcional para pelo menos uma rota local e rotas cloud alternativas, permitindo seleção por alias sem alteração no código das aplicações.
 - **FR-004**: O proxy MUST aceitar solicitações de chat para rotas válidas e retornar resposta de sucesso quando os pré-requisitos de autenticação e rota forem atendidos.
 - **FR-005**: O controle de acesso ao proxy MUST depender de uma chave mestre definida por variável de ambiente, sem hardcode de credenciais no versionamento.
 - **FR-006**: O projeto MUST incluir uma configuração versionada do proxy separada do código das aplicações, para permitir evolução de rotas sem alterações no domínio das apps.
-- **FR-007**: A configuração inicial MUST manter aliases de rotas locais e cloud documentados com versionamento explícito de configuração para evitar quebra de contrato entre revisões.
+- **FR-007**: A configuração inicial MUST manter aliases versionados e estáveis entre revisões, com registro explícito de mudanças para evitar quebra de contrato com consumidores.
 - **FR-008**: Quando credenciais cloud não estiverem definidas, o proxy MUST iniciar com rotas locais disponíveis e marcar rotas cloud como indisponíveis sem interromper o ambiente local.
 - **FR-009**: O proxy MUST exigir autenticação por chave mestre em todos os endpoints expostos, incluindo listagem de modelos e execução de chat.
 - **FR-010**: Quando uma rota cloud estiver configurada, mas indisponível por ausência de credenciais, o proxy MUST retornar status de indisponibilidade (503) nas chamadas de chat para essa rota.
@@ -106,7 +106,7 @@ Como responsável por operação do ambiente, quero controlar o acesso ao proxy 
 - **SC-005**: Em uma janela de 10 chamadas consecutivas sem credenciais cloud configuradas, 100% das requisições para rotas locais seguem funcionais e os endpoints de aceite permanecem operacionais.
 - **SC-006**: Em 20 chamadas consecutivas com chave ausente ou inválida distribuídas entre `/v1/models` e `/v1/chat/completions`, 100% das requisições são rejeitadas.
 - **SC-007**: Em 10 chamadas consecutivas para rota cloud sem credencial, 100% das respostas retornam `503`, mantendo distinção explícita de erro para rota inexistente.
-- **SC-008**: Em falhas runtime de rotas cloud, o retorno preserva o erro da rota alvo sem redirecionamento automático para rota local.
+- **SC-008**: Em uma janela de 10 chamadas consecutivas para rota cloud com falha runtime (timeout/erro do provedor), 100% das respostas preservam o erro da rota solicitada sem redirecionamento automático para rota local.
 
 ## Assumptions
 
