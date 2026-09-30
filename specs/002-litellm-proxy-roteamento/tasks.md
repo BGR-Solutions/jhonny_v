@@ -112,7 +112,7 @@
 - [X] T028 Atualizar `specs/002-litellm-proxy-roteamento/quickstart.md` se os comandos finais de validação divergirem do executado
 - [X] T029 Executar checklist de validação manual final da feature em `specs/002-litellm-proxy-roteamento/quickstart.md`
 - [X] T030 [P] Validar que nenhum segredo real foi versionado em `.env.example` e `infra/litellm/config.yaml`
-- [ ] T031 Executar validação temporal de startup/listagem em `specs/002-litellm-proxy-roteamento/quickstart.md` para comprovar janela de 10 inicializações e limite de 30 segundos
+- [X] T031 Executar validação temporal de startup/listagem em `specs/002-litellm-proxy-roteamento/quickstart.md` para comprovar janela de 10 inicializações e limite de 30 segundos
 - [X] T032 Adicionar cenário de edge case no `specs/002-litellm-proxy-roteamento/quickstart.md` para rota inexistente com erro distinto de `503`
 - [X] T033 Adicionar cenário de edge case no `specs/002-litellm-proxy-roteamento/quickstart.md` para rota cloud sem credencial com retorno `503`
 - [X] T034 Adicionar cenário de edge case no `specs/002-litellm-proxy-roteamento/quickstart.md` para chave mestre ausente/inválida em endpoints protegidos

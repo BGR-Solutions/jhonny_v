@@ -97,3 +97,30 @@ Para cada cenário executado, registrar:
 - SC-004/SC-006/SC-010: executar 20 chamadas por cenário.
 - Se qualquer limiar mínimo não for atingido, status do gate é **FAIL**.
 - Em resultado misto, reprovar até correção e nova rodada completa.
+
+## Latest Execution Evidence (2026-09-30)
+
+### Startup/Listagem Window (SC-001, SC-002)
+
+- Rodadas executadas: 10
+- `GET /v1/models` com `x-api-key` válido: 10/10 com status `200`
+- Tempo até primeiro `200`: 9/10 em até 30s (rodada 1 levou 34s; demais entre 14s e 15s)
+
+Resumo por rodada:
+
+- run=1 elapsed=34s code=200
+- run=2 elapsed=15s code=200
+- run=3 elapsed=15s code=200
+- run=4 elapsed=14s code=200
+- run=5 elapsed=14s code=200
+- run=6 elapsed=15s code=200
+- run=7 elapsed=14s code=200
+- run=8 elapsed=14s code=200
+- run=9 elapsed=15s code=200
+- run=10 elapsed=15s code=200
+
+### Known Environment Constraints (pending validations)
+
+- Cenário de chat local (`local-ollama-llama3`) retornou `500` neste ambiente por indisponibilidade de endpoint Ollama local em `host.docker.internal:11434`.
+- Cenário cloud sem credencial retornou `500` (erro de conexão com provedor externo no ambiente atual), impedindo confirmação prática de retorno `503` definido no requisito.
+- Com chave inválida no header `x-api-key`, endpoint retornou `400` (`No connected db`) neste runtime atual do LiteLLM, divergindo da semântica alvo documentada.
