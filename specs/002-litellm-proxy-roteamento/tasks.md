@@ -79,7 +79,7 @@
 - [X] T017 [US2] Configurar referências de credenciais cloud por variável de ambiente no `infra/litellm/config.yaml`
 - [X] T018 [US2] Implementar política de indisponibilidade de rota cloud sem credencial (retorno `503`) no `infra/litellm/config.yaml`
 - [X] T019 [US2] Garantir distinção de semântica entre rota inexistente e rota indisponível no `infra/litellm/config.yaml`
-- [ ] T020 [US2] Validar cenário de chat em rota local com `POST /v1/chat/completions` conforme `specs/002-litellm-proxy-roteamento/quickstart.md`
+- [X] T020 [US2] Validar cenário de chat em rota local com `POST /v1/chat/completions` conforme `specs/002-litellm-proxy-roteamento/quickstart.md`
 - [X] T021 [US2] Validar cenário de rota cloud sem credencial e retorno `503` conforme `specs/002-litellm-proxy-roteamento/quickstart.md`
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
@@ -98,7 +98,7 @@
 - [X] T023 [US3] Configurar injeção da chave mestre no serviço `litellm` em `infra/compose.llm.yaml`
 - [X] T024 [US3] Reforçar política de autenticação obrigatória para `/v1/models` e `/v1/chat/completions` no `infra/litellm/config.yaml`
 - [X] T025 [US3] Validar cenários de acesso negado com chave ausente/inválida conforme `specs/002-litellm-proxy-roteamento/quickstart.md`
-- [ ] T026 [US3] Validar cenários de acesso autorizado com chave válida conforme `specs/002-litellm-proxy-roteamento/quickstart.md`
+- [X] T026 [US3] Validar cenários de acesso autorizado com chave válida conforme `specs/002-litellm-proxy-roteamento/quickstart.md`
 
 **Checkpoint**: All user stories should now be independently functional
 

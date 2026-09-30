@@ -1,4 +1,31 @@
 services:
+  ollama-local-mock:
+    image: python:3.12-alpine
+    restart: unless-stopped
+    command:
+      - python
+      - /mock/ollama_mock.py
+    volumes:
+      - ./litellm/ollama_mock.py:/mock/ollama_mock.py:ro
+    networks:
+      - jhonny-core
+
+  ollama:
+    image: ollama/ollama:0.6.6
+    restart: unless-stopped
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    environment:
+      TZ: ${TZ:-UTC}
+      OLLAMA_HOST: 0.0.0.0:11434
+    ports:
+      - "${HOST_IP:-127.0.0.1}:11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - jhonny-core
+
   litellm-cloud-unavailable:
     image: hashicorp/http-echo:1.0.0
     restart: unless-stopped
@@ -21,6 +48,7 @@ services:
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-litellm-dev-token}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OLLAMA_API_BASE: ${OLLAMA_API_BASE:-http://ollama-local-mock:11435}
       OPENAI_API_BASE: ${OPENAI_API_BASE:-http://litellm-cloud-unavailable:8080/v1}
       ANTHROPIC_API_BASE: ${ANTHROPIC_API_BASE:-http://litellm-cloud-unavailable:8080}
     command:
@@ -34,6 +62,10 @@ services:
     networks:
       - jhonny-core
     depends_on:
+      ollama-local-mock:
+        condition: service_started
+      ollama:
+        condition: service_started
       litellm-cloud-unavailable:
         condition: service_started
     healthcheck:
@@ -45,3 +77,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+
+volumes:
+  ollama-data:
+    name: ${COMPOSE_PROJECT_NAME:-jhonny_v}-ollama-data

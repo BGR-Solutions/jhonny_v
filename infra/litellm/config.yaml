@@ -2,7 +2,7 @@ model_list:
   - model_name: local-ollama-llama3
     litellm_params:
       model: ollama/llama3.1
-      api_base: http://host.docker.internal:11434
+      api_base: os.environ/OLLAMA_API_BASE
 
   - model_name: cloud-openai-gpt-4o-mini
     litellm_params:

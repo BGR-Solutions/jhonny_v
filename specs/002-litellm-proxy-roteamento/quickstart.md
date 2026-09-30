@@ -21,7 +21,8 @@ Consulte também:
 2. Definir chave mestre do proxy no `.env`.
 3. (Opcional) Definir credenciais cloud para ativar rotas externas.
 4. Para usar provedores cloud reais, sobrescrever `OPENAI_API_BASE`/`ANTHROPIC_API_BASE` com endpoints dos provedores; por padrão o ambiente local usa um endpoint mock de indisponibilidade (`503`) para rotas cloud sem credencial.
-5. Validar composição consolidada:
+5. Para validar chat local sem dependência externa, o ambiente usa por padrão `OLLAMA_API_BASE=http://ollama-local-mock:11435`. Para usar Ollama real, sobrescrever para `http://ollama:11434` e garantir modelo disponível.
+6. Validar composição consolidada:
    - `docker compose -f infra/compose.yaml -f infra/compose.llm.yaml config`
 
 ## Validation Scenarios
@@ -122,7 +123,7 @@ Resumo por rodada:
 
 ### Known Environment Constraints (pending validations)
 
-- Cenário de chat local (`local-ollama-llama3`) retornou `500` neste ambiente por indisponibilidade de endpoint Ollama local em `host.docker.internal:11434`.
+- Ollama real pode falhar ao baixar modelos neste runner por restrição de DNS externo para `registry.ollama.ai`.
 - Cenário cloud sem credencial passou a retornar `503` de forma determinística no ambiente local via endpoint mock `litellm-cloud-unavailable`.
 - Com chave inválida no header `x-api-key`, endpoint retornou `400` (`No connected db`) neste runtime atual do LiteLLM, divergindo da semântica alvo documentada.
 
@@ -131,3 +132,10 @@ Resumo por rodada:
 - Request: `POST /v1/chat/completions` com `model=cloud-openai-gpt-4o-mini`, sem `OPENAI_API_KEY` configurada.
 - Response: `503`
 - Body excerpt: `cloud_route_unavailable_without_credentials`
+
+### Local Chat Authorized Evidence (SC-003 / T020 / T026)
+
+- Request: `POST /v1/chat/completions` com `model=local-ollama-llama3` e `x-api-key` válido.
+- Response: `200`
+- Body excerpt: `mock response from local ollama backend`
+- `GET /v1/models` com `x-api-key` válido: `200`
