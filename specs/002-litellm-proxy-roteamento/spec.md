@@ -12,7 +12,7 @@
 
 ### Session 2026-09-29
 
-- Q: Quando as chaves dos provedores cloud (OpenAI/Anthropic) não estiverem definidas, o proxy deve subir mantendo apenas as rotas locais ativas? → A: Subir normalmente e expor apenas rotas locais; rotas cloud ficam indisponíveis.
+- Q: Quando as chaves dos provedores cloud (OpenAI/Anthropic) não estiverem definidas, o proxy deve subir mantendo apenas as rotas locais ativas? → A: Subir normalmente e expor as rotas configuradas; rotas cloud continuam listadas em `/v1/models`, mas chamadas retornam `503` até que haja credencial. O endpoint não anuncia disponibilidade por rota.
 - Q: A autenticação por chave mestre deve ser obrigatória também no endpoint de listagem de modelos (`/v1/models`)? → A: Exigir chave mestre em todos os endpoints do proxy, incluindo `/v1/models` e `/v1/chat/completions`.
 - Q: Quando uma rota cloud estiver configurada, mas indisponível por ausência de credenciais, qual resultado o proxy deve retornar na chamada de chat? → A: Tratar como rota indisponível por configuração/credencial (503).
 - Q: Quando uma rota cloud falhar em runtime (timeout/erro do provedor), o proxy deve tentar fallback automático para uma rota local equivalente? → A: Não, retornar erro da rota solicitada sem fallback automático.
@@ -30,7 +30,7 @@ Como integrante da equipe, quero iniciar o proxy de modelos no ambiente comparti
 **Acceptance Scenarios**:
 
 1. **Given** o ambiente local configurado, **When** o proxy é iniciado, **Then** um endpoint de listagem de modelos responde com sucesso.
-2. **Given** o proxy em execução, **When** um integrante consulta os modelos disponíveis, **Then** a resposta inclui os modelos roteados previstos para uso local e alternativo.
+2. **Given** o proxy em execução, **When** um integrante consulta os modelos disponíveis, **Then** a resposta inclui todos os aliases configurados, inclusive os cloud indisponíveis; uma chamada autenticada à rota cloud retorna `503` enquanto não houver credencial.
 
 ---
 
@@ -106,7 +106,7 @@ Como responsável por operação do ambiente, quero controlar o acesso ao proxy 
 - **FR-006**: O projeto MUST incluir uma configuração versionada do proxy separada do código das aplicações, para permitir evolução de rotas sem alterações no domínio das apps.
 - **FR-007**: A configuração inicial MUST manter aliases versionados e estáveis entre revisões, com registro explícito de mudanças para evitar quebra de contrato com consumidores.
 - **FR-008**: Quando credenciais cloud não estiverem definidas, o proxy MUST iniciar com rotas locais disponíveis e marcar rotas cloud como indisponíveis sem interromper o ambiente local.
-- **FR-009**: O proxy MUST exigir autenticação por chave mestre em todos os endpoints expostos, incluindo listagem de modelos e execução de chat.
+- **FR-009**: O proxy MUST exigir autenticação por chave mestre em todos os endpoints de API expostos, incluindo listagem de modelos e execução de chat. A única exceção é `GET /health/liveliness`, que expõe somente o estado básico de vida do processo e não dados de modelos ou credenciais.
 - **FR-010**: Quando uma rota cloud estiver configurada, mas indisponível por ausência de credenciais, o proxy MUST retornar status de indisponibilidade (503) nas chamadas de chat para essa rota.
 - **FR-011**: Quando uma rota cloud falhar em runtime por timeout ou erro do provedor, o proxy MUST retornar erro da rota solicitada sem fallback automático para rota local.
 - **FR-012**: Quando uma rota solicitada não existir na configuração ativa, o proxy MUST retornar erro de rota inexistente distinto do erro `503` de indisponibilidade por credencial.

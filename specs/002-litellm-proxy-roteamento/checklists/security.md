@@ -10,7 +10,7 @@
 
 ## Requirement Completeness
 
-- [x] CHK001 Are authentication requirements explicitly specified for every exposed proxy endpoint beyond the two exemplos principais? [Completeness, Spec §FR-009, Contract §Endpoint Contract]
+- [ ] CHK001 Are authentication requirements explicitly specified for every exposed proxy endpoint beyond the two exemplos principais? [Completeness, Spec §FR-009, Contract §Endpoint Contract]
 - [x] CHK002 Are requirements defined for how cloud routes are represented as unavailable when provider credentials are absent? [Completeness, Spec §FR-008, Data Model §Model Route]
 - [x] CHK003 Are requirements documented for configuration ownership and update boundaries between `compose.llm.yaml` and `litellm/config.yaml`? [Completeness, Plan §Project Structure]
 - [x] CHK004 Are release-gate requirements defined for both local-only mode and hybrid local+cloud mode? [Coverage, Gap]
@@ -50,7 +50,7 @@
 
 ## Non-Functional Requirements
 
-- [x] CHK023 Are observability requirements explicitly specified for security-relevant events (denials, unavailable routes, runtime failures)? [Non-Functional, Gap]
+- [ ] CHK023 Are observability requirements explicitly specified for security-relevant events (denials, unavailable routes, runtime failures)? [Non-Functional, Gap]
 - [x] CHK024 Are rate-limiting or abuse-protection requirements explicitly included or explicitly out-of-scope for this release gate? [Non-Functional, Gap]
 - [x] CHK025 Are availability and startup reliability requirements defined for degraded cloud mode versus full hybrid mode? [Non-Functional, Spec §SC-001, Spec §SC-005]
 

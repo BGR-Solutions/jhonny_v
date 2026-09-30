@@ -8,8 +8,11 @@ Definir o contrato funcional e operacional do proxy de modelos para descoberta, 
 
 | Endpoint | Authentication | Expected Behavior | Failure Contract |
 |----------|----------------|-------------------|------------------|
-| `GET /v1/models` | Obrigatória (chave mestre) | Lista rotas/modelos disponíveis para consumo | Sem chave: `401`; chave malformada: `401`; chave inválida: `403` |
+| `GET /v1/models` | Obrigatória (chave mestre) | Lista todos os aliases configurados, sem sinalizar disponibilidade de credenciais | Sem chave: `401`; chave malformada: `401`; chave inválida: `403` |
 | `POST /v1/chat/completions` | Obrigatória (chave mestre) | Executa chamada para rota válida configurada | Sem chave: `401`; chave malformada: `401`; chave inválida: `403` |
+| `GET /health/liveliness` | Não requerida | Informa somente se o processo está vivo; não inclui dados de modelos ou credenciais | Exceção limitada à autenticação de API |
+
+`GET /v1/models` lista todos os aliases configurados, independentemente de credenciais disponíveis. A listagem não contém metadados de disponibilidade; uma chamada cloud sem credenciais retorna `503`.
 
 ## Authorization & Error Matrix
 

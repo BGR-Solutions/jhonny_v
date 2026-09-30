@@ -4,9 +4,13 @@
 
 **Input**: Feature specification from `/specs/002-litellm-proxy-roteamento/spec.md`
 
+## SDD Feature Selection
+
+Downstream Specify commands select this feature through `SPECIFY_FEATURE_DIRECTORY=specs/002-litellm-proxy-roteamento` or the locally generated `.specify/feature.json`. The generated state is intentionally ignored by Git; set the environment variable when a checkout has no local state file.
+
 ## Summary
 
-Configurar uma camada dedicada de proxy de modelos na infraestrutura local para desacoplar as aplicações da escolha de provedores/modelos. O plano define um overlay de Compose para o LiteLLM, uma configuração versionada de rotas para modelos locais e cloud, política explícita de autenticação por chave mestre em todos os endpoints e comportamento de erro previsível para indisponibilidade de credenciais e falhas de runtime.
+Configurar uma camada dedicada de proxy de modelos na infraestrutura local para desacoplar as aplicações da escolha de provedores/modelos. O plano define um overlay de Compose para o LiteLLM, uma configuração versionada de rotas para modelos locais e cloud, política explícita de autenticação por chave mestre em todos os endpoints de API (com exceção documentada para liveness) e comportamento de erro previsível para indisponibilidade de credenciais e falhas de runtime.
 
 ## Technical Context
 
@@ -24,7 +28,7 @@ Configurar uma camada dedicada de proxy de modelos na infraestrutura local para 
 
 **Performance Goals**: Endpoint de listagem disponível em até 30 segundos após start; chamadas autenticadas de chat roteadas com sucesso para rotas válidas
 
-**Constraints**: Não hardcode de segredos; autenticação obrigatória em todos os endpoints; sem fallback automático de rota cloud para local; distinção explícita entre rota inexistente e rota indisponível por credencial
+**Constraints**: Não hardcode de segredos; autenticação obrigatória em endpoints de API, com exceção documentada para liveness; sem fallback automático de rota cloud para local; distinção explícita entre rota inexistente e rota indisponível por credencial
 
 **Scale/Scope**: 1 serviço LiteLLM no overlay LLM, com conjunto inicial de rotas locais + cloud para validação da issue
 
