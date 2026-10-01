@@ -18,6 +18,7 @@
 - Q: O coletor deve acessar o Docker direto pelo socket montado como somente leitura, ou por um proxy intermediário que só libera as consultas de leitura? → A: Por um proxy de socket com permissão só de leitura (listar contêineres e ler logs); só o proxy monta o socket e o coletor fala com ele pela rede interna.
 - Q: O proxy de socket deve ficar numa rede interna só dele com o coletor, ou na rede compartilhada `jhonny-core`? → A: Rede interna dedicada (sem saída para a internet) só para proxy ↔ coletor; o coletor e o armazenamento central também ficam na `jhonny-core`.
 - Q: A porta do Loki deve ser publicada no host por padrão (em `127.0.0.1`), ou ele deve ficar acessível só pela rede interna do Compose? → A: Publicada por padrão em `${HOST_IP:-127.0.0.1}`, com porta configurável por variável de ambiente documentada no `.env.example`.
+- Q: Devemos limitar o tamanho dos arquivos onde o próprio Docker guarda o `stdout`/`stderr` de cada contêiner, com um padrão aplicado a todas as camadas Compose? → A: Sim. Um limite padrão em todas as camadas Compose (core, llm, obs) de 10 MB × 3 arquivos por contêiner, ajustável por variável de ambiente.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -81,6 +82,7 @@ Como responsável pela arquitetura, quero comprovar com evidência objetiva que 
 - Quando o coletor (ou qualquer cliente do proxy) tentar uma operação de escrita na API do Docker (ex.: criar, iniciar ou remover contêiner), o proxy MUST negar a operação.
 - Quando qualquer contêiner fora da rede dedicada (ex.: serviços da `jhonny-core`) tentar acessar o proxy de socket, a conexão MUST falhar por falta de rota, impedindo a leitura de metadados sensíveis (como variáveis de ambiente) de outros contêineres.
 - Quando o proxy de socket estiver indisponível, a descoberta de novos contêineres é suspensa sem afetar os contêineres de aplicação, e é retomada automaticamente quando o proxy voltar.
+- Quando um contêiner gerar logs mais rápido do que o coletor consegue ler e atingir o limite de rotação do Docker (FR-019), as linhas mais antigas ainda não lidas podem ser descartadas; o limite default deve dar folga suficiente para que isso não ocorra em condições normais do ambiente local.
 - Linhas muito longas ou multilinha (ex.: stack traces) devem ser ingeridas sem derrubar o pipeline; o agrupamento multilinha está fora do escopo inicial.
 
 ## Requirements *(mandatory)*
@@ -104,7 +106,8 @@ Como responsável pela arquitetura, quero comprovar com evidência objetiva que 
 - **FR-015**: O armazenamento central MUST publicar sua porta de consulta no host por padrão, seguindo o padrão das demais camadas: vinculada a `${HOST_IP:-127.0.0.1}` e com número de porta configurável por variável de ambiente. Essa é a interface usada pelos testes de aceite antes da existência do Grafana (ISSUE-104). O coletor e o proxy de socket MUST NOT publicar portas no host.
 - **FR-016**: Nenhum serviço do repositório (aplicação ou infraestrutura) MAY gravar logs em arquivo local; todos MUST usar exclusivamente `stdout`/`stderr`.
 - **FR-017**: O coletor utilizado MUST ser o Grafana Alloy, substituto oficial e mantido do Promtail (em fim de vida desde o início de 2026), atendendo aos mesmos requisitos funcionais (FR-001 a FR-010). O Promtail MUST NOT ser adotado.
-- **FR-018**: A variável de ambiente de retenção (FR-012) e a porta publicada do armazenamento central (FR-015) MUST ser documentadas em `.env.example` com seus valores default.
+- **FR-018**: A variável de ambiente de retenção (FR-012), a porta publicada do armazenamento central (FR-015) e as variáveis de limite de rotação (FR-019) MUST ser documentadas em `.env.example` com seus valores default.
+- **FR-019**: Todos os serviços de todas as camadas Compose do repositório (core, llm e obs) MUST aplicar um limite comum de rotação para as saídas `stdout`/`stderr` mantidas pelo Docker no host: default de 10 MB por arquivo e 3 arquivos por contêiner, ajustável por variável de ambiente. O limite MUST ser definido num bloco único reutilizado por todos os serviços (mesmo padrão do `x-common-environment`), sem duplicação por serviço.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -129,11 +132,13 @@ Como responsável pela arquitetura, quero comprovar com evidência objetiva que 
 - **SC-008**: Em teste de validação, 100% das tentativas de operação de escrita na API do Docker feitas através do proxy de socket são negadas, e o coletor não tem o socket do Docker montado.
 - **SC-009**: Em teste de validação, 0 contêineres além do coletor conseguem alcançar o proxy de socket.
 - **SC-010**: Com os valores default, o armazenamento central responde a consultas a partir do host em `127.0.0.1` e não é alcançável por outras interfaces de rede da máquina.
+- **SC-011**: 100% dos serviços definidos nas camadas Compose do repositório aplicam o limite comum de rotação; com os valores default, o espaço em disco ocupado pelos logs de cada contêiner no host não passa de 30 MB.
 
 ## Assumptions
 
 - O ambiente-alvo é Docker Engine com Docker Compose v2 num único host local; orquestração multi-nó e Kubernetes estão fora do escopo.
-- Os contêineres usam o driver de log padrão do Docker, que mantém as saídas `stdout`/`stderr` acessíveis ao coletor.
+- Os contêineres usam o driver de log padrão do Docker, que mantém as saídas `stdout`/`stderr` acessíveis ao coletor; o limite de rotação (FR-019) é aplicado sobre esse driver.
+- Esta feature altera também as camadas `infra/compose.core.yaml` e `infra/compose.llm.yaml`, mas só para aplicar o limite comum de rotação (FR-019), sem nenhuma outra mudança de comportamento nesses serviços.
 - Os documentos `docs/issues/v0.1/ISSUE-103.md` e `docs/milestones/v0.1-infra-core.md` citam o Promtail; eles devem ser atualizados para Grafana Alloy durante a implementação, para manter a rastreabilidade (princípio V da constituição).
 - Como a coleta abrange todo o host (FR-002), contêineres de outros projetos no mesmo host também são ingeridos; isso é aceitável no ambiente local, e a separação é feita pelo rótulo de projeto.
 - O nome do overlay segue a convenção da constituição e da milestone v0.1 (`infra/compose.obs.yaml`), e não `compose.obs.yml`, que aparece em versões anteriores da issue.
