@@ -32,6 +32,7 @@ LOKI_IMAGE = "grafana/loki:3.7.8"
 
 BASE_FILES: tuple[str, ...] = ("compose.yaml", "compose.core.yaml", "compose.obs.yaml")
 LLM_FILE = "compose.llm.yaml"
+ALL_FILES: tuple[str, ...] = (*BASE_FILES, LLM_FILE)
 OBS_SERVICES: tuple[str, ...] = ("socket-proxy", "loki", "loki-gateway", "alloy")
 ALLOWED_LABELS: frozenset[str] = frozenset(
     {"compose_project", "compose_service", "container", "stream", "service_name"}
@@ -302,8 +303,8 @@ def probe_container() -> Iterator[ProbeFn]:
     """Sobe contêineres busybox descartáveis e os remove no teardown.
 
     Yields:
-        Função `probe_container(script, labels=None, network=None, rm=True)`
-        que devolve o nome único (prefixo `qs-`) do contêiner criado.
+        Função `probe_container(script, labels=None, network=None, detach=True,
+        auto_remove=True)` que devolve o nome único (prefixo `qs-`) do contêiner.
     """
     created: list[str] = []
 
@@ -312,9 +313,12 @@ def probe_container() -> Iterator[ProbeFn]:
         labels: Mapping[str, str] | None = None,
         network: str | None = None,
         detach: bool = True,
+        auto_remove: bool = True,
     ) -> str:
         name = f"qs-{uuid.uuid4().hex[:10]}"
-        cmd = ["docker", "run", "--rm", "--name", name]
+        cmd = ["docker", "run", "--name", name]
+        if auto_remove:
+            cmd.append("--rm")
         if detach:
             cmd.append("-d")
         for key, value in (labels or {}).items():

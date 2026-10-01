@@ -54,6 +54,27 @@ Armazena as especificações, planos, tarefas e demais artefatos produzidos pelo
    docker compose -f infra/compose.yaml -f infra/compose.core.yaml up -d
    ```
 
+### Camada de observabilidade (logs)
+
+A camada `infra/compose.obs.yaml` coleta `stdout`/`stderr` de todos os contêineres do host (Grafana Alloy) e os disponibiliza no Loki por um gateway autenticado em `http://127.0.0.1:${LOKI_PORT}` (padrão `3100`). Detalhes em [`specs/003-agregacao-logs-loki/`](./specs/003-agregacao-logs-loki/quickstart.md).
+
+1. Preencha no `.env` as variáveis obrigatórias da camada:
+   - `LOKI_GATEWAY_USER` e `LOKI_GATEWAY_PASSWORD` (segredos; não versionar);
+   - `DOCKER_GID`, obtido com `stat -c %g /var/run/docker.sock`.
+2. Suba a camada (o `--env-file` é necessário porque o diretório do projeto Compose é `infra/`):
+   ```bash
+   docker compose --env-file .env -f infra/compose.yaml -f infra/compose.core.yaml -f infra/compose.obs.yaml up -d --build --wait
+   ```
+3. Consulte os logs com as credenciais do gateway:
+   ```bash
+   curl -G -u "$LOKI_GATEWAY_USER:$LOKI_GATEWAY_PASSWORD" http://127.0.0.1:3100/loki/api/v1/query_range \
+     --data-urlencode 'query={compose_service="postgres"}'
+   ```
+4. Rode os testes de aceite (requer [`uv`](https://docs.astral.sh/uv/) e a stack no ar):
+   ```bash
+   cd infra && uv sync --extra dev && uv run pytest -v
+   ```
+
 ## Navegação da documentação
 
 - [Hub de documentação](./docs/README.md)

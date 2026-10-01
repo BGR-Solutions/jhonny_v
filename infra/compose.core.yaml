@@ -1,3 +1,9 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: ${DOCKER_LOG_MAX_SIZE:-10m}
+    max-file: "${DOCKER_LOG_MAX_FILE:-3}"
+
 x-common-environment: &common-environment
   TZ: ${TZ:-UTC}
   LOG_LEVEL: ${LOG_LEVEL:-INFO}
@@ -22,6 +28,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    logging: *default-logging
 
   redis:
     image: redis:7-alpine
@@ -43,6 +50,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    logging: *default-logging
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -64,3 +72,4 @@ services:
       interval: 15s
       timeout: 10s
       retries: 5
+    logging: *default-logging

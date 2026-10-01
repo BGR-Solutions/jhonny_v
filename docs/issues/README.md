@@ -16,7 +16,7 @@ Este diretório contém o detalhamento técnico e os critérios de aceite das is
 | :--- | :--- | :--- | :--- |
 | **v0.1** | [**`#101`**](./v0.1/ISSUE-101.md) | Estrutura Base do Monorepo e Documentação inicial | N/A |
 | **v0.1** | [**`#102`**](./v0.1/ISSUE-102.md) | Configuração do LiteLLM Proxy e Roteamento de Modelos | `ADR-0001` |
-| **v0.1** | [**`#103`**](./v0.1/ISSUE-103.md) | Setup do Promtail e Loki para Agregação de Logs | N/A |
+| **v0.1** | [**`#103`**](./v0.1/ISSUE-103.md) | Agregação de Logs de Contêineres com Grafana Alloy e Loki | [`0006`](../adr/0006-log-aggregation-socket-proxy-gateway.md) |
 | **v0.1** | [**`#104`**](./v0.1/ISSUE-104.md) | Setup do Prometheus e Grafana (Metrics & Dashboards) | N/A |
 | **v0.1** | [**`#105`**](./v0.1/ISSUE-105.md) | Setup do Grafana Tempo e Collector OpenTelemetry | `ADR-0003` |
 | **v0.1** | [**`#106`**](./v0.1/ISSUE-106.md) | Provisionamento do PostgreSQL + pgvector | `ADR-0005` |

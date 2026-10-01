@@ -11,7 +11,7 @@ from collections.abc import Iterator, Sequence
 import pytest
 
 from .conftest import (
-    BASE_FILES,
+    ALL_FILES,
     LLM_FILE,
     OBS_SERVICES,
     ComposeFn,
@@ -22,7 +22,6 @@ from .conftest import (
 
 pytestmark = [pytest.mark.disruptive, pytest.mark.slow]
 
-ALL_FILES = (*BASE_FILES, LLM_FILE)
 BASE_OBS = ("compose.yaml", "compose.obs.yaml")
 BASE_CORE_LLM = ("compose.yaml", "compose.core.yaml", LLM_FILE)
 UP = ("up", "-d", "--build", "--wait", "--wait-timeout", "600")

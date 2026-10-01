@@ -8,7 +8,6 @@ import pytest
 
 from .conftest import INFRA_DIR, LOKI_IMAGE, run
 
-
 CONFIG = INFRA_DIR / "loki" / "config.yaml"
 
 

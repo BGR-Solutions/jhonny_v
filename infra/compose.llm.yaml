@@ -1,3 +1,9 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: ${DOCKER_LOG_MAX_SIZE:-10m}
+    max-file: "${DOCKER_LOG_MAX_FILE:-3}"
+
 services:
   ollama-local-mock:
     profiles:
@@ -11,6 +17,7 @@ services:
       - ./litellm/ollama_mock.py:/mock/ollama_mock.py:ro
     networks:
       - jhonny-core
+    logging: *default-logging
 
   ollama:
     image: ollama/ollama:0.6.6
@@ -27,6 +34,7 @@ services:
       - ollama-data:/root/.ollama
     networks:
       - jhonny-core
+    logging: *default-logging
 
   litellm-cloud-unavailable:
     image: hashicorp/http-echo:1.0.0
@@ -37,6 +45,7 @@ services:
       - -text={"error":"cloud_route_unavailable_without_credentials"}
     networks:
       - jhonny-core
+    logging: *default-logging
 
   litellm:
     image: ghcr.io/berriai/litellm:v1.103.1
@@ -83,6 +92,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    logging: *default-logging
 
 volumes:
   ollama-data:

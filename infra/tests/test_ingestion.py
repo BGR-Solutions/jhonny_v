@@ -57,9 +57,14 @@ def test_new_container_is_queryable_within_30s(
 def test_short_lived_container_is_ingested(
     probe_container: ProbeFn, wait_for_lines: WaitFn
 ) -> None:
-    """Edge case: contêiner que imprime uma linha e encerra em ~2 s."""
+    """Edge case: contêiner que imprime uma linha e encerra em ~5 s.
+
+    O coletor descobre contêineres por polling (1 s) e lê os logs pela API do
+    Docker: vidas a partir de ~5 s são garantidas; mais curtas são best-effort.
+    Sem `--rm`, porque a remoção automática apaga o log no encerramento.
+    """
     marker = unique_marker()
-    name = probe_container(f"echo {marker}; sleep 2")
+    name = probe_container(f"echo {marker}; sleep 5", auto_remove=False)
     wait_for_lines(f'{{container="{name}"}} |= "{marker}"', timeout=60)
 
 
