@@ -17,6 +17,7 @@
 - Q: Qual coletor deve ser usado: Promtail (EOL desde o início de 2026, conforme a issue) ou Grafana Alloy (substituto oficial)? → A: Grafana Alloy. Isso substitui a menção ao Promtail na ISSUE-103 e na milestone v0.1, com os mesmos requisitos funcionais.
 - Q: O coletor deve acessar o Docker direto pelo socket montado como somente leitura, ou por um proxy intermediário que só libera as consultas de leitura? → A: Por um proxy de socket com permissão só de leitura (listar contêineres e ler logs); só o proxy monta o socket e o coletor fala com ele pela rede interna.
 - Q: O proxy de socket deve ficar numa rede interna só dele com o coletor, ou na rede compartilhada `jhonny-core`? → A: Rede interna dedicada (sem saída para a internet) só para proxy ↔ coletor; o coletor e o armazenamento central também ficam na `jhonny-core`.
+- Q: A porta do Loki deve ser publicada no host por padrão (em `127.0.0.1`), ou ele deve ficar acessível só pela rede interna do Compose? → A: Publicada por padrão em `${HOST_IP:-127.0.0.1}`, com porta configurável por variável de ambiente documentada no `.env.example`.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -100,7 +101,7 @@ Como responsável pela arquitetura, quero comprovar com evidência objetiva que 
 - **FR-012**: O armazenamento central MUST reter os logs por um período configurável por variável de ambiente, com valor default de 7 dias quando a variável não for definida, e descartar automaticamente os dados mais antigos que esse período.
 - **FR-013**: A camada de observabilidade MUST ser um overlay Compose próprio (`infra/compose.obs.yaml`), combinável com `infra/compose.yaml`, reutilizando a rede `jhonny-core` declarada na base para coletor e armazenamento central e declarando explicitamente a rede interna dedicada proxy ↔ coletor, com versões de imagem fixadas (sem `:latest`), `healthcheck` nos serviços e `depends_on` com `condition: service_healthy` do coletor para o armazenamento e para o proxy de socket.
 - **FR-014**: As configurações do coletor e do armazenamento MUST ser versionadas em `infra/alloy/` e `infra/loki/config.yaml`, respectivamente, sem segredos embutidos. O diretório `infra/alloy/` substitui o `infra/promtail/config.yaml` citado na issue; o nome exato do arquivo será definido no `/speckit-plan`.
-- **FR-015**: Qualquer porta publicada no host pelo armazenamento central MUST seguir o padrão das demais camadas: vinculada a `${HOST_IP:-127.0.0.1}` e com porta configurável por variável de ambiente.
+- **FR-015**: O armazenamento central MUST publicar sua porta de consulta no host por padrão, seguindo o padrão das demais camadas: vinculada a `${HOST_IP:-127.0.0.1}` e com número de porta configurável por variável de ambiente. Essa é a interface usada pelos testes de aceite antes da existência do Grafana (ISSUE-104). O coletor e o proxy de socket MUST NOT publicar portas no host.
 - **FR-016**: Nenhum serviço do repositório (aplicação ou infraestrutura) MAY gravar logs em arquivo local; todos MUST usar exclusivamente `stdout`/`stderr`.
 - **FR-017**: O coletor utilizado MUST ser o Grafana Alloy, substituto oficial e mantido do Promtail (em fim de vida desde o início de 2026), atendendo aos mesmos requisitos funcionais (FR-001 a FR-010). O Promtail MUST NOT ser adotado.
 - **FR-018**: A variável de ambiente de retenção (FR-012) e a porta publicada do armazenamento central (FR-015) MUST ser documentadas em `.env.example` com seus valores default.
@@ -127,6 +128,7 @@ Como responsável pela arquitetura, quero comprovar com evidência objetiva que 
 - **SC-007**: A camada de observabilidade inicia com todos os serviços saudáveis na primeira tentativa, combinada com a camada base, em 100% das execuções de validação.
 - **SC-008**: Em teste de validação, 100% das tentativas de operação de escrita na API do Docker feitas através do proxy de socket são negadas, e o coletor não tem o socket do Docker montado.
 - **SC-009**: Em teste de validação, 0 contêineres além do coletor conseguem alcançar o proxy de socket.
+- **SC-010**: Com os valores default, o armazenamento central responde a consultas a partir do host em `127.0.0.1` e não é alcançável por outras interfaces de rede da máquina.
 
 ## Assumptions
 
