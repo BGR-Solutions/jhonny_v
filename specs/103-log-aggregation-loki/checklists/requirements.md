@@ -24,11 +24,12 @@
 
 ## Prontidão da Feature
 
-- [x] Todo requisito funcional tem critério de aceite claro
+- [ ] Todo requisito funcional tem critério de aceite claro — **exceto FR-011, FR-012, FR-013 (pendentes de `/speckit-clarify`)**
 - [x] Os cenários de usuário cobrem os fluxos principais (coleta, filtragem, conformidade)
 - [x] A feature atende aos resultados mensuráveis definidos nos Critérios de Sucesso
-- [x] Nenhum detalhe de implementação vazou para a especificação
+- [x] Nenhum detalhe de implementação vazou para a especificação além das restrições impostas pela Issue (Promtail/Loki, `docker.sock`, caminhos em `infra/`)
 
 ## Notas
 
+- Confirmar em `/speckit-clarify` a escolha do coletor: o Promtail está em EOL e o Grafana Alloy é o substituto (ver seção Riscos da spec).
 - A spec só fica pronta para `/speckit-plan` depois que os 3 pontos `[NEEDS CLARIFICATION]` forem resolvidos.

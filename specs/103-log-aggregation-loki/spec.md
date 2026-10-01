@@ -3,7 +3,7 @@
 **Feature Branch**: `103-log-aggregation-loki`
 **Criado em**: 2026-10-01
 **Status**: Draft (etapa `/speckit-specify`)
-**Issue de origem**: #103 — "Setup do Promtail e Loki para Agregação de Logs" (GitHub BGR-Solutions/jhonny_v#3)
+**Issue de origem**: ISSUE-103 (ID interno do backlog) = GitHub [BGR-Solutions/jhonny_v#3](https://github.com/BGR-Solutions/jhonny_v/issues/3) — "Setup do Promtail e Loki para Agregação de Logs"
 **Entrada**: "Configurar a coleta unificada de logs de contêineres capturando saídas `stdout`/`stderr` e enviando para o Loki através do Promtail."
 
 > Esta especificação descreve **o quê** e **por quê**. Decisões de **como** (versões de imagem,
@@ -86,8 +86,9 @@ nenhum deles configura saída de log para arquivo (nem monta volume dedicado a a
 
 - **Contêiner de vida curta** (termina em poucos segundos): os logs emitidos antes do fim
   ainda precisam ser ingeridos.
-- **Reinício do coletor**: ao reiniciar, o coletor não pode perder nem duplicar de forma
-  significativa os logs já enviados (precisa guardar a posição de leitura).
+- **Reinício do coletor**: ao reiniciar, o coletor não pode perder logs (precisa guardar a
+  posição de leitura). A entrega é *at-least-once*: uma pequena duplicação das últimas linhas
+  antes do reinício é aceitável.
 - **Armazenamento central indisponível temporariamente**: o coletor deve tentar de novo e não
   derrubar os contêineres de aplicação.
 - **Linhas muito longas ou multilinha** (ex.: stack traces): devem ser ingeridas sem derrubar
@@ -118,7 +119,7 @@ nenhum deles configura saída de log para arquivo (nem monta volume dedicado a a
 - **FR-006**: O coletor (Promtail) DEVE descobrir contêineres pelo socket do Docker
   (`/var/run/docker.sock`), montado **somente leitura**.
 - **FR-007**: O coletor DEVE guardar a posição de leitura de forma persistente para não
-  perder nem duplicar logs ao reiniciar.
+  perder logs ao reiniciar (entrega *at-least-once*; pequena duplicação é tolerada).
 - **FR-008**: O coletor e o armazenamento central DEVEM ser serviços da stack de
   observabilidade definida em `infra/compose.obs.yml`, com a configuração versionada em
   `infra/promtail/config.yaml` e `infra/loki/config.yaml`.
@@ -157,7 +158,7 @@ nenhum deles configura saída de log para arquivo (nem monta volume dedicado a a
 - **SC-003**: Um contêiner novo começa a ter logs coletados em até 30 segundos após iniciar,
   sem reinício da stack de observabilidade.
 - **SC-004**: Depois de reiniciar o coletor, não há lacuna de logs para contêineres que
-  continuaram rodando durante o reinício.
+  continuaram rodando durante o reinício (duplicação residual das últimas linhas é aceitável).
 - **SC-005**: Uma consulta filtrada por serviço do Compose retorna apenas linhas desse
   serviço (0 falsos positivos em teste com ≥ 2 serviços).
 - **SC-006**: 0 serviços definidos no repositório configurados para gravar logs em arquivo
@@ -177,6 +178,14 @@ nenhum deles configura saída de log para arquivo (nem monta volume dedicado a a
 - Autenticação/multi-tenant no Loki não é necessária para o ambiente atual (uso
   single-tenant).
 
+## Riscos
+
+- **Promtail em fim de vida (EOL)**: a Grafana descontinuou o Promtail. Ele entrou em LTS em
+  2025 e chegou ao EOL no início de 2026, com o **Grafana Alloy** como substituto oficial. Como a
+  Issue exige o Promtail explicitamente, esta spec mantém a restrição, mas a escolha do coletor
+  DEVE ser confirmada em `/speckit-clarify`: manter o Promtail (aceitando o EOL) ou adotar o
+  Alloy/"coletor compatível com Loki". Os requisitos FR-001 a FR-007 independem do coletor.
+
 ## Fora do Escopo
 
 - Dashboards, data sources e alertas no Grafana.
@@ -186,7 +195,8 @@ nenhum deles configura saída de log para arquivo (nem monta volume dedicado a a
 
 ## Próximas Etapas do Fluxo SDD
 
-1. `/speckit-clarify` — resolver os 3 pontos `[NEEDS CLARIFICATION]` (FR-011, FR-012, FR-013).
+1. `/speckit-clarify` — resolver os 3 pontos `[NEEDS CLARIFICATION]` (FR-011, FR-012, FR-013)
+   e confirmar o coletor (Promtail EOL × Grafana Alloy — ver Riscos).
 2. `/speckit-plan` — decidir versões de imagem, estrutura dos arquivos de configuração, rede,
    volumes e estratégia de validação.
 3. `/speckit-tasks` — quebrar o plano em tarefas executáveis.
