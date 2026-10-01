@@ -1,0 +1,29 @@
+# Camada de observabilidade: coleta de stdout/stderr de todos os contêineres do
+# host (Grafana Alloy) e armazenamento/consulta no Loki por um gateway autenticado.
+# Especificação: specs/003-agregacao-logs-loki/
+#
+# Uso (a partir da raiz do repositório):
+#   docker compose --env-file .env -f infra/compose.yaml -f infra/compose.obs.yaml up -d --build
+#
+# Política de env_file: nenhum serviço desta camada usa `env_file`. As variáveis
+# vêm de interpolação via `--env-file .env`, com default ou obrigatórias
+# (`${VAR:?}`), e cada serviço declara seu bloco `environment` explicitamente.
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: ${DOCKER_LOG_MAX_SIZE:-10m}
+    max-file: "${DOCKER_LOG_MAX_FILE:-3}"
+
+services: {}
+
+networks:
+  docker-api:
+    name: ${COMPOSE_PROJECT_NAME:-jhonny_v}-docker-api
+    internal: true
+
+volumes:
+  loki-data:
+    name: ${COMPOSE_PROJECT_NAME:-jhonny_v}-loki-data
+  alloy-data:
+    name: ${COMPOSE_PROJECT_NAME:-jhonny_v}-alloy-data
