@@ -22,8 +22,9 @@ Todas as decisões abaixo foram validadas num protótipo descartável (em `/tmp`
   - `tecnativa/docker-socket-proxy:v0.5.0`: substituído pela decisão do checklist Q7 (ver Decision 3).
 ## Decision 2: Coletor = Grafana Alloy com `loki.source.docker`
 
-- **Decision**: pipeline `discovery.docker` → `discovery.relabel` → `loki.source.docker` → `loki.process` → `loki.write`, em `infra/alloy/config.alloy`, com `refresh_interval = "5s"`.
+- **Decision**: pipeline `discovery.docker` → `discovery.relabel` → `loki.source.docker` → `loki.process` → `loki.write`, em `infra/alloy/config.alloy`, com `refresh_interval = "1s"` (no `discovery.docker` e no `loki.source.docker`).
 - **Rationale**: o `loki.source.docker` lê os logs pela API do Docker (`/containers/{id}/logs`), sem montar `/var/lib/docker/containers`. Isso combina com o proxy de socket (FR-009) e mantém a descoberta dinâmica (FR-003). No protótipo, um contêiner novo ficou consultável em cerca de 10 s (SC-003 ≤ 30 s).
+- **Contêineres de vida curta (medido na implementação)**: com `refresh_interval = "5s"`, um contêiner que vive ~2 s era perdido com frequência; com `"1s"`, contêineres que vivem ≥ 4–5 s foram ingeridos em 100% das medições (18/18), e os de 2–3 s em ~50–70%. Com `docker run --rm`, o Docker apaga o log no encerramento, então nenhum coletor pela API garante essas linhas. O edge case da spec fica garantido a partir de ~5 s de vida, e abaixo disso é best-effort.
 - **Alternatives considered**: ler os arquivos `*-json.log` do host, rejeitado (exige montar o diretório do Docker, perde metadados do Compose e foi descartado na clarificação Q1); Promtail, rejeitado (EOL, clarificação Q3).
 
 ## Decision 3: Proxy de socket e permissões mínimas

@@ -67,7 +67,7 @@ Toda a abordagem foi prototipada localmente com as versões fixadas abaixo (ver 
 
 **Performance Goals**:
 - Linha visível no Loki em ≤ 10 s, em condições normais: camada saudável e até 1000 linhas/s (SC-002).
-- Contêiner novo coletado em ≤ 30 s (SC-003). No protótipo, um contêiner novo ficou consultável em cerca de 10 s com `refresh_interval = "5s"`.
+- Contêiner novo coletado em ≤ 30 s (SC-003). No protótipo, um contêiner novo ficou consultável em cerca de 10 s com `refresh_interval = "5s"`; a implementação usa `"1s"` para cobrir contêineres de vida curta (research, Decision 2).
 
 **Constraints**:
 - O coletor não monta o socket.

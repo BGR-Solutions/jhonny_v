@@ -29,15 +29,15 @@
 
 **Purpose**: criar a estrutura de diretórios, o projeto de testes e o contrato de variáveis.
 
-- [ ] T001 Criar os diretórios `infra/loki/`, `infra/loki-gateway/`, `infra/alloy/` e `infra/tests/` (estrutura do plan.md)
-- [ ] T002 Criar `infra/pyproject.toml` (FR-027; constituição 3.1.2, 3.1.4, 3.5.1):
+- [X] T001 Criar os diretórios `infra/loki/`, `infra/loki-gateway/`, `infra/alloy/` e `infra/tests/` (estrutura do plan.md)
+- [X] T002 Criar `infra/pyproject.toml` (FR-027; constituição 3.1.2, 3.1.4, 3.5.1):
   - projeto `jhonny-v-infra-tests`, `requires-python = ">=3.12"`;
   - dependências `pytest` e `httpx`; extra `dev` com `black` e `ruff`;
   - `[tool.pytest.ini_options]` com `testpaths = ["tests"]` e os markers `disruptive` (reinicia ou recria serviços) e `slow`;
   - `[tool.ruff]` e `[tool.black]` com `line-length = 88` e `target-version` py312;
   - sem `requirements.txt`.
-- [ ] T003 Gerar `infra/uv.lock` com `cd infra && uv lock`, e confirmar que `infra/.gitignore` (ou o `.gitignore` da raiz) ignora `infra/.venv/` e `__pycache__/` (constituição 3.4.7)
-- [ ] T004 [P] Atualizar `.env.example`, na seção de observabilidade (FR-018):
+- [X] T003 Gerar `infra/uv.lock` com `cd infra && uv lock`, e confirmar que `infra/.gitignore` (ou o `.gitignore` da raiz) ignora `infra/.venv/` e `__pycache__/` (constituição 3.4.7)
+- [X] T004 [P] Atualizar `.env.example`, na seção de observabilidade (FR-018):
   - `LOKI_RETENTION_PERIOD=7d`, `LOKI_LOG_LEVEL=info`, `DOCKER_LOG_MAX_SIZE=10m`, `DOCKER_LOG_MAX_FILE=3`;
   - `LOKI_GATEWAY_USER=` e `LOKI_GATEWAY_PASSWORD=` vazios, com comentário "obrigatório; segredo, não versionar";
   - `DOCKER_GID=`, com comentário "obrigatório; `stat -c %g /var/run/docker.sock`";
@@ -51,7 +51,7 @@
 
 **⚠️ CRITICAL**: nenhuma história pode começar antes de esta fase terminar.
 
-- [ ] T005 Criar `infra/tests/conftest.py` com fixtures de sessão, todas com type hints e docstrings estilo Google:
+- [X] T005 Criar `infra/tests/conftest.py` com fixtures de sessão, todas com type hints e docstrings estilo Google:
   - `env`: lê `LOKI_GATEWAY_USER`, `LOKI_GATEWAY_PASSWORD`, `LOKI_PORT` (default 3100) e `HOST_IP` (default 127.0.0.1) do ambiente; falha com mensagem clara se faltar credencial;
   - `loki`: um `httpx.Client` com `base_url` do gateway e `auth=(user, password)`;
   - `query_lines(logql, since)`: chama `/loki/api/v1/query_range` e devolve as linhas com seus labels e metadados;
@@ -59,13 +59,13 @@
   - `compose(*args)`: executa `docker compose --env-file ../.env -f compose.yaml -f compose.core.yaml -f compose.obs.yaml …` via `subprocess`;
   - `probe_container(name, script, labels=None)`: sobe `busybox:1.37.0-musl` com `docker run -d --rm`, faz cleanup no teardown e gera nomes únicos com o prefixo `qs-`;
   - `llm_env`: valida que `LITELLM_MASTER_KEY` está definido e define `OLLAMA_API_BASE=http://ollama-local-mock:11435` e `COMPOSE_PROFILES=core,validation` para a camada llm (SC-007). Se faltar algum pré-requisito, MUST falhar com mensagem explícita, nunca chamar `pytest.skip` (SC-014; constituição 6.3).
-- [ ] T006 Criar `infra/tests/__init__.py` vazio e `infra/tests/README.md` com os pré-requisitos (`.env` preenchido, stack no ar) e os comandos `uv sync --extra dev`, `uv run pytest -v` e `uv run pytest -m "not disruptive"`
-- [ ] T007 Criar o esqueleto de `infra/compose.obs.yaml` (FR-013, FR-019; research, Decisions 4, 8 e 9). No topo, um comentário que declara a política de `env_file` (constituição 3.4.2 / IV): nenhum serviço usa `env_file`, e as variáveis vêm de interpolação via `--env-file .env`, com default ou obrigatórias (`${VAR:?}`). Cada serviço declara seu bloco `environment` explicitamente. O esqueleto contém:
+- [X] T006 Criar `infra/tests/__init__.py` vazio e `infra/tests/README.md` com os pré-requisitos (`.env` preenchido, stack no ar) e os comandos `uv sync --extra dev`, `uv run pytest -v` e `uv run pytest -m "not disruptive"`
+- [X] T007 Criar o esqueleto de `infra/compose.obs.yaml` (FR-013, FR-019; research, Decisions 4, 8 e 9). No topo, um comentário que declara a política de `env_file` (constituição 3.4.2 / IV): nenhum serviço usa `env_file`, e as variáveis vêm de interpolação via `--env-file .env`, com default ou obrigatórias (`${VAR:?}`). Cada serviço declara seu bloco `environment` explicitamente. O esqueleto contém:
   - bloco `x-logging: &default-logging` com `driver: json-file`, `max-size: ${DOCKER_LOG_MAX_SIZE:-10m}` e `max-file: "${DOCKER_LOG_MAX_FILE:-3}"`;
   - a rede `docker-api` (`name: ${COMPOSE_PROJECT_NAME:-jhonny_v}-docker-api`, `internal: true`);
   - os volumes `loki-data` e `alloy-data`, com `name:` prefixado pelo projeto;
   - `services: {}` vazio, a preencher nas histórias.
-- [ ] T008 Validar o esqueleto com `docker compose --env-file .env -f infra/compose.yaml -f infra/compose.obs.yaml config --quiet` (Setup 1 do quickstart)
+- [X] T008 Validar o esqueleto com `docker compose --env-file .env -f infra/compose.yaml -f infra/compose.obs.yaml config --quiet` (Setup 1 do quickstart)
 
 **Checkpoint**: fixtures e esqueleto prontos; as histórias podem começar.
 
@@ -81,51 +81,51 @@
 
 > Escrever primeiro e confirmar que falham (`uv run pytest` → falha de conexão ou de asserção) antes de T019.
 
-- [ ] T009 [P] [US1] Teste de ingestão em `infra/tests/test_ingestion.py`:
+- [X] T009 [P] [US1] Teste de ingestão em `infra/tests/test_ingestion.py`:
   - SC-001: todos os serviços de `compose config --services` aparecem em `label/compose_service/values`, e um contêiner avulso sem labels Compose aparece em `label/container/values` (FR-002);
   - SC-003: um probe novo fica consultável em ≤ 30 s;
-  - edge case de vida curta: um contêiner que imprime uma linha e encerra em ~2 s (`docker run --rm`) tem a linha ingerida;
+  - edge case de vida curta: um contêiner que imprime uma linha e encerra em ~5 s (sem `--rm`, que apaga o log no encerramento) tem a linha ingerida;
   - stdout × stderr distinguíveis pelo rótulo `stream`;
   - SC-002: uma linha com timestamp embutido fica consultável em ≤ 10 s.
-- [ ] T010 [P] [US1] Teste de gateway em `infra/tests/test_gateway.py` (SC-010, FR-015):
+- [X] T010 [P] [US1] Teste de gateway em `infra/tests/test_gateway.py` (SC-010, FR-015):
   - sem credencial → `401`; credencial inválida → `401`; credencial válida → `200` em `/loki/api/v1/labels`; `GET /ready` sem credencial → `200`;
   - a porta publicada está ligada só a `127.0.0.1` (`docker port`);
   - um acesso pelo IP não-loopback do host falha;
   - `http://loki:3101/ready` falha a partir de um busybox na rede `jhonny_v-core`.
-- [ ] T011 [P] [US1] Teste do proxy em `infra/tests/test_socket_proxy.py` (SC-008, SC-009, FR-009):
+- [X] T011 [P] [US1] Teste do proxy em `infra/tests/test_socket_proxy.py` (SC-008, SC-009, FR-009):
   - via `docker compose exec alloy bash /dev/tcp`: `POST /containers/create` e `DELETE /containers/x` → `405`; `GET /images/json` e `GET /info` → `403`; asserções positivas para cada caminho da allowlist: `GET /_ping`, `HEAD /_ping`, `GET /version`, `GET /containers/json`, `GET /containers/<id>/json`, `GET /containers/<id>/logs?stdout=1&tail=1`, `GET /networks` e `GET /networks/<id>` → `200`, com e sem o prefixo `/v1.NN`;
   - os mounts do `alloy` não contêm `docker.sock`;
   - o proxy está só na rede `jhonny_v-docker-api`, e os membros dessa rede são exatamente `socket-proxy` e `alloy`;
   - um busybox em `jhonny_v-core` não alcança `socket-proxy:2375`;
   - `docker inspect` do proxy mostra o usuário `65534:<DOCKER_GID>` e `ReadonlyRootfs=true`.
-- [ ] T012 [P] [US1] Teste de mascaramento em `infra/tests/test_masking.py` (SC-012, FR-022):
+- [X] T012 [P] [US1] Teste de mascaramento em `infra/tests/test_masking.py` (SC-012, FR-022):
   - um probe emite uma linha de cada padrão (token `Bearer`, `sk-…`, `"password":"…"`, `token=…`, `api_key=…`), montando a palavra `Bearer` em runtime para evitar falso positivo de secret scanning;
   - todas as linhas aparecem com `<redacted>`;
   - uma busca `|~` pelos valores originais retorna 0 linhas.
-- [ ] T013 [P] [US1] Teste de limites de linha em `infra/tests/test_line_limits.py` (SC-013, FR-023, FR-024):
+- [X] T013 [P] [US1] Teste de limites de linha em `infra/tests/test_line_limits.py` (SC-013, FR-023, FR-024):
   - uma linha de 300.000 `a` é armazenada com 262.144 caracteres;
   - o timestamp da entrada no Loki é igual ao de `docker logs -t`, com tolerância de 1 ms.
-- [ ] T014 [P] [US1] Teste de retenção em `infra/tests/test_retention.py` (FR-012), via `docker run grafana/loki:3.7.8 -verify-config -print-config-stderr` montando `infra/loki/`:
+- [X] T014 [P] [US1] Teste de retenção em `infra/tests/test_retention.py` (FR-012), via `docker run grafana/loki:3.7.8 -verify-config -print-config-stderr` montando `infra/loki/`:
   - `LOKI_RETENTION_PERIOD=72h` → `retention_period: 3d`;
   - sem a variável → `1w`;
   - `abc` → exit ≠ 0 com `not a valid duration string`.
-- [ ] T015 [P] [US1] Teste de entrega em `infra/tests/test_delivery.py`, marker `disruptive`:
+- [X] T015 [P] [US1] Teste de entrega em `infra/tests/test_delivery.py`, marker `disruptive`:
   - SC-004: um emissor de sequência `seq=N`; `compose restart alloy`; esperar `healthy`; os números únicos consultados formam uma sequência contínua;
   - FR-011: `compose rm -sf loki && compose up -d loki loki-gateway`; uma linha anterior continua consultável;
   - FR-025: um contêiner que logou antes de o `alloy` subir tem essas linhas ingeridas;
   - edge case de reinício do proxy: com o emissor de sequência ativo, `compose restart socket-proxy`; esperar `healthy`; 0 números faltando.
-- [ ] T016 [P] [US1] Teste de subida em `infra/tests/test_startup.py` (SC-007, FR-013), marker `disruptive` e `slow`:
+- [X] T016 [P] [US1] Teste de subida em `infra/tests/test_startup.py` (SC-007, FR-013), marker `disruptive` e `slow`:
   - as combinações base+obs, base+core+llm+obs, e obs por último, uma execução de cada (SC-007); a camada llm usa a fixture `llm_env` (perfil `validation`);
   - os quatro serviços obs ficam `healthy` sem restart (`RestartCount == 0`);
   - a ordem de `StartedAt` respeita `loki` → `loki-gateway` → `alloy`.
 
 ### Implementation for User Story 1
 
-- [ ] T017 [P] [US1] Criar `infra/loki/Dockerfile`, com dois estágios (research, Decision 7):
+- [X] T017 [P] [US1] Criar `infra/loki/Dockerfile`, com dois estágios (research, Decision 7):
   - `FROM busybox:1.37.0-musl AS probe`;
   - `FROM grafana/loki:3.7.8`;
   - `COPY --from=probe /bin/busybox /usr/bin/busybox`.
-- [ ] T018 [P] [US1] Criar `infra/loki/config.yaml` (FR-011, FR-012, FR-020, FR-023; research, Decision 6):
+- [X] T018 [P] [US1] Criar `infra/loki/config.yaml` (FR-011, FR-012, FR-020, FR-023; research, Decision 6):
   - `auth_enabled: false`;
   - `server`: `http_listen_address: 127.0.0.1`, `http_listen_port: 3101`, `log_format: json` e `log_level: ${LOKI_LOG_LEVEL:-info}`;
   - `common`, com `path_prefix /loki`, storage filesystem, `replication_factor 1` e ring inmemory;
@@ -133,13 +133,13 @@
   - `compactor`, com `retention_enabled: true` e `delete_request_store: filesystem`;
   - `limits_config`, com `retention_period: ${LOKI_RETENTION_PERIOD:-7d}`, `allow_structured_metadata: true`, `discover_service_name: [compose_service]` (FR-005, exigido já na US1), `max_line_size: 256KB` e `max_line_size_truncate: true`;
   - `analytics.reporting_enabled: false`.
-- [ ] T019 [P] [US1] Criar `infra/loki-gateway/Caddyfile` (FR-015, FR-020; research, Decisions 10 e 13):
+- [X] T019 [P] [US1] Criar `infra/loki-gateway/Caddyfile` (FR-015, FR-020; research, Decisions 10 e 13):
   - global: `admin off` e `log { output stderr; format json }`;
   - site `:3100`, com access log JSON, matcher `@quiet path /ready /loki/api/v1/push` e `log_skip @quiet`;
   - `handle /ready { reverse_proxy 127.0.0.1:3101 }`;
   - `handle { basic_auth { {$LOKI_GATEWAY_USER} {$LOKI_GATEWAY_PASSWORD_HASH} } reverse_proxy 127.0.0.1:3101 }`;
   - validar com `caddy validate` (Setup 4 do quickstart).
-- [ ] T020 [US1] Adicionar o serviço `socket-proxy` em `infra/compose.obs.yaml` (FR-009; research, Decision 3):
+- [X] T020 [US1] Adicionar o serviço `socket-proxy` em `infra/compose.obs.yaml` (FR-009; research, Decision 3):
   - `image: wollomatic/socket-proxy:1.13.1` e `restart: unless-stopped`;
   - `user: "65534:${DOCKER_GID:?DOCKER_GID obrigatório}"`;
   - hardening: `read_only: true`, `cap_drop: [ALL]` e `security_opt: [no-new-privileges:true]`;
@@ -147,7 +147,7 @@
   - volume `/var/run/docker.sock:/var/run/docker.sock:ro` e `networks: [docker-api]`;
   - healthcheck `["CMD", "./healthcheck"]`;
   - `logging: *default-logging`.
-- [ ] T021 [US1] Adicionar os serviços `loki` e `loki-gateway` em `infra/compose.obs.yaml` (FR-013, FR-015; research, Decisions 7, 12 e 13):
+- [X] T021 [US1] Adicionar os serviços `loki` e `loki-gateway` em `infra/compose.obs.yaml` (FR-013, FR-015; research, Decisions 7, 12 e 13):
   - `loki`:
     - `build: ./loki`;
     - `command` com `-config.file=/etc/loki/config.yaml` e `-config.expand-env=true`;
@@ -164,15 +164,15 @@
     - `depends_on: loki: service_healthy`;
     - healthcheck `wget -qO- http://127.0.0.1:3100/ready`.
   - Ambos com `restart: unless-stopped` e `logging: *default-logging`.
-- [ ] T022 [US1] Criar `infra/alloy/config.alloy`, na parte de coleta e entrega (FR-001 a FR-005, FR-010, FR-022, FR-026; research, Decisions 2, 5 e 14):
+- [X] T022 [US1] Criar `infra/alloy/config.alloy`, na parte de coleta e entrega (FR-001 a FR-005, FR-010, FR-022, FR-026; research, Decisions 2, 5 e 14):
   - `logging { level = "info" format = "json" }`;
-  - `discovery.docker` com `host = "tcp://socket-proxy:2375"` e `refresh_interval = "5s"`;
+  - `discovery.docker` com `host = "tcp://socket-proxy:2375"` e `refresh_interval = "1s"` (ajustado na implementação; research, Decision 2);
   - `discovery.relabel`, com as regras para `compose_project`, `compose_service`, `container` (regex `/(.*)`) e `stream`;
   - `loki.source.docker` com `relabel_rules`;
   - `loki.process` com os 3 `stage.replace` da Decision 14, todos com `<redacted>`;
   - `loki.write` com `url = "http://loki:3100/loki/api/v1/push"` e `basic_auth` via `sys.env`, sem sobrescrever os defaults de backoff (FR-026);
   - validar com `alloy fmt` (Setup 3 do quickstart).
-- [ ] T023 [US1] Adicionar o serviço `alloy` em `infra/compose.obs.yaml` (FR-010, FR-013):
+- [X] T023 [US1] Adicionar o serviço `alloy` em `infra/compose.obs.yaml` (FR-010, FR-013):
   - `image: grafana/alloy:v1.20.1`;
   - `command`: `run /etc/alloy/config.alloy --storage.path=/var/lib/alloy/data`;
   - `environment` com as credenciais do gateway (`${VAR:?}`);
@@ -182,7 +182,7 @@
   - healthcheck bash via `/dev/tcp` em `127.0.0.1:12345/-/ready`;
   - sem portas publicadas e sem montar `docker.sock`;
   - `restart: unless-stopped` e `logging: *default-logging`.
-- [ ] T024 [US1] Subir com `DC up -d --build` e rodar `cd infra && uv run pytest tests/test_ingestion.py tests/test_gateway.py tests/test_socket_proxy.py tests/test_masking.py tests/test_line_limits.py tests/test_retention.py tests/test_delivery.py tests/test_startup.py -v` até passar 100%; registrar a saída como evidência (Scenarios 1–3 e 6–9 do quickstart)
+- [X] T024 [US1] Subir com `DC up -d --build` e rodar `cd infra && uv run pytest tests/test_ingestion.py tests/test_gateway.py tests/test_socket_proxy.py tests/test_masking.py tests/test_line_limits.py tests/test_retention.py tests/test_delivery.py tests/test_startup.py -v` até passar 100%; registrar a saída como evidência (Scenarios 1–3 e 6–9 do quickstart)
 
 **Checkpoint**: a US1 está funcional e entrega o MVP: logs de todos os contêineres consultáveis com autenticação.
 
@@ -196,7 +196,7 @@
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T025 [P] [US2] Teste de filtros em `infra/tests/test_filters.py` (SC-005, FR-005 a FR-008):
+- [X] T025 [P] [US2] Teste de filtros em `infra/tests/test_filters.py` (SC-005, FR-005 a FR-008):
   - dois emissores JSON com labels Compose distintos;
   - `| detected_level="error"` retorna só as linhas `ERROR` (testar também `warning` → `warn` e `Info` → `info`);
   - `| trace_id="…"` retorna só o trace esperado;
@@ -206,9 +206,9 @@
 
 ### Implementation for User Story 2
 
-- [ ] T026 [US2] Acrescentar ao `loki.process` de `infra/alloy/config.alloy`, depois dos `stage.replace`, os estágios `stage.json { expressions = { level = "", trace_id = "", span_id = "" } }` e `stage.structured_metadata { values = { level = "", trace_id = "", span_id = "" } }` (FR-007; research, Decision 5)
-- [ ] T027 [US2] Acrescentar a `limits_config` de `infra/loki/config.yaml` a chave `discover_log_levels: true` (FR-007; research, Decision 15). O `discover_service_name` já entra no T018.
-- [ ] T028 [US2] Recriar `alloy` e `loki` (`DC up -d --build alloy loki`) e rodar `uv run pytest tests/test_filters.py -v` até passar; registrar a evidência (Scenarios 4–5 do quickstart)
+- [X] T026 [US2] Acrescentar ao `loki.process` de `infra/alloy/config.alloy`, depois dos `stage.replace`, os estágios `stage.json { expressions = { level = "", trace_id = "", span_id = "" } }` e `stage.structured_metadata { values = { level = "", trace_id = "", span_id = "" } }` (FR-007; research, Decision 5)
+- [X] T027 [US2] Acrescentar a `limits_config` de `infra/loki/config.yaml` a chave `discover_log_levels: true` (FR-007; research, Decision 15). O `discover_service_name` já entra no T018.
+- [X] T028 [US2] Recriar `alloy` e `loki` (`DC up -d --build alloy loki`) e rodar `uv run pytest tests/test_filters.py -v` até passar; registrar a evidência (Scenarios 4–5 do quickstart)
 
 **Checkpoint**: US1 e US2 funcionam de forma independente.
 
@@ -222,7 +222,7 @@
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T029 [P] [US3] Teste de conformidade em `infra/tests/test_compliance.py` (SC-006, SC-011, SC-015, FR-016, FR-019, FR-020):
+- [X] T029 [P] [US3] Teste de conformidade em `infra/tests/test_compliance.py` (SC-006, SC-011, SC-015, FR-016, FR-019, FR-020):
   - `config --format json` das 4 camadas: todo serviço tem `logging.driver == "json-file"`, `max-size == "10m"` e `max-file == "3"`;
   - nenhum volume ou bind mount com destino em diretórios de log (`/var/log`, `*.log`);
   - as últimas 20 linhas de `compose logs --no-log-prefix` de `loki`, `loki-gateway`, `alloy` e `socket-proxy` são JSON válido;
@@ -231,8 +231,8 @@
 
 ### Implementation for User Story 3
 
-- [ ] T030 [P] [US3] Adicionar o bloco `x-logging: &default-logging`, idêntico ao de T007, em `infra/compose.core.yaml`, e `logging: *default-logging` em `postgres`, `redis` e `rabbitmq`, sem nenhuma outra mudança (FR-019)
-- [ ] T031 [P] [US3] Adicionar o mesmo bloco `x-logging` em `infra/compose.llm.yaml`, e `logging: *default-logging` em `ollama-local-mock`, `ollama`, `litellm-cloud-unavailable` e `litellm`, sem nenhuma outra mudança (FR-019)
+- [X] T030 [P] [US3] Adicionar o bloco `x-logging: &default-logging`, idêntico ao de T007, em `infra/compose.core.yaml`, e `logging: *default-logging` em `postgres`, `redis` e `rabbitmq`, sem nenhuma outra mudança (FR-019)
+- [X] T031 [P] [US3] Adicionar o mesmo bloco `x-logging` em `infra/compose.llm.yaml`, e `logging: *default-logging` em `ollama-local-mock`, `ollama`, `litellm-cloud-unavailable` e `litellm`, sem nenhuma outra mudança (FR-019)
 - [ ] T032 [US3] Recriar as camadas com `DC_ALL up -d` e rodar `uv run pytest tests/test_compliance.py -v` até passar; registrar a evidência (Scenarios 10–11 do quickstart)
 
 **Checkpoint**: as três histórias estão funcionais e verificadas.
@@ -243,19 +243,19 @@
 
 **Purpose**: documentação, CI, lint e validação ponta a ponta. O T040 aparece antes do T037 porque o CI precisa existir para a validação final; o ID foi acrescentado no analyze para não renumerar as tarefas.
 
-- [ ] T033 [P] Atualizar `docs/issues/v0.1/ISSUE-103.md` (FR-021):
+- [X] T033 [P] Atualizar `docs/issues/v0.1/ISSUE-103.md` (FR-021):
   - Grafana Alloy no lugar do Promtail;
   - `infra/compose.obs.yaml` no lugar de `compose.obs.yml`;
   - `infra/alloy/config.alloy` no lugar de `infra/promtail/config.yaml`;
   - proxy de socket e gateway autenticado;
   - link para `specs/003-agregacao-logs-loki/`.
-- [ ] T034 [P] Atualizar `docs/milestones/v0.1-infra-core.md`: Promtail → Grafana Alloy, com o proxy de socket e o gateway autenticado, sem citar o Promtail como componente adotado (FR-021)
-- [ ] T035 [P] Atualizar `README.md`:
+- [X] T034 [P] Atualizar `docs/milestones/v0.1-infra-core.md`: Promtail → Grafana Alloy, com o proxy de socket e o gateway autenticado, sem citar o Promtail como componente adotado (FR-021)
+- [X] T035 [P] Atualizar `README.md`:
   - comando de subida da camada obs (`--env-file .env -f infra/compose.yaml -f infra/compose.obs.yaml`);
   - variáveis obrigatórias (`LOKI_GATEWAY_*`, `DOCKER_GID`);
   - como rodar os testes de aceite (`cd infra && uv run pytest`).
-- [ ] T036 [P] Registrar em `docs/adr/` um ADR curto sobre o gateway autenticado com namespace compartilhado e o proxy `wollomatic/socket-proxy` (research, Decisions 3, 12 e 13), e indexá-lo em `docs/README.md`
-- [ ] T040 Criar `.github/workflows/infra-obs.yaml` (FR-027, SC-014; research, Decision 18; constituição 3.5.3):
+- [X] T036 [P] Registrar em `docs/adr/` um ADR curto sobre o gateway autenticado com namespace compartilhado e o proxy `wollomatic/socket-proxy` (research, Decisions 3, 12 e 13), e indexá-lo em `docs/README.md`
+- [X] T040 Criar `.github/workflows/infra-obs.yaml` (FR-027, SC-014; research, Decision 18; constituição 3.5.3):
   - `on`: `pull_request` e `push` com `paths` (`infra/**`, `.env.example`, `.github/workflows/infra-obs.yaml`);
   - `permissions: contents: read`, `concurrency` por ref com `cancel-in-progress: true`;
   - job `acceptance` em `ubuntu-24.04`, com `timeout-minutes: 40`;
@@ -268,9 +268,9 @@
     5. `uv run pytest -v`;
     6. `if: failure()`: `DC logs --no-color` (stdout do job, sem artefato em arquivo);
     7. `if: always()`: `DC_ALL down -v`.
-- [ ] T037 Rodar `cd infra && uv run ruff check . && uv run black --check .` e corrigir até zerar (constituição 3.5.1)
+- [X] T037 Rodar `cd infra && uv run ruff check . && uv run black --check .` e corrigir até zerar (constituição 3.5.1)
 - [ ] T038 Rodar a suíte completa com a stack no ar: `cd infra && uv run pytest -v` (SC-014), sem testes pulados, e confirmar que o workflow do T040 passou no pull request. Executar os Scenarios 13–16 do [quickstart.md](./quickstart.md) e registrar a saída de cada um como evidência (constituição 6.2)
-- [ ] T039 Varredura final de conformidade:
+- [X] T039 Varredura final de conformidade:
   - `grep -rn ':latest' infra/` → vazio;
   - `git ls-files | grep requirements.txt` → vazio;
   - `grep -nE 'min_backoff|max_backoff|max_backoff_retries' infra/alloy/config.alloy` → vazio, o que confirma os defaults de reenvio do FR-026;

@@ -89,7 +89,7 @@ Como responsável pela arquitetura, quero comprovar com evidência objetiva que 
 
 ### Edge Cases
 
-- Quando um contêiner tiver vida curta (encerrar segundos após iniciar), os logs emitidos antes do encerramento ainda devem ser ingeridos.
+- Quando um contêiner tiver vida curta (encerrar segundos após iniciar), os logs emitidos antes do encerramento ainda devem ser ingeridos. A garantia vale para contêineres que vivem ≥ 5 s; abaixo disso é best-effort, e com `--rm` o Docker apaga o log no encerramento (research, Decision 2).
 - Quando o coletor for reiniciado, não deve haver lacuna de logs dos contêineres que continuaram ativos; a entrega é "ao menos uma vez" e uma pequena duplicação das últimas linhas anteriores ao reinício é aceitável.
 - Quando o armazenamento central (ou o gateway) estiver temporariamente indisponível, o coletor deve tentar reenviar sem afetar a execução dos contêineres de aplicação. A política de reenvio e de descarte é definida pelo FR-026.
 - Quando uma linha JSON estiver malformada, ela deve ser ingerida como texto bruto, sem descartar a linha nem interromper a coleta.
