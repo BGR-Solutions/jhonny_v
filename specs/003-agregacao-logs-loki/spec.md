@@ -29,10 +29,14 @@
 - Q: Qual carimbo de tempo vale para cada linha? → A: O do Docker, isto é, o momento em que a linha foi escrita no `stdout`/`stderr`.
 - Q: Quando não há posição de leitura salva (primeira subida ou perda do volume do coletor), o histórico retido pelo Docker deve ser ingerido? → A: Sim. O histórico retido (até o limite de rotação) é ingerido, e duplicatas são aceitas.
 - Q: Qual proxy de socket deve ser usado, dado que o `tecnativa/docker-socket-proxy` emite logs em texto? → A: `wollomatic/socket-proxy`, que emite logs em JSON, roda sem root e funciona como allowlist por regex.
-- Q: Como os critérios de sucesso de infraestrutura são verificados? → A: Por testes de aceite em `pytest` (`infra/pyproject.toml` + `uv`), executados contra a stack em execução. A integração em CI fica para uma issue futura.
+- Q: Como os critérios de sucesso de infraestrutura são verificados? → A: Por testes de aceite em `pytest` (`infra/pyproject.toml` + `uv`), executados contra a stack em execução. A integração em CI foi depois trazida para o escopo (sessão analyze, D1:B).
 - Q: O ponto de consulta do Loki deve ter autenticação? → A: Sim. Um proxy reverso com autenticação HTTP básica fica na frente do Loki, e as credenciais vêm do `.env`.
 - Q: Limites de CPU e memória dos serviços de observabilidade entram nesta feature? → A: Não. Ficam para uma issue de follow-up que trate todas as camadas.
 - Q: Podem ser assumidos (a) crescimento do volume do Loki limitado só pela retenção, (b) evolução de schema do Loki fora do escopo, (c) "sem laço de realimentação" significando que os serviços de observabilidade não logam por linha ingerida no nível `info`, e (d) "condições normais" do SC-002 como camada saudável e até 1000 linhas/s no host? → A: Sim, os quatro.
+
+### Session 2026-10-01 (analyze)
+
+- Q: Como atender à constituição 3.5.3 ("testes validados por pipeline/CI antes da aprovação"), já que o repositório não tem pipeline? → A: A feature cria um workflow mínimo de CI no GitHub Actions. Ele roda lint, validações estáticas e a suíte `pytest` de aceite contra a stack. A exceção de CI deixa de existir.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -144,7 +148,7 @@ Como responsável pela arquitetura, quero comprovar com evidência objetiva que 
 
   A ausência de qualquer variável obrigatória MUST impedir a subida da camada (fail-fast), e valores reais de credenciais MUST NOT ser versionados.
 - **FR-019**: Todos os serviços de todas as camadas Compose do repositório (core, llm e obs) MUST aplicar um limite comum de rotação para as saídas `stdout`/`stderr` mantidas pelo Docker no host: default de 10 MB por arquivo e 3 arquivos por contêiner, ajustável por variável de ambiente. O limite MUST ser definido num bloco único por arquivo Compose (extensão `x-logging`), idêntico em todos os arquivos e reutilizado por todos os serviços do arquivo, sem duplicação por serviço. É o mesmo padrão do `x-common-environment`, já que âncoras YAML não atravessam arquivos. O limite vale para os serviços definidos nas camadas Compose do repositório; contêineres criados fora delas seguem a configuração de log do daemon Docker e continuam no escopo de coleta do FR-002.
-- **FR-020**: Os serviços da camada de observabilidade MUST emitir seus próprios logs em JSON estruturado no `stdout`/`stderr` (constituição 3.3.2). O nível de log do armazenamento central MUST ser configurável por variável de ambiente (`LOKI_LOG_LEVEL`, default `info`). Isso vale para os quatro serviços da camada: Loki, gateway, coletor e proxy de socket. No nível `info`, nenhum desses serviços MUST emitir uma linha de log por linha ingerida ou por requisição de ingestão.
+- **FR-020**: Os serviços da camada de observabilidade MUST emitir seus próprios logs em JSON estruturado no `stdout`/`stderr` (constituição 3.3.2). O nível de log do armazenamento central MUST ser configurável por variável de ambiente (`LOKI_LOG_LEVEL`, default `info`). Isso vale para os quatro serviços da camada: Loki, gateway, coletor e proxy de socket. No nível `info`, nenhum desses serviços MUST emitir uma linha de log por linha ingerida ou por requisição de ingestão. A ausência de laço de realimentação é medida pelo SC-015.
 - **FR-021**: Os documentos `docs/issues/v0.1/ISSUE-103.md` e `docs/milestones/v0.1-infra-core.md` MUST ser atualizados na implementação para refletir: Grafana Alloy no lugar do Promtail, `infra/compose.obs.yaml` no lugar de `compose.obs.yml`, `infra/alloy/config.alloy` no lugar de `infra/promtail/config.yaml` e o proxy de socket no lugar da montagem direta do socket, e o gateway autenticado na frente do Loki. Depois da atualização, nenhum desses documentos pode citar o Promtail como componente adotado.
 - **FR-022**: O coletor MUST mascarar, antes do envio, os valores destes padrões conhecidos de segredo, substituindo-os por `<redacted>`:
   - tokens após `Bearer`, sem distinção de maiúsculas;
@@ -160,7 +164,13 @@ Como responsável pela arquitetura, quero comprovar com evidência objetiva que 
   - em projeto Python próprio da infraestrutura (`infra/pyproject.toml`, dependências gerenciadas com `uv`, formatação com Black e lint com Ruff);
   - com testes em `infra/tests/`.
 
-  A execução em CI está fora do escopo desta feature.
+  A suíte MUST rodar num workflow de CI do GitHub Actions (`.github/workflows/infra-obs.yaml`), disparado em pull requests e pushes que alterem `infra/**`, `.env.example` ou o próprio workflow. O workflow:
+  - roda Ruff, Black e as validações estáticas (`compose config`, `loki -verify-config`, `alloy fmt`, `caddy validate`);
+  - sobe a stack com um `.env` gerado no job, com credenciais aleatórias mascaradas no log e sem segredos versionados;
+  - executa a suíte completa;
+  - derruba a stack ao final, mesmo em caso de falha.
+
+  Uma falha em qualquer etapa MUST bloquear o merge (constituição 3.5.3 e 7.2).
 
 ### Key Entities *(include if feature involves data)*
 
@@ -182,7 +192,9 @@ Como responsável pela arquitetura, quero comprovar com evidência objetiva que 
 - **SC-004**: Após reiniciar o coletor, 0 linhas são perdidas para contêineres que continuaram ativos durante o reinício. A medição usa um emissor de sequência numerada contínua: depois do reinício, nenhum número da sequência pode faltar no armazenamento central (duplicatas são permitidas).
 - **SC-005**: Em teste com ao menos 2 serviços emitindo JSON estruturado, filtros por serviço, por nível normalizado (`detected_level`) e por `trace_id` retornam 0 falsos positivos.
 - **SC-006**: A revisão de conformidade das camadas Compose encontra 0 serviços configurados para gravar logs em arquivo local.
-- **SC-007**: A camada de observabilidade inicia com todos os serviços saudáveis na primeira tentativa, em 100% das execuções de validação, tanto só com a camada base quanto combinada com as camadas core e llm, em qualquer ordem de inicialização das camadas. Contêineres de camadas iniciadas depois são descobertos pelo FR-003.
+- **SC-007**: A camada de observabilidade inicia com todos os serviços saudáveis na primeira tentativa, em 100% das execuções de validação, tanto só com a camada base quanto combinada com as camadas core e llm, em qualquer ordem de inicialização das camadas. As execuções de validação são três (base+obs; base+core+llm+obs; base+core+llm e depois obs), cada uma executada uma vez por rodada da suíte. Contêineres de camadas iniciadas depois são descobertos pelo FR-003.
+
+A camada llm é validada com o perfil `validation` da feature 002 (`OLLAMA_API_BASE=http://ollama-local-mock:11435`) e exige `LITELLM_MASTER_KEY` no `.env`. Se faltar algum pré-requisito, o teste falha com mensagem explícita; ele não é pulado.
 - **SC-008**: Em teste de validação, 100% das tentativas de operação de escrita na API do Docker feitas através do proxy de socket são negadas (`403` ou `405`), e o coletor não tem o socket do Docker montado.
 - **SC-009**: Em teste de validação, 0 contêineres além do coletor conseguem alcançar o proxy de socket. A verificação é exaustiva pela topologia (o proxy está conectado só à rede dedicada, cujo único outro membro é o coletor) e é complementada por uma tentativa de conexão a partir da rede `jhonny-core`, que MUST falhar.
 - **SC-010**: Com os valores default, o gateway de consulta:
@@ -192,7 +204,8 @@ Como responsável pela arquitetura, quero comprovar com evidência objetiva que 
 - **SC-011**: 100% dos serviços definidos nas camadas Compose do repositório aplicam o limite comum de rotação; com os valores default, o espaço em disco ocupado pelos logs de cada contêiner no host não passa de 30 MB, medidos como o tamanho em disco de todos os arquivos `json-file` do contêiner (o arquivo ativo e os rotacionados, incluindo o envelope JSON do Docker).
 - **SC-012**: Em teste com uma linha de exemplo de cada padrão do FR-022, 100% dos valores secretos aparecem como `<redacted>` no armazenamento central, e 0 valores originais são encontrados por busca textual.
 - **SC-013**: Uma linha de 300.000 caracteres é armazenada truncada em 262.144 bytes (256 KB), sem rejeição do lote.
-- **SC-014**: Os SC-001 a SC-013 são cobertos por testes `pytest` em `infra/tests/` (FR-027), cuja execução contra a stack em execução passa sem falhas.
+- **SC-014**: Os SC-001 a SC-013 e o SC-015 são cobertos por testes `pytest` em `infra/tests/` (FR-027), cuja execução contra a stack passa sem falhas e sem testes pulados, tanto localmente quanto no workflow de CI.
+- **SC-015**: Com a camada ociosa (sem contêineres de teste ativos) por 5 minutos, os quatro serviços da camada geram juntos no máximo 60 linhas/min. Além disso, a taxa do 5º minuto não passa de 1,2× a taxa do 2º minuto (volume não crescente).
 
 ## Assumptions
 

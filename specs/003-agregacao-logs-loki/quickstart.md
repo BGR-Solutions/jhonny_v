@@ -32,6 +32,8 @@ Nos comandos abaixo, `DC` é um atalho para `docker compose --env-file .env -f i
 
 ### Scenario 1: Subida saudável, sozinha e combinada (SC-007)
 
+Para a camada llm, use `--profile validation`, com `OLLAMA_API_BASE=http://ollama-local-mock:11435` e `LITELLM_MASTER_KEY` definidos no `.env`.
+
 1. Só base + obs: `docker compose --env-file .env -f infra/compose.yaml -f infra/compose.obs.yaml up -d --build`, depois `docker compose --env-file .env -f infra/compose.yaml -f infra/compose.obs.yaml ps`.
 2. Subir core e llm por cima, sem derrubar a obs: `DC_ALL up -d`, depois `DC_ALL ps`.
 3. Ordem inversa: `DC_ALL down`, subir só base + core + llm e, por último, a obs com `DC_ALL up -d --build`.
@@ -110,9 +112,9 @@ Nos comandos abaixo, `DC` é um atalho para `docker compose --env-file .env -f i
 
 1. Revisar `infra/compose*.yaml`, `infra/loki/config.yaml`, `infra/alloy/config.alloy` e `infra/loki-gateway/Caddyfile`.
 2. `DC logs --no-log-prefix --tail 5 loki loki-gateway alloy socket-proxy`.
-3. Com a camada ociosa por 60 s, contar as linhas novas de `{compose_service=~"loki|loki-gateway|alloy|socket-proxy"}`.
+3. Com a camada ociosa por 5 min, contar por minuto as linhas novas de `{compose_service=~"loki|loki-gateway|alloy|socket-proxy"}`.
 
-**Expected outcome**: no passo 1, nenhum serviço configura saída de log para arquivo nem monta volume de logs. No passo 2, cada linha é um objeto JSON válido. No passo 3, o volume não cresce com o tempo: não há linha por push nem por healthcheck (laço de realimentação ausente).
+**Expected outcome**: no passo 1, nenhum serviço configura saída de log para arquivo nem monta volume de logs. No passo 2, cada linha é um objeto JSON válido. No passo 3, com a camada ociosa por 5 min, o total é ≤ 60 linhas/min, e o 5º minuto não passa de 1,2× o 2º (SC-015): não há linha por push nem por healthcheck.
 
 ### Scenario 12: Persistência do armazenamento (FR-011)
 
@@ -147,7 +149,7 @@ Nos comandos abaixo, `DC` é um atalho para `docker compose --env-file .env -f i
 1. `cd infra && uv sync --extra dev && uv run ruff check . && uv run black --check .`.
 2. Com a stack no ar e o `.env` carregado: `uv run pytest -v`.
 
-**Expected outcome**: lint sem erros e 100% dos testes aprovados, com um teste por SC (SC-001 a SC-013).
+**Expected outcome**: lint sem erros e 100% dos testes aprovados, sem testes pulados, cobrindo os SC-001 a SC-013 e o SC-015. O mesmo resultado precisa aparecer no workflow `.github/workflows/infra-obs.yaml` do pull request (FR-027).
 
 ## Traceability Matrix (FR → evidência)
 

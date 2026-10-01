@@ -59,7 +59,7 @@ Toda a abordagem foi prototipada localmente com as versões fixadas abaixo (ver 
 - Projeto Python próprio em `infra/pyproject.toml`, gerenciado com `uv`.
 - Validações estáticas complementares: `docker compose config`, `loki -verify-config`, `alloy fmt` e `caddy validate`.
 - As evidências são registradas por ID de SC no [quickstart.md](./quickstart.md).
-- A execução em CI fica para uma issue futura.
+- CI: workflow `.github/workflows/infra-obs.yaml` (GitHub Actions) executa lint, validações estáticas e a suíte completa contra a stack em pull requests e pushes que tocam `infra/**` (FR-027).
 
 **Target Platform**: host local com Docker Engine e Docker Compose v2 (Linux, macOS ou Windows com Docker Desktop).
 
@@ -85,6 +85,7 @@ Toda a abordagem foi prototipada localmente com as versões fixadas abaixo (ver 
 - 4 arquivos de configuração novos.
 - Ajuste de logging em 2 overlays existentes.
 - Projeto de testes de infra.
+- 1 workflow de CI.
 - Atualização de `.env.example`, `README.md`, ISSUE-103 e milestone v0.1.
 
 ## Constitution Check
@@ -105,14 +106,14 @@ Toda a abordagem foi prototipada localmente com as versões fixadas abaixo (ver 
 | 3.4.6 Volumes nomeados para persistência | `loki-data` e `alloy-data` declarados com `name:` prefixado pelo projeto | PASS |
 | 3.4.7 `.dockerignore` | O contexto de build é `infra/loki/` (só Dockerfile + config); o `.dockerignore` da raiz não muda | PASS |
 | 3.5.1 Black + Ruff | Configurados em `infra/pyproject.toml` para os testes de aceite | PASS |
-| 3.5.3 / 3.5.4 pytest + CI | Testes de aceite `pytest` cobrem os SCs. O repositório ainda não tem pipeline (`.github/workflows` não existe); a execução em CI vira follow-up | PASS com ressalva (CI) |
+| 3.5.3 / 3.5.4 pytest + CI | Testes de aceite `pytest` cobrem os SCs e rodam no workflow `.github/workflows/infra-obs.yaml`, que bloqueia o merge em caso de falha (decisão D1 do analyze) | PASS |
 | Princípio V (segurança por padrão) | O Loki não é exposto sem autenticação; o proxy de socket é uma allowlist só leitura, sem root; segredos conhecidos são mascarados no coletor | PASS |
 | 4.1 Ordem bottom-up | A feature pertence à v0.1 (Infra Core) | PASS |
 | 5.1 Fluxo SDD | specify → clarify → plan → **checklist** (decisões aplicadas) → tasks → analyze → implement | PASS |
 | 6.4 Bloqueios imediatos | Sem `requirements.txt`, sem logs em disco, sem segredos, sem rede implícita (todas declaradas) | PASS |
 
 - **Status pré-pesquisa**: PASS.
-- **Status pós-design**: PASS, com 1 ressalva (CI) e os itens de Complexity Tracking. As decisões do checklist (sessão 2026-10-01) removeram as exceções anteriores: logs em texto do proxy (agora `wollomatic/socket-proxy`, com logs JSON), ausência de pytest e Loki sem autenticação.
+- **Status pós-design**: PASS, com os itens de Complexity Tracking e sem exceções à constituição. A ressalva de CI foi removida pela decisão D1 do analyze (workflow mínimo). As decisões do checklist (sessão 2026-10-01) removeram as exceções anteriores: logs em texto do proxy (agora `wollomatic/socket-proxy`, com logs JSON), ausência de pytest e Loki sem autenticação.
 
 ## Project Structure
 
@@ -152,6 +153,7 @@ infra/
     ├── conftest.py
     └── test_*.py
 
+.github/workflows/infra-obs.yaml  # NOVO: CI (lint, validações estáticas, stack + pytest)
 .env.example                     # + LOKI_RETENTION_PERIOD, LOKI_LOG_LEVEL, DOCKER_LOG_MAX_SIZE, DOCKER_LOG_MAX_FILE,
                                  #   LOKI_GATEWAY_USER, LOKI_GATEWAY_PASSWORD, DOCKER_GID (LOKI_PORT já existe)
 README.md                        # + comando de subida da camada obs e dos testes de aceite
@@ -173,6 +175,7 @@ docs/milestones/v0.1-infra-core.md  # Promtail → Grafana Alloy
 | `infra/loki/Dockerfile` | Plataforma/Infra | Só adiciona o binário de probe; nenhuma outra customização |
 | `infra/loki-gateway/Caddyfile` | Plataforma/Segurança | Autenticação, exceção `/ready`, proxy para o Loki e access log |
 | `infra/pyproject.toml`, `infra/tests/` | Plataforma/QA | Testes de aceite dos SCs; não fazem parte de nenhuma imagem |
+| `.github/workflows/infra-obs.yaml` | Plataforma/QA | Gate de CI: lint, validações estáticas e suíte de aceite; gera um `.env` efêmero sem segredos versionados |
 | `infra/compose.core.yaml`, `infra/compose.llm.yaml` | Plataforma/Infra | Só o bloco `x-logging` (FR-019) |
 | `.env.example` | Plataforma | Contrato das novas variáveis, defaults e placeholders |
 
@@ -199,4 +202,3 @@ docs/milestones/v0.1-infra-core.md  # Promtail → Grafana Alloy
 | Proxy de socket com `-allowfrom=0.0.0.0/0` | O DNS embutido do Docker não responde dentro de um contêiner ligado só a uma rede `internal`, então a restrição por hostname (`-allowfrom=alloy`) bloqueia o próprio coletor | Fixar IPs (`ipam`) acopla a configuração a sub-redes. O isolamento real vem da topologia: a rede `docker-api` é interna e tem só dois membros (SC-009) |
 | `DOCKER_GID` obrigatório | O proxy roda sem root e precisa do grupo dono do socket, cujo GID varia por host | Rodar o proxy como root contraria o hardening do Princípio V |
 | Bloco `x-logging` repetido em cada arquivo Compose | Âncoras YAML não atravessam arquivos; o padrão `x-common-environment` já se repete pelo mesmo motivo | Um `include`/`extends` só para logging adicionaria complexidade sem ganho; o bloco é único **por arquivo** e não é duplicado por serviço (FR-019) |
-| Sem CI (3.5.3) | O repositório não tem pipeline | Criar a infraestrutura de CI está fora do escopo da ISSUE-103; os testes `pytest` ficam prontos para serem plugados num pipeline futuro |

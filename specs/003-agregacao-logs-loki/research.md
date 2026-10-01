@@ -206,4 +206,20 @@ Todas as decisões abaixo foram validadas num protótipo descartável (em `/tmp`
   - desenvolvimento: `black` e `ruff`.
 
   Os testes ficam em `infra/tests/` e rodam contra a stack em execução. Um teste por SC, com credenciais lidas do ambiente (`.env`).
-- **Rationale**: atende a constituição 3.1.2, 3.1.4, 3.5.1 e 3.5.3. O CI fica como follow-up porque `.github/workflows` não existe.
+- **Rationale**: atende a constituição 3.1.2, 3.1.4, 3.5.1 e 3.5.3.
+
+## Decision 18: Workflow de CI (analyze, D1:B)
+
+- **Decision**: `.github/workflows/infra-obs.yaml`, disparado em `pull_request` e `push` com filtro de paths (`infra/**`, `.env.example` e o próprio workflow).
+  - **Job**: `ubuntu-24.04`, `permissions: contents: read`, `timeout-minutes: 40`.
+  - **Actions**: fixadas por SHA de commit (`actions/checkout`, `astral-sh/setup-uv`).
+  - **Passos**:
+    1. Gerar o `.env` a partir do `.env.example`, com `LOKI_GATEWAY_PASSWORD` e `LITELLM_MASTER_KEY` aleatórios (`openssl rand`) e mascarados (`::add-mask::`), `DOCKER_GID` obtido com `stat -c %g /var/run/docker.sock` e `OLLAMA_API_BASE` apontando para o mock.
+    2. `uv sync --extra dev`, `ruff check` e `black --check`.
+    3. Validações estáticas.
+    4. Subir a stack com `up -d --build --wait`.
+    5. `uv run pytest -v`.
+    6. Em caso de falha, `compose logs` no log do job (stdout).
+    7. Sempre executar `down -v`.
+- **Rationale**: elimina a exceção à constituição 3.5.3. Os runners hospedados têm Docker Engine e Compose v2, e o socket fica em `/var/run/docker.sock`. Nenhum segredo é versionado: as credenciais são efêmeras por execução.
+- **Risco**: o bug de DNS multi-rede (Decision 12) foi observado no Docker 28.0.4 do ambiente de prototipação. A topologia escolhida já o evita, e funciona igual em versões sem o bug.
