@@ -1,4 +1,4 @@
-# Feature Specification: Agregação Centralizada de Logs de Contêineres (Promtail + Loki)
+# Feature Specification: Agregação Centralizada de Logs de Contêineres (Grafana Alloy + Loki)
 
 **Feature Branch**: `[003-agregacao-logs-loki]`
 
@@ -6,7 +6,15 @@
 
 **Status**: Draft
 
-**Input**: User description: "ISSUE-103 (`docs/issues/v0.1/ISSUE-103.md`): Configurar a coleta unificada de logs de contêineres capturando saídas `stdout`/`stderr` e enviando para o Loki através do Promtail. Critérios de aceite: os logs de qualquer contêiner ativo são ingeridos e indexados no Loki; nenhuma aplicação grava logs em arquivos locais (uso estrito de `stdout`/`stderr`)."
+**Input**: User description: "ISSUE-103 (`docs/issues/v0.1/ISSUE-103.md`): Configurar a coleta unificada de logs de contêineres capturando saídas `stdout`/`stderr` e enviando para o Loki através do Promtail. Critérios de aceite: os logs de qualquer contêiner ativo são ingeridos e indexados no Loki; nenhuma aplicação grava logs em arquivos locais (uso estrito de `stdout`/`stderr`)." (Coletor alterado para Grafana Alloy na sessão de clarificação de 2026-10-01; ver Clarifications.)
+
+## Clarifications
+
+### Session 2026-10-01
+
+- Q: O escopo de coleta deve abranger todos os contêineres do host Docker ou apenas os do projeto Compose `jhonny_v`? → A: Todos os contêineres ativos do host Docker, sem filtro por projeto.
+- Q: Qual período de retenção dos logs no armazenamento central? → A: Configurável por variável de ambiente, com valor default de 7 dias.
+- Q: Qual coletor deve ser usado: Promtail (EOL desde o início de 2026, conforme a issue) ou Grafana Alloy (substituto oficial)? → A: Grafana Alloy. Isso substitui a menção ao Promtail na ISSUE-103 e na milestone v0.1, com os mesmos requisitos funcionais.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -74,7 +82,7 @@ Como responsável pela arquitetura, quero comprovar com evidência objetiva que 
 ### Functional Requirements
 
 - **FR-001**: O sistema MUST coletar automaticamente as saídas `stdout` e `stderr` dos contêineres em escopo, sem configuração individual por contêiner.
-- **FR-002**: O escopo de coleta MUST abranger [NEEDS CLARIFICATION: todos os contêineres do host Docker, ou apenas os contêineres dos projetos Compose deste repositório (ex.: projeto `jhonny_v`)?].
+- **FR-002**: O escopo de coleta MUST abranger todos os contêineres ativos do host Docker, sem filtro por projeto Compose; o rótulo de projeto (FR-005) permite isolar os contêineres do `jhonny_v` na consulta.
 - **FR-003**: O sistema MUST descobrir dinamicamente contêineres iniciados ou encerrados após a subida da camada de observabilidade, sem reinício dela.
 - **FR-004**: O sistema MUST enviar os logs coletados para o armazenamento central (Loki), onde ficam indexados e consultáveis.
 - **FR-005**: Cada linha ingerida MUST receber rótulos de origem derivados dos metadados do contêiner, no mínimo: projeto Compose, serviço Compose, nome do contêiner e stream (`stdout`/`stderr`).
@@ -84,12 +92,13 @@ Como responsável pela arquitetura, quero comprovar com evidência objetiva que 
 - **FR-009**: O coletor MUST descobrir contêineres pelo socket do Docker montado em modo somente leitura.
 - **FR-010**: O coletor MUST persistir sua posição de leitura para não perder logs ao reiniciar (entrega "ao menos uma vez").
 - **FR-011**: O armazenamento central MUST persistir os dados em volume nomeado declarado explicitamente, sobrevivendo à recriação do contêiner.
-- **FR-012**: O armazenamento central MUST reter os logs por [NEEDS CLARIFICATION: qual período de retenção — 7, 14 ou 30 dias?] e descartar automaticamente os dados mais antigos.
+- **FR-012**: O armazenamento central MUST reter os logs por um período configurável por variável de ambiente, com valor default de 7 dias quando a variável não for definida, e descartar automaticamente os dados mais antigos que esse período.
 - **FR-013**: A camada de observabilidade MUST ser um overlay Compose próprio (`infra/compose.obs.yaml`), combinável com `infra/compose.yaml`, reutilizando a rede declarada explicitamente na base, com versões de imagem fixadas (sem `:latest`), `healthcheck` nos serviços e `depends_on` com `condition: service_healthy` do coletor para o armazenamento.
-- **FR-014**: As configurações do coletor e do armazenamento MUST ser versionadas em `infra/promtail/config.yaml` e `infra/loki/config.yaml`, sem segredos embutidos.
+- **FR-014**: As configurações do coletor e do armazenamento MUST ser versionadas em `infra/alloy/` e `infra/loki/config.yaml`, respectivamente, sem segredos embutidos. O diretório `infra/alloy/` substitui o `infra/promtail/config.yaml` citado na issue; o nome exato do arquivo será definido no `/speckit-plan`.
 - **FR-015**: Qualquer porta publicada no host pelo armazenamento central MUST seguir o padrão das demais camadas: vinculada a `${HOST_IP:-127.0.0.1}` e com porta configurável por variável de ambiente.
 - **FR-016**: Nenhum serviço do repositório (aplicação ou infraestrutura) MAY gravar logs em arquivo local; todos MUST usar exclusivamente `stdout`/`stderr`.
-- **FR-017**: O coletor utilizado MUST ser [NEEDS CLARIFICATION: o Promtail, conforme a issue, aceitando que ele está em fim de vida (EOL) desde o início de 2026, ou o Grafana Alloy, substituto oficial do Promtail mantido pela Grafana, preservando os mesmos requisitos funcionais?].
+- **FR-017**: O coletor utilizado MUST ser o Grafana Alloy, substituto oficial e mantido do Promtail (em fim de vida desde o início de 2026), atendendo aos mesmos requisitos funcionais (FR-001 a FR-010). O Promtail MUST NOT ser adotado.
+- **FR-018**: A variável de ambiente de retenção (FR-012) e a porta publicada do armazenamento central (FR-015) MUST ser documentadas em `.env.example` com seus valores default.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -115,6 +124,8 @@ Como responsável pela arquitetura, quero comprovar com evidência objetiva que 
 
 - O ambiente-alvo é Docker Engine com Docker Compose v2 num único host local; orquestração multi-nó e Kubernetes estão fora do escopo.
 - Os contêineres usam o driver de log padrão do Docker, que mantém as saídas `stdout`/`stderr` acessíveis ao coletor.
+- Os documentos `docs/issues/v0.1/ISSUE-103.md` e `docs/milestones/v0.1-infra-core.md` citam o Promtail; eles devem ser atualizados para Grafana Alloy durante a implementação, para manter a rastreabilidade (princípio V da constituição).
+- Como a coleta abrange todo o host (FR-002), contêineres de outros projetos no mesmo host também são ingeridos; isso é aceitável no ambiente local, e a separação é feita pelo rótulo de projeto.
 - O nome do overlay segue a convenção da constituição e da milestone v0.1 (`infra/compose.obs.yaml`), e não `compose.obs.yml`, que aparece em versões anteriores da issue.
 - A rede `jhonny-core` e o padrão de volumes nomeados de `infra/compose.yaml` (ISSUE-101) já existem e serão reutilizados/estendidos.
 - O armazenamento central opera em modo single-tenant, sem autenticação própria, aceitável apenas para o ambiente local; o acesso fica restrito por padrão à interface `127.0.0.1` do host.
