@@ -11,19 +11,19 @@
 ## Requirement Completeness
 
 - [ ] CHK001 Os requisitos definem o comportamento do coletor quando o Loki fica indisponível por um período longo, incluindo o limite de buffer/retentativa e o que acontece quando esse limite estoura? [Completeness, Gap, Spec §Edge Cases]
-- [ ] CHK002 O comportamento esperado para um valor inválido de `LOKI_RETENTION_PERIOD` (falha no start × fallback para o default) está definido na spec, e não só no plan? [Completeness, Spec §FR-012, Plan §Env Matrix]
+- [x] CHK002 O comportamento esperado para um valor inválido de `LOKI_RETENTION_PERIOD` (falha no start × fallback para o default) está definido na spec, e não só no plan? [Completeness, Spec §FR-012, Plan §Env Matrix] — Resolvido: FR-012 exige fail-fast para valor inválido (comportamento verificado no plan).
 - [ ] CHK003 Existe requisito limitando o crescimento do volume `loki-data` além da retenção por tempo (ex.: tamanho máximo ou alerta de disco)? [Gap, Spec §FR-011, Spec §FR-012]
 - [ ] CHK004 Os requisitos tratam de dados sensíveis (segredos, tokens, PII) que possam aparecer nas linhas de log ingeridas, inclusive as de contêineres de outros projetos do host? [Gap, Spec §FR-002, Spec §Assumptions]
 - [ ] CHK005 Os limites de ingestão do Loki (taxa por stream, tamanho máximo de linha) estão especificados ou explicitamente delegados aos defaults? [Gap, Spec §Edge Cases]
 - [ ] CHK006 A spec define os requisitos de logs dos próprios serviços da camada obs (Loki, Alloy, proxy), incluindo formato JSON e nível configurável? [Completeness, Spec §FR-016, Constitution §3.3.2]
-- [ ] CHK007 Há requisito de atualizar `docs/issues/v0.1/ISSUE-103.md` e `docs/milestones/v0.1-infra-core.md` (Promtail → Alloy, `compose.obs.yml` → `compose.obs.yaml`) com critério verificável? [Completeness, Spec §Assumptions, Spec §FR-017]
+- [x] CHK007 Há requisito de atualizar `docs/issues/v0.1/ISSUE-103.md` e `docs/milestones/v0.1-infra-core.md` (Promtail → Alloy, `compose.obs.yml` → `compose.obs.yaml`) com critério verificável? [Completeness, Spec §Assumptions, Spec §FR-017] — Resolvido: novo FR-021, com critério verificável no Scenario 13 do quickstart.
 - [ ] CHK008 O procedimento de evolução do schema do Loki (data `from` do schema tsdb e futuras migrações) é tratado como requisito ou fica explicitamente fora do escopo? [Gap, Research]
 
 ## Requirement Clarity
 
-- [ ] CHK009 O nome final da configuração do coletor (`infra/alloy/config.alloy`) foi incorporado ao FR-014, já que a spec ainda diz que "o nome exato será definido no plan"? [Clarity, Spec §FR-014, Plan §Project Structure]
-- [ ] CHK010 As operações de leitura liberadas pelo proxy estão listadas de forma exaustiva? O FR-009 cita "listar/inspecionar contêineres e ler logs", mas a descoberta também exige leitura de redes (`NETWORKS=1`). [Clarity, Spec §FR-009, Research]
-- [ ] CHK011 O conjunto mínimo de rótulos do FR-005 está alinhado com o `service_name` que o Loki adiciona automaticamente, e está documentado se `service_name` conta como rótulo de indexação? [Clarity, Spec §FR-005, Data Model §Rótulo de origem]
+- [x] CHK009 O nome final da configuração do coletor (`infra/alloy/config.alloy`) foi incorporado ao FR-014, já que a spec ainda diz que "o nome exato será definido no plan"? [Clarity, Spec §FR-014, Plan §Project Structure] — Resolvido: FR-014 fixa `infra/alloy/config.alloy`.
+- [x] CHK010 As operações de leitura liberadas pelo proxy estão listadas de forma exaustiva? O FR-009 cita "listar/inspecionar contêineres e ler logs", mas a descoberta também exige leitura de redes (`NETWORKS=1`). [Clarity, Spec §FR-009, Research] — Resolvido: FR-009 lista as operações GET liberadas, inclusive leitura de redes, `_ping` e `version`.
+- [x] CHK011 O conjunto mínimo de rótulos do FR-005 está alinhado com o `service_name` que o Loki adiciona automaticamente, e está documentado se `service_name` conta como rótulo de indexação? [Clarity, Spec §FR-005, Data Model §Rótulo de origem] — Resolvido: FR-005 declara `service_name` como o único rótulo além dos mínimos.
 - [ ] CHK012 A normalização do atributo `level` (maiúsculas/minúsculas, sinônimos como `warn`/`warning`) está definida para que o filtro por nível tenha 0 falsos positivos? [Ambiguity, Spec §FR-007, Spec §SC-005]
 - [ ] CHK013 A origem do carimbo de tempo de cada linha (momento da escrita no Docker × campo `timestamp` do JSON da aplicação) está especificada? [Ambiguity, Spec §Key Entities, Data Model §Linha de log]
 - [ ] CHK014 "Sem criar laço de realimentação com volume crescente" está quantificado ou associado a um critério verificável? [Ambiguity, Spec §Edge Cases]
@@ -32,42 +32,42 @@
 
 ## Requirement Consistency
 
-- [ ] CHK017 O FR-019 ("bloco único reutilizado ... sem duplicação") é coerente com o plan, que repete `x-logging` em cada arquivo Compose porque âncoras YAML não atravessam arquivos? [Conflict, Spec §FR-019, Plan §Complexity Tracking]
-- [ ] CHK018 O FR-002 (todos os contêineres do host) e o SC-011 (100% dos serviços com rotação) são consistentes, dado que a rotação só alcança serviços definidos nas camadas Compose e não contêineres avulsos? [Consistency, Spec §FR-002, Spec §FR-019, Spec §SC-011]
+- [x] CHK017 O FR-019 ("bloco único reutilizado ... sem duplicação") é coerente com o plan, que repete `x-logging` em cada arquivo Compose porque âncoras YAML não atravessam arquivos? [Conflict, Spec §FR-019, Plan §Complexity Tracking] — Resolvido: FR-019 passa a exigir um bloco `x-logging` único e idêntico por arquivo Compose, alinhado ao plan.
+- [x] CHK018 O FR-002 (todos os contêineres do host) e o SC-011 (100% dos serviços com rotação) são consistentes, dado que a rotação só alcança serviços definidos nas camadas Compose e não contêineres avulsos? [Consistency, Spec §FR-002, Spec §FR-019, Spec §SC-011] — Resolvido: FR-019 limita a rotação aos serviços do repositório; contêineres avulsos seguem o daemon e continuam coletados.
 - [ ] CHK019 A exigência de logs JSON em `stdout`/`stderr` (constituição 3.3.2) é compatível com o proxy (HAProxy) emitindo texto puro, e essa exceção está registrada formalmente conforme a constituição 1.3? [Conflict, Constitution §3.3.2, Plan §Complexity Tracking]
-- [ ] CHK020 A regra da constituição 3.3.3 (ausência de `trace_id`/`span_id` é falha de instrumentação) é consistente com a spec, que ingere essas linhas normalmente sem sinalizá-las? [Consistency, Spec §Edge Cases, Constitution §3.3.3]
-- [ ] CHK021 A tabela de serviços do contrato (redes, portas, volumes, `depends_on`) corresponde exatamente ao FR-009, FR-013 e FR-015? [Consistency, Contract §2, Spec §FR-009, Spec §FR-013, Spec §FR-015]
-- [ ] CHK022 A latência de 10 s do SC-002 e a de 30 s do SC-003 são usadas sem sobreposição ambígua nos cenários do quickstart? [Consistency, Spec §SC-002, Spec §SC-003, Quickstart §Scenario 3]
-- [ ] CHK023 O uso de `build` local para o Loki (só para o healthcheck) é coerente com a declaração explícita `build` × `image` por serviço exigida pela constituição 2.5? [Consistency, Constitution §2.5, Plan §Complexity Tracking]
+- [x] CHK020 A regra da constituição 3.3.3 (ausência de `trace_id`/`span_id` é falha de instrumentação) é consistente com a spec, que ingere essas linhas normalmente sem sinalizá-las? [Consistency, Spec §Edge Cases, Constitution §3.3.3] — Resolvido: o edge case atribui a detecção da falha 3.3.3 à consulta, não ao coletor.
+- [x] CHK021 A tabela de serviços do contrato (redes, portas, volumes, `depends_on`) corresponde exatamente ao FR-009, FR-013 e FR-015? [Consistency, Contract §2, Spec §FR-009, Spec §FR-013, Spec §FR-015] — Resolvido: a tabela do contrato §2 bate com FR-009, FR-013 e FR-015; nenhuma mudança foi necessária.
+- [x] CHK022 A latência de 10 s do SC-002 e a de 30 s do SC-003 são usadas sem sobreposição ambígua nos cenários do quickstart? [Consistency, Spec §SC-002, Spec §SC-003, Quickstart §Scenario 3] — Resolvido: o Scenario 3 separa a coleta de contêiner novo (SC-003, 30 s) da latência de linha (SC-002, 10 s).
+- [x] CHK023 O uso de `build` local para o Loki (só para o healthcheck) é coerente com a declaração explícita `build` × `image` por serviço exigida pela constituição 2.5? [Consistency, Constitution §2.5, Plan §Complexity Tracking] — Resolvido: `build` × `image` está declarado por serviço no contrato §2 e no plan; há só o ambiente local.
 
 ## Acceptance Criteria Quality
 
-- [ ] CHK024 O SC-004 ("0 linhas perdidas") tem um método de medição objetivo definido, por exemplo uma sequência numerada contínua? A contagem por segundo do quickstart detecta lacunas, mas não perdas parciais. [Measurability, Spec §SC-004, Quickstart §Scenario 6]
-- [ ] CHK025 O SC-009 ("0 contêineres além do coletor alcançam o proxy") pode ser verificado de forma exaustiva, ou está restrito a uma amostra representativa e declarada? [Measurability, Spec §SC-009]
-- [ ] CHK026 O SC-010 define quais interfaces de rede da máquina devem ser testadas para comprovar que o Loki não é alcançável? [Measurability, Spec §SC-010]
-- [ ] CHK027 O limite de 30 MB do SC-011 considera a sobrecarga do formato `json-file` e o arquivo ativo em escrita? [Clarity, Spec §SC-011]
-- [ ] CHK028 Cada FR (001–019) tem pelo menos um SC ou cenário do quickstart que o comprove, conforme a constituição 6.2? [Traceability, Constitution §6.2, Quickstart]
+- [x] CHK024 O SC-004 ("0 linhas perdidas") tem um método de medição objetivo definido, por exemplo uma sequência numerada contínua? A contagem por segundo do quickstart detecta lacunas, mas não perdas parciais. [Measurability, Spec §SC-004, Quickstart §Scenario 6] — Resolvido: SC-004 e Scenario 6 usam um emissor de sequência numerada contínua.
+- [x] CHK025 O SC-009 ("0 contêineres além do coletor alcançam o proxy") pode ser verificado de forma exaustiva, ou está restrito a uma amostra representativa e declarada? [Measurability, Spec §SC-009] — Resolvido: SC-009 é verificado de forma exaustiva pela topologia, mais uma amostra de conectividade (Scenario 7).
+- [x] CHK026 O SC-010 define quais interfaces de rede da máquina devem ser testadas para comprovar que o Loki não é alcançável? [Measurability, Spec §SC-010] — Resolvido: SC-010 testa o bind e um IP não-loopback do host (Scenario 8).
+- [x] CHK027 O limite de 30 MB do SC-011 considera a sobrecarga do formato `json-file` e o arquivo ativo em escrita? [Clarity, Spec §SC-011] — Resolvido: SC-011 define a medição (arquivo ativo + rotacionados, incluindo o envelope JSON).
+- [x] CHK028 Cada FR (001–019) tem pelo menos um SC ou cenário do quickstart que o comprove, conforme a constituição 6.2? [Traceability, Constitution §6.2, Quickstart] — Resolvido: matriz FR → evidência no quickstart, com os novos Scenarios 12 e 13.
 
 ## Scenario & Edge Case Coverage
 
-- [ ] CHK029 Existem requisitos de recuperação para o proxy de socket reiniciado ou recriado enquanto o coletor está ativo (retomada da descoberta e da leitura)? [Recovery, Spec §Edge Cases]
+- [x] CHK029 Existem requisitos de recuperação para o proxy de socket reiniciado ou recriado enquanto o coletor está ativo (retomada da descoberta e da leitura)? [Recovery, Spec §Edge Cases] — Resolvido: o edge case cobre o reinício/recriação do proxy, com retomada pela posição salva.
 - [ ] CHK030 O comportamento esperado ao recriar o contêiner do coletor com o volume `alloy-data` removido (releitura × perda) está definido? [Recovery, Gap, Spec §FR-010]
-- [ ] CHK031 Os requisitos tratam de reinício do daemon Docker ou do host (posições salvas, contêineres reiniciados com o mesmo nome)? [Coverage, Gap]
-- [ ] CHK032 A spec cobre a subida da camada obs sozinha (só `compose.yaml` + `compose.obs.yaml`) e combinada com core e llm, nas duas ordens de inicialização? [Coverage, Spec §FR-013, Spec §SC-007]
+- [x] CHK031 Os requisitos tratam de reinício do daemon Docker ou do host (posições salvas, contêineres reiniciados com o mesmo nome)? [Coverage, Gap] — Resolvido: novo edge case para reinício do daemon/host (mesmo ID retoma; ID novo vira alvo novo).
+- [x] CHK032 A spec cobre a subida da camada obs sozinha (só `compose.yaml` + `compose.obs.yaml`) e combinada com core e llm, nas duas ordens de inicialização? [Coverage, Spec §FR-013, Spec §SC-007] — Resolvido: SC-007 e Scenario 1 cobrem subida sozinha e combinada, nas duas ordens.
 - [ ] CHK033 Está definido o que acontece com logs emitidos antes da subida da camada obs (backfill do histórico retido pelo Docker × só a partir da descoberta)? [Gap, Spec §FR-001, Spec §FR-003]
 
 ## Non-Functional Requirements (Security & Operations)
 
 - [ ] CHK034 A spec define requisito ou alerta para quando `HOST_IP` for sobrescrito para uma interface não local, já que o Loki não tem autenticação? [Security, Gap, Spec §FR-015, Spec §Assumptions]
-- [ ] CHK035 A matriz de permissões do proxy está formulada como lista de permissões (allowlist, "nega tudo o que não estiver listado") e não como lista de bloqueios (denylist)? [Security, Clarity, Spec §FR-009, Contract §4]
+- [x] CHK035 A matriz de permissões do proxy está formulada como lista de permissões (allowlist, "nega tudo o que não estiver listado") e não como lista de bloqueios (denylist)? [Security, Clarity, Spec §FR-009, Contract §4] — Resolvido: FR-009 está redigido como allowlist (nega tudo o que não estiver listado).
 - [ ] CHK036 Os requisitos limitam o uso de CPU/memória da camada obs para que ela não afete os serviços de aplicação no host local? [Non-Functional, Gap]
 - [ ] CHK037 A ausência de testes `pytest` e de CI (constituição 3.5.3) está registrada como exceção formal aprovada, e não só justificada no plan? [Conflict, Constitution §1.3, Constitution §3.5.3, Plan §Complexity Tracking]
-- [ ] CHK038 A fixação de versões cobre todas as imagens usadas, inclusive o estágio de build `busybox` do Dockerfile do Loki? [Completeness, Constitution §3.4.4, Plan §Technical Context]
+- [x] CHK038 A fixação de versões cobre todas as imagens usadas, inclusive o estágio de build `busybox` do Dockerfile do Loki? [Completeness, Constitution §3.4.4, Plan §Technical Context] — Resolvido: o plan fixa `busybox:1.37.0-musl` como estágio de build.
 
 ## Dependencies & Assumptions
 
-- [ ] CHK039 A premissa de que todos os contêineres usam o driver `json-file` (ou outro legível pela API do Docker) está validada, e o comportamento com drivers como `none` e `syslog` está definido? [Assumption, Spec §Assumptions]
-- [ ] CHK040 A dependência das futuras ISSUE-104 (Grafana) e ISSUE-105 (Tempo) está registrada com os contratos que elas vão consumir (rótulos, `trace_id` como metadado estruturado)? [Dependency, Spec §Assumptions, Contract §3]
+- [x] CHK039 A premissa de que todos os contêineres usam o driver `json-file` (ou outro legível pela API do Docker) está validada, e o comportamento com drivers como `none` e `syslog` está definido? [Assumption, Spec §Assumptions] — Resolvido: as Assumptions definem os drivers legíveis e excluem `none` e o cache dual desativado.
+- [x] CHK040 A dependência das futuras ISSUE-104 (Grafana) e ISSUE-105 (Tempo) está registrada com os contratos que elas vão consumir (rótulos, `trace_id` como metadado estruturado)? [Dependency, Spec §Assumptions, Contract §3] — Resolvido: as Assumptions registram os contratos consumidos pelas ISSUE-104 e ISSUE-105.
 
 ## Notes
 
