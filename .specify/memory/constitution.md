@@ -1,50 +1,41 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Jhonny-V Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Monorepo Architecture Consistency (MUST)
+- O projeto MUST ser tratado como monorepo com separação clara entre `apps/`, `libs/` e `infra/`.
+- Cada app MUST ter responsabilidade explícita e limites claros de dependência.
+- Serviços de infraestrutura locais e externos MUST ser declarados explicitamente por ambiente.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Observability and Logging (MUST)
+- Aplicações MUST enviar logs para `stdout`/`stderr` em JSON estruturado.
+- Logs em arquivos locais são PROIBIDOS.
+- Telemetria distribuída MUST manter `trace_id` e `span_id` propagados.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Python Packaging and App Structure (MUST)
+- `requirements.txt` é PROIBIDO; dependências MUST ser geridas por `pyproject.toml`.
+- Apps Python em `apps/` MUST separar código em `src/` e testes em `tests/`.
+- Ferramental de qualidade MUST incluir lint/format/tipagem e testes automatizados quando aplicável.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Compose and Infrastructure Contracts (MUST)
+- Compose MUST usar convenção `compose.yaml` e `compose.override.yaml` (ou overlays `compose.*.yaml` em `infra/`).
+- Definições de serviço MUST explicitar `build`/`image`, `env_file`, `volumes`, `network`, `depends_on` e políticas de restart conforme necessário.
+- Segredos MUST permanecer fora do versionamento e ser fornecidos por `.env`/secret manager.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Security and Operational Safety (MUST)
+- Credenciais e dados sensíveis NEVER podem ser hardcoded no repositório.
+- Acesso a serviços MUST usar autenticação forte e controles explícitos.
+- Alterações MUST preservar documentação operacional e rastreabilidade das decisões.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Workflow Governance
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+- Fluxo SDD MUST seguir ordem: `specify` → `clarify` → `plan` → `checklist` → `tasks` → `analyze` → `implement`.
+- Nenhuma implementação deve começar antes dos artefatos de planejamento estarem aprovados.
+- Conflitos com esta constituição são CRÍTICOS e devem ser corrigidos em spec/plan/tasks antes de implementação.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Compliance Notes
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+- Esta constituição está alinhada às diretrizes operacionais atuais do projeto em `.github/copilot-instructions.md`.
+- Em caso de divergência futura, a atualização da constituição deve ocorrer explicitamente com versionamento e revisão.
 
-## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
-
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
-
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-09-29 | **Last Amended**: 2026-09-29
