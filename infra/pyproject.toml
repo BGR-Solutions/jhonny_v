@@ -1,0 +1,44 @@
+[project]
+name = "jhonny-v-infra-tests"
+version = "0.1.0"
+description = "Testes de aceite da infraestrutura local do Jhonny-V (camada de observabilidade)."
+readme = "tests/README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pytest>=8.3",
+    "httpx>=0.28",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=25.1",
+    "ruff>=0.12",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "disruptive: reinicia ou recria serviços da stack",
+    "slow: leva vários minutos",
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+# O mock da feature 002 (litellm/) tem lint próprio e fica fora deste projeto.
+extend-exclude = "^/litellm/"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+extend-exclude = ["litellm"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"

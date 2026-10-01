@@ -1,0 +1,87 @@
+# Testes de aceite da camada de observabilidade (specs/003-agregacao-logs-loki,
+# FR-027/SC-014). Sobe a stack com credenciais efêmeras, roda lint, validações
+# estáticas e a suíte pytest completa, e sempre derruba a stack no fim.
+name: infra-obs
+
+on:
+  pull_request:
+    paths:
+      - "infra/**"
+      - ".env.example"
+      - ".github/workflows/infra-obs.yaml"
+  push:
+    paths:
+      - "infra/**"
+      - ".env.example"
+      - ".github/workflows/infra-obs.yaml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infra-obs-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DC: docker compose --env-file .env -f infra/compose.yaml -f infra/compose.core.yaml -f infra/compose.obs.yaml
+  DC_ALL: docker compose --env-file .env -f infra/compose.yaml -f infra/compose.core.yaml -f infra/compose.obs.yaml -f infra/compose.llm.yaml
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+
+      - name: Generate ephemeral .env
+        run: |
+          gateway_secret="$(openssl rand -hex 24)"
+          master_key="sk-ci-$(openssl rand -hex 24)"
+          echo "::add-mask::${gateway_secret}"
+          echo "::add-mask::${master_key}"
+          cp .env.example .env
+          sed -i \
+            -e "s|^LOKI_GATEWAY_USER=.*|LOKI_GATEWAY_USER=ci|" \
+            -e "s|^LOKI_GATEWAY_PASSWORD=.*|LOKI_GATEWAY_PASSWORD=${gateway_secret}|" \
+            -e "s|^LITELLM_MASTER_KEY=.*|LITELLM_MASTER_KEY=${master_key}|" \
+            -e "s|^DOCKER_GID=.*|DOCKER_GID=$(stat -c %g /var/run/docker.sock)|" \
+            -e "s|^OLLAMA_API_BASE=.*|OLLAMA_API_BASE=http://ollama-local-mock:11435|" \
+            .env
+
+      - name: Lint (ruff + black)
+        working-directory: infra
+        run: |
+          uv sync --extra dev --locked
+          uv run ruff check .
+          uv run black --check .
+
+      - name: Static validation
+        run: |
+          $DC config --quiet
+          docker run --rm -v ./infra/loki:/c:ro grafana/loki:3.7.8 \
+            -config.file=/c/config.yaml -config.expand-env=true -verify-config
+          docker run --rm -v ./infra/alloy:/c:ro grafana/alloy:v1.20.1 fmt /c/config.alloy > /dev/null
+          docker run --rm -e LOKI_GATEWAY_USER=x -e LOKI_GATEWAY_PASSWORD_HASH=x \
+            -v ./infra/loki-gateway:/c:ro caddy:2.11.4-alpine \
+            caddy validate --config /c/Caddyfile --adapter caddyfile
+
+      - name: Start stack
+        run: $DC up -d --build --wait --wait-timeout 300
+
+      - name: Acceptance tests
+        working-directory: infra
+        run: uv run pytest -v
+
+      - name: Stack logs on failure
+        if: failure()
+        run: $DC_ALL logs --no-color --timestamps
+
+      - name: Tear down
+        if: always()
+        env:
+          COMPOSE_PROFILES: core,validation
+        run: $DC_ALL down -v --remove-orphans

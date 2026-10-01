@@ -1,0 +1,150 @@
+# Camada de observabilidade: coleta de stdout/stderr de todos os contêineres do
+# host (Grafana Alloy) e armazenamento/consulta no Loki por um gateway autenticado.
+# Especificação: specs/003-agregacao-logs-loki/
+#
+# Uso (a partir da raiz do repositório):
+#   docker compose --env-file .env -f infra/compose.yaml -f infra/compose.obs.yaml up -d --build
+#
+# Política de env_file: nenhum serviço desta camada usa `env_file`. As variáveis
+# vêm de interpolação via `--env-file .env`, com default ou obrigatórias
+# (`${VAR:?}`), e cada serviço declara seu bloco `environment` explicitamente.
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: ${DOCKER_LOG_MAX_SIZE:-10m}
+    max-file: "${DOCKER_LOG_MAX_FILE:-3}"
+
+services:
+  # Proxy da API do Docker: único serviço que monta o socket (somente leitura).
+  # Allowlist de GET/HEAD exigida pelo coletor; todo o resto → 403/405.
+  socket-proxy:
+    image: wollomatic/socket-proxy:1.13.1
+    restart: unless-stopped
+    user: "65534:${DOCKER_GID:?DOCKER_GID obrigatório (stat -c %g /var/run/docker.sock)}"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment: {}
+    command:
+      - -logjson
+      - -loglevel=INFO
+      - -listenip=0.0.0.0
+      - -allowfrom=0.0.0.0/0
+      - -allowhealthcheck
+      - -allowGET=(/v1\.[0-9]{1,2})?/(_ping|version|containers/json|containers/[a-zA-Z0-9_.-]+/(json|logs)|networks|networks/[a-zA-Z0-9_.-]+)
+      - -allowHEAD=(/v1\.[0-9]{1,2})?/_ping
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - docker-api
+    healthcheck:
+      test: ["CMD", "./healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  # Loki em loopback (127.0.0.1:3101); a porta publicada é a do gateway, que
+  # compartilha este namespace de rede. Só na rede core (research, Decision 12).
+  loki:
+    build:
+      context: ./loki
+    image: ${COMPOSE_PROJECT_NAME:-jhonny_v}-loki:3.7.8
+    restart: unless-stopped
+    command:
+      - -config.file=/etc/loki/config.yaml
+      - -config.expand-env=true
+    environment:
+      LOKI_RETENTION_PERIOD: ${LOKI_RETENTION_PERIOD:-7d}
+      LOKI_LOG_LEVEL: ${LOKI_LOG_LEVEL:-info}
+    ports:
+      - "${HOST_IP:-127.0.0.1}:${LOKI_PORT:-3100}:3100"
+    volumes:
+      - ./loki/config.yaml:/etc/loki/config.yaml:ro
+      - loki-data:/loki
+    networks:
+      - jhonny-core
+    healthcheck:
+      test: ["CMD", "/usr/bin/busybox", "wget", "-qO-", "http://127.0.0.1:3101/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    logging: *default-logging
+
+  # Gateway de consulta e push com basic auth (exceto /ready).
+  loki-gateway:
+    image: caddy:2.11.4-alpine
+    restart: unless-stopped
+    network_mode: service:loki
+    environment:
+      LOKI_GATEWAY_USER: ${LOKI_GATEWAY_USER:?LOKI_GATEWAY_USER obrigatório}
+      LOKI_GATEWAY_PASSWORD: ${LOKI_GATEWAY_PASSWORD:?LOKI_GATEWAY_PASSWORD obrigatório}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        LOKI_GATEWAY_PASSWORD_HASH="$$(caddy hash-password --plaintext "$$LOKI_GATEWAY_PASSWORD")" || exit 1
+        export LOKI_GATEWAY_PASSWORD_HASH
+        unset LOKI_GATEWAY_PASSWORD
+        exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
+    volumes:
+      - ./loki-gateway/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      loki:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3100/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  # Coletor: lê stdout/stderr de todos os contêineres pela API (via proxy) e
+  # envia ao Loki pelo gateway. Sem portas publicadas e sem o socket do Docker.
+  alloy:
+    image: grafana/alloy:v1.20.1
+    restart: unless-stopped
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --storage.path=/var/lib/alloy/data
+      - --server.http.listen-addr=127.0.0.1:12345
+    environment:
+      LOKI_GATEWAY_USER: ${LOKI_GATEWAY_USER:?LOKI_GATEWAY_USER obrigatório}
+      LOKI_GATEWAY_PASSWORD: ${LOKI_GATEWAY_PASSWORD:?LOKI_GATEWAY_PASSWORD obrigatório}
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - alloy-data:/var/lib/alloy/data
+    networks:
+      - jhonny-core
+      - docker-api
+    depends_on:
+      loki-gateway:
+        condition: service_healthy
+      socket-proxy:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - bash
+        - -c
+        - exec 3<>/dev/tcp/127.0.0.1/12345 && printf 'GET /-/ready HTTP/1.0\r\n\r\n' >&3 && grep -q '200 OK' <&3
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging: *default-logging
+
+networks:
+  docker-api:
+    name: ${COMPOSE_PROJECT_NAME:-jhonny_v}-docker-api
+    internal: true
+
+volumes:
+  loki-data:
+    name: ${COMPOSE_PROJECT_NAME:-jhonny_v}-loki-data
+  alloy-data:
+    name: ${COMPOSE_PROJECT_NAME:-jhonny_v}-alloy-data

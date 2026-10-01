@@ -1,0 +1,32 @@
+# Gateway autenticado do Loki. Compartilha o namespace de rede do serviço `loki`
+# (network_mode: service:loki) e encaminha para o Loki no loopback (3101).
+# LOKI_GATEWAY_PASSWORD_HASH é gerado na subida pelo entrypoint do serviço.
+{
+	admin off
+	log {
+		output stderr
+		format json
+	}
+}
+
+:3100 {
+	log {
+		output stderr
+		format json
+	}
+
+	# Sem access log para healthcheck e push: evita laço de realimentação.
+	@quiet path /ready /loki/api/v1/push
+	log_skip @quiet
+
+	handle /ready {
+		reverse_proxy 127.0.0.1:3101
+	}
+
+	handle {
+		basic_auth {
+			{$LOKI_GATEWAY_USER} {$LOKI_GATEWAY_PASSWORD_HASH}
+		}
+		reverse_proxy 127.0.0.1:3101
+	}
+}
