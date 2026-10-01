@@ -16,6 +16,7 @@
 - Q: Qual período de retenção dos logs no armazenamento central? → A: Configurável por variável de ambiente, com valor default de 7 dias.
 - Q: Qual coletor deve ser usado: Promtail (EOL desde o início de 2026, conforme a issue) ou Grafana Alloy (substituto oficial)? → A: Grafana Alloy. Isso substitui a menção ao Promtail na ISSUE-103 e na milestone v0.1, com os mesmos requisitos funcionais.
 - Q: O coletor deve acessar o Docker direto pelo socket montado como somente leitura, ou por um proxy intermediário que só libera as consultas de leitura? → A: Por um proxy de socket com permissão só de leitura (listar contêineres e ler logs); só o proxy monta o socket e o coletor fala com ele pela rede interna.
+- Q: O proxy de socket deve ficar numa rede interna só dele com o coletor, ou na rede compartilhada `jhonny-core`? → A: Rede interna dedicada (sem saída para a internet) só para proxy ↔ coletor; o coletor e o armazenamento central também ficam na `jhonny-core`.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -77,6 +78,7 @@ Como responsável pela arquitetura, quero comprovar com evidência objetiva que 
 - Quando os próprios contêineres de observabilidade produzirem logs, eles devem ser coletados sem criar laço de realimentação com volume crescente.
 - O socket do Docker dá controle total do host mesmo montado como somente leitura; por isso o coletor NÃO o monta e acessa o Docker só por um proxy de socket restrito a leitura.
 - Quando o coletor (ou qualquer cliente do proxy) tentar uma operação de escrita na API do Docker (ex.: criar, iniciar ou remover contêiner), o proxy MUST negar a operação.
+- Quando qualquer contêiner fora da rede dedicada (ex.: serviços da `jhonny-core`) tentar acessar o proxy de socket, a conexão MUST falhar por falta de rota, impedindo a leitura de metadados sensíveis (como variáveis de ambiente) de outros contêineres.
 - Quando o proxy de socket estiver indisponível, a descoberta de novos contêineres é suspensa sem afetar os contêineres de aplicação, e é retomada automaticamente quando o proxy voltar.
 - Linhas muito longas ou multilinha (ex.: stack traces) devem ser ingeridas sem derrubar o pipeline; o agrupamento multilinha está fora do escopo inicial.
 
@@ -92,11 +94,11 @@ Como responsável pela arquitetura, quero comprovar com evidência objetiva que 
 - **FR-006**: O conjunto de rótulos de indexação MUST ter cardinalidade limitada; atributos de alta cardinalidade (`trace_id`, `span_id`, ID do contêiner) MUST NOT ser usados como rótulo de indexação.
 - **FR-007**: O sistema MUST interpretar linhas de log em JSON estruturado, expondo o nível do log como atributo filtrável e `trace_id`/`span_id` como atributos pesquisáveis, sem promovê-los a rótulos de indexação.
 - **FR-008**: Linhas não JSON ou JSON malformado MUST ser ingeridas como texto bruto, preservando os rótulos de origem, sem descarte.
-- **FR-009**: O coletor MUST descobrir contêineres e ler seus logs exclusivamente por meio de um proxy de socket do Docker. O proxy é o único serviço que monta `/var/run/docker.sock` (em modo somente leitura), permite apenas as operações de leitura necessárias (listar/inspecionar contêineres e ler logs), nega todas as demais e só é acessível pela rede interna do Compose, sem porta publicada no host. O coletor MUST NOT montar o socket do Docker.
+- **FR-009**: O coletor MUST descobrir contêineres e ler seus logs exclusivamente por meio de um proxy de socket do Docker. O proxy é o único serviço que monta `/var/run/docker.sock` (em modo somente leitura), permite apenas as operações de leitura necessárias (listar/inspecionar contêineres e ler logs), nega todas as demais e só é acessível por uma rede interna dedicada (sem saída para a internet) compartilhada exclusivamente com o coletor, sem porta publicada no host. O proxy MUST NOT ser conectado à rede `jhonny-core` nem a qualquer outra rede. O coletor MUST NOT montar o socket do Docker.
 - **FR-010**: O coletor MUST persistir sua posição de leitura para não perder logs ao reiniciar (entrega "ao menos uma vez").
 - **FR-011**: O armazenamento central MUST persistir os dados em volume nomeado declarado explicitamente, sobrevivendo à recriação do contêiner.
 - **FR-012**: O armazenamento central MUST reter os logs por um período configurável por variável de ambiente, com valor default de 7 dias quando a variável não for definida, e descartar automaticamente os dados mais antigos que esse período.
-- **FR-013**: A camada de observabilidade MUST ser um overlay Compose próprio (`infra/compose.obs.yaml`), combinável com `infra/compose.yaml`, reutilizando a rede declarada explicitamente na base, com versões de imagem fixadas (sem `:latest`), `healthcheck` nos serviços e `depends_on` com `condition: service_healthy` do coletor para o armazenamento e para o proxy de socket.
+- **FR-013**: A camada de observabilidade MUST ser um overlay Compose próprio (`infra/compose.obs.yaml`), combinável com `infra/compose.yaml`, reutilizando a rede `jhonny-core` declarada na base para coletor e armazenamento central e declarando explicitamente a rede interna dedicada proxy ↔ coletor, com versões de imagem fixadas (sem `:latest`), `healthcheck` nos serviços e `depends_on` com `condition: service_healthy` do coletor para o armazenamento e para o proxy de socket.
 - **FR-014**: As configurações do coletor e do armazenamento MUST ser versionadas em `infra/alloy/` e `infra/loki/config.yaml`, respectivamente, sem segredos embutidos. O diretório `infra/alloy/` substitui o `infra/promtail/config.yaml` citado na issue; o nome exato do arquivo será definido no `/speckit-plan`.
 - **FR-015**: Qualquer porta publicada no host pelo armazenamento central MUST seguir o padrão das demais camadas: vinculada a `${HOST_IP:-127.0.0.1}` e com porta configurável por variável de ambiente.
 - **FR-016**: Nenhum serviço do repositório (aplicação ou infraestrutura) MAY gravar logs em arquivo local; todos MUST usar exclusivamente `stdout`/`stderr`.
@@ -124,6 +126,7 @@ Como responsável pela arquitetura, quero comprovar com evidência objetiva que 
 - **SC-006**: A revisão de conformidade das camadas Compose encontra 0 serviços configurados para gravar logs em arquivo local.
 - **SC-007**: A camada de observabilidade inicia com todos os serviços saudáveis na primeira tentativa, combinada com a camada base, em 100% das execuções de validação.
 - **SC-008**: Em teste de validação, 100% das tentativas de operação de escrita na API do Docker feitas através do proxy de socket são negadas, e o coletor não tem o socket do Docker montado.
+- **SC-009**: Em teste de validação, 0 contêineres além do coletor conseguem alcançar o proxy de socket.
 
 ## Assumptions
 
@@ -132,6 +135,7 @@ Como responsável pela arquitetura, quero comprovar com evidência objetiva que 
 - Os documentos `docs/issues/v0.1/ISSUE-103.md` e `docs/milestones/v0.1-infra-core.md` citam o Promtail; eles devem ser atualizados para Grafana Alloy durante a implementação, para manter a rastreabilidade (princípio V da constituição).
 - Como a coleta abrange todo o host (FR-002), contêineres de outros projetos no mesmo host também são ingeridos; isso é aceitável no ambiente local, e a separação é feita pelo rótulo de projeto.
 - O nome do overlay segue a convenção da constituição e da milestone v0.1 (`infra/compose.obs.yaml`), e não `compose.obs.yml`, que aparece em versões anteriores da issue.
+- A rede `jhonny-core` permanece a rede compartilhada dos serviços; a rede dedicada proxy ↔ coletor é nova, declarada pela camada de observabilidade e interna (sem saída para a internet).
 - A rede `jhonny-core` e o padrão de volumes nomeados de `infra/compose.yaml` (ISSUE-101) já existem e serão reutilizados/estendidos.
 - O armazenamento central opera em modo single-tenant, sem autenticação própria, aceitável apenas para o ambiente local; o acesso fica restrito por padrão à interface `127.0.0.1` do host.
 - Visualização (Grafana, ISSUE-104), tracing (Tempo/OTel, ISSUE-105) e alertas estão fora do escopo; esta feature só garante que os logs estejam disponíveis para essas integrações.
