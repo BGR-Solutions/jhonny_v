@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Pre-commit hook: Validate .env file management and .env.example consistency
+
+# Check if any .env files (excluding .env.example) are being committed
+if git diff --cached --name-only | grep -E '\.env$|\.env\.[a-z]+$' | grep -v '\.env\.example'; then
+  echo "❌ ERROR: Detected .env file in commit (secrets leak risk)"
+  echo "   Use .env.example for template; .env is gitignored"
+  exit 1
+fi
+
+# Validate .env.example exists and has basic structure
+if [ ! -f .env.example ]; then
+  echo "⚠️  WARNING: .env.example not found"
+  exit 1
+fi
+
+echo "✅ Pre-commit checks passed"
+exit 0

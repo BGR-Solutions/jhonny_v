@@ -1,0 +1,13 @@
+version: '3.9'
+
+# Base Docker Compose configuration - shared across all compose files
+# This file defines networks, volumes, and defaults
+
+networks:
+  monorepo:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
