@@ -192,8 +192,8 @@ Todas as decisões abaixo foram validadas num protótipo descartável (em `/tmp`
 
 ## Decision 16: Política de entrega e histórico (checklist Q1, Q5, Q6)
 
-- **Decision**:
-  - **Reenvio**: defaults do `loki.write`: `min_backoff` 500 ms, `max_backoff` 5 min e `max_backoff_retries` 10, cerca de 8–9 min no total. Depois disso o lote é descartado.
+- **Decisão original (substituída em 2026-10-16)**:
+  - **Reenvio anterior**: defaults do `loki.write`: `min_backoff` 500 ms, `max_backoff` 5 min e `max_backoff_retries` 10, cerca de 8–9 min no total. Depois disso o lote era descartado.
   - **Fila e lote**: fila de 10 MiB e lote de 1 MiB.
   - **Timestamp**: o do Docker.
   - **Sem posição salva**: ingestão do histórico retido pelo Docker.
@@ -206,6 +206,14 @@ Todas as decisões abaixo foram validadas num protótipo descartável (em `/tmp`
   - Evidência upstream fixada em v1.20.1: [checkpoint do Docker](https://github.com/grafana/alloy/blob/v1.20.1/internal/component/loki/source/docker/tailer.go#L349-L367) e [seleção do segmento para replay](https://github.com/grafana/alloy/blob/v1.20.1/internal/component/common/loki/wal/watcher.go#L161-L186).
   - A coordenação durável de checkpoint/replay exige decisão arquitetural e validação de queda abrupta; não se deve declarar FR-010/SC-004 atendidos apenas com `compose restart` ou com a existência de arquivos WAL.
   - Experimento local: gateway interrompido, 40 linhas numeradas emitidas, checkpoint salvo e WAL não vazio confirmados; produtor removido para impedir releitura; Alloy encerrado com `SIGKILL` e reiniciado com o mesmo volume. Após restaurar o gateway, **0/40 linhas** foram recuperadas em 120 s. O teste temporário e a opção de WAL foram retirados, sem alterar a suíte existente de reinício gracioso nem apresentar essa tentativa como correção.
+- **Política aprovada pelo usuário (2026-10-16)**:
+  - Preservar os registros mascarados confirmados em fila transacional até HTTP `204`, sem descarte por tentativas. Limitar o conteúdo pendente (256 MiB por padrão), suspender leituras quando cheio e sinalizar degradação.
+  - Estado de transporte e checkpoint devem compartilhar uma transação durável; `positions.yml` e WAL independentes não atendem ao contrato.
+  - Extensão nativa compilada na versão fixada do Alloy, usando os estágios síncronos de processamento e banco transacional bbolt já presente no upstream. Não há SDK de plugin externo estável que permita apenas carregar o componente na imagem oficial.
+  - Um dono ordenado por contêiner evita que `stdout` e `stderr` confirmem progresso fora de ordem. O histórico Docker é relido conservadoramente na reconexão, pois timestamps não são monotônicos nem únicos.
+  - A fila conserva rótulos/metadados e sobrevive à remoção do produtor. O checkpoint representa recebimento durável, não permissão para descartar histórico potencialmente não confirmado.
+  - Escopo da garantia: volume íntegro e registros confirmados. Registros parciais/não persistidos continuam sujeitos à rotação Docker; resposta `204` depende da política de aceitação do Loki e não garante retenção infinita.
+  - O teste negativo anterior permanece como evidência histórica. O redesenho só fecha o bloqueio com testes positivos de SIGKILL, produtor ausente, fila cheia, atomicidade, mascaramento em disco e respostas HTTP sem confirmação.
 
 ## Decision 17: Testes de aceite (checklist Q8)
 

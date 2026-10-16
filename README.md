@@ -61,6 +61,13 @@ Armazena as especificações, planos, tarefas e demais artefatos produzidos pelo
 
 A camada `infra/compose.obs.yaml` coleta `stdout`/`stderr` de todos os contêineres do host (Grafana Alloy) e os disponibiliza no Loki por um gateway autenticado em `http://127.0.0.1:${LOKI_PORT}` (padrão `3100`). Detalhes em [`specs/003-agregacao-logs-loki/`](./specs/003-agregacao-logs-loki/quickstart.md).
 
+O Alloy usa build local fixado com fila transacional: registros mascarados já
+persistidos permanecem até confirmação do Loki, inclusive após queda abrupta.
+`ALLOY_QUEUE_MAX_BYTES` limita o conteúdo pendente (default 256 MiB; reservar
+espaço adicional para o banco). Ao atingir o limite, a coleta pausa sem descartar
+pendências; dados ainda não persistidos podem desaparecer pela rotação Docker.
+Preserve o volume `alloy-data`: apagá-lo destrói registros pendentes.
+
 1. Preencha no `.env` as variáveis obrigatórias da camada:
    - `LOKI_GATEWAY_USER` e `LOKI_GATEWAY_PASSWORD` (segredos; não versionar);
    - `DOCKER_GID`, obtido com `stat -c %g /var/run/docker.sock`.

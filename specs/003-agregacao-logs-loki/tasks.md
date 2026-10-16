@@ -352,3 +352,23 @@ Task: "Criar infra/loki-gateway/Caddyfile"
 ## Bloqueio da revisão de 2026-10-16
 
 - [ ] T041 [US1] Definir e aprovar em `specs/003-agregacao-logs-loki/plan.md` a coordenação durável de checkpoint/replay e implementá-la em `infra/alloy/`; validar perda zero após encerramento abrupto em `infra/tests/test_delivery.py`, incluindo lote pendente e produtor indisponível para releitura (FR-010; research, Decision 16). T015/T022 não comprovam essa garantia com reinício gracioso; a entrega permanece bloqueada até a validação.
+
+### Decomposição aprovada de T041 (2026-10-16)
+
+- [x] T042 Atualizar FR-010/FR-026/SC-004, plan, data-model e contrato com a política aprovada: mascarar antes de persistir; confirmação atômica; reenvio até `204`; limite e suspensão; explicitar risco de rotação e duplicação.
+- [x] T043 Escrever primeiro testes de transação/rollback, confirmação HTTP, reenvio, limite, recuperação e ausência de segredos em disco. Testes Go executados no upstream fixado falham antes da implementação (símbolos ainda ausentes); novo aceite pytest passa lint.
+- [ ] T044 Implementar componente nativo do Alloy com leitor ordenado, processamento síncrono, fila/checkpoint transacionais e emissor independente do produtor.
+- [ ] T045 Integrar build upstream fixado, Compose, variável de capacidade, métricas/saúde e CI, preservando isolamento de rede e segredos externos.
+- [ ] T046 Validar SIGKILL com Loki indisponível e produtor removido, repetir recuperação, provar suspensão/retomada e preservar os testes existentes.
+- [ ] T047 Atualizar procedimentos operacionais, executar regressões/lint/build e revisão de segurança; registrar evidências e limitações antes de fechar T041.
+
+### Analyze constitucional antes de implementar
+
+- **Specify/clarify**: a aprovação explícita de 2026-10-16 substitui o descarte finito; a garantia é restrita a registros já confirmados.
+- **Checklist**: os 16 critérios de `requirements.md` e 40 de `observability.md` estão marcados. Esses marcadores são de qualidade de requisitos, não evidência de implementação; a resolução histórica de CHK001 (10 tentativas) foi substituída pela aprovação acima, sem autoatribuir nova revisão ao checklist.
+- **Risco crítico — segredos**: somente linhas completas e mascaradas podem chegar ao banco; proibir persistência de fragmentos brutos e payloads em diagnósticos.
+- **Risco crítico — perda**: confirmação de recebimento após commit síncrono; erro/capacidade não avança checkpoint; somente `204` retira pendências. Testar falhas nas fronteiras.
+- **Risco alto — disco/rotação**: limite lógico não representa tamanho físico exato; reservar folga e suspender antes de aceitar mais conteúdo. Dados não confirmados continuam sujeitos à rotação Docker.
+- **Risco alto — disponibilidade**: rejeição permanente pode bloquear FIFO; diagnosticar sem descartar. Não condicionar a execução das aplicações à entrega.
+- **Risco de manutenção**: extensão usa APIs internas; versão/checksum/build/testes fixados e revisão obrigatória ao atualizar upstream.
+- **Gate de implementação**: desenho aprovado e riscos identificados; T043 precede T044. **Gate de entrega**: bloqueado até evidência objetiva em T046/T047 e CI aprovado, sem declarar testes antigos suficientes.

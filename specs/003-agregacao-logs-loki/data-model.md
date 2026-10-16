@@ -53,17 +53,39 @@ Modelo lógico das entidades da [spec](./spec.md). Não há banco de dados de ap
 | Estado | Persistência | Regras |
 |--------|--------------|--------|
 | Alvos descobertos | Memória (renovados a cada 5 s) | Contêiner novo vira alvo; contêiner encerrado sai depois de drenado |
-| Posição de leitura por contêiner | `alloy-data` (`/var/lib/alloy/data`) | Retomada após reinício; entrega ao menos uma vez (FR-010) |
+| Registro pendente | Banco transacional em `alloy-data` (`/var/lib/alloy/data`) | ID sequencial, timestamp Docker em ns, linha já mascarada, rótulos e metadados imutáveis; remoção somente após HTTP `204` |
+| Checkpoint de recebimento | Mesma transação do registro | Confirma recebimento durável, nunca mera entrega a canal em memória; timestamp não é identidade única nem autorização para pular histórico |
+| Bytes pendentes | Mesma transação de inserção/remoção | Inclui representação serializada persistida; limitado por `ALLOY_QUEUE_MAX_BYTES` |
+| Diagnósticos/saúde | Métricas e JSON no stdout/stderr | Fila cheia, armazenamento indisponível e reenvio bloqueado não expõem linhas ou credenciais |
+
+### Invariantes transacionais
+
+- Ou registro mascarado e checkpoint são confirmados juntos, ou nenhum é confirmado. A confirmação exige sincronização durável do banco, não só flush de buffers de aplicação.
+- Nunca persistir conteúdo bruto ou fragmentos anteriores ao mascaramento. O banco pode conservar páginas livres contendo versões antigas, mas todas elas já passaram pelo mascaramento.
+- O envio lê apenas dados confirmados; não depende de o produtor continuar existindo. Não mantém transação de escrita durante HTTP.
+- HTTP `204` permite retirar o registro; queda antes da retirada permite duplicatas. Qualquer outro resultado mantém a pendência sem limite de tentativas/idade.
+- Inserção que exceda capacidade ou falhe não avança checkpoint. A fila drena independentemente dos leitores suspensos; capacidade liberada permite retomar.
+- O limite de bytes pendentes não inclui páginas, índices e espaço temporário de transações. O operador deve reservar folga; o banco reutiliza páginas liberadas. Remover o volume para liberar disco destrói a garantia.
 
 ### Ciclo de vida de um alvo
 
 `descoberto` → `lendo` → (`contêiner encerrado`) → `drenado` → `removido`
 
-Se o proxy ou o Loki ficarem indisponíveis, o alvo permanece em `lendo` e o envio é retentado com backoff de 500 ms a 5 min, por até 10 tentativas (FR-026). Esgotadas as tentativas, o lote é descartado, sem afetar o contêiner de origem. Sem posição salva, a leitura começa do histórico retido pelo Docker (FR-025).
+Se o proxy cair, a reconexão relê conservadoramente o histórico retido pelo
+Docker, aceitando duplicatas e timestamps repetidos/não monotônicos. Se o Loki
+cair, os registros confirmados permanecem pendentes, com backoff de 500 ms a
+5 min e sem expiração por tentativas. Atingir a capacidade/falhar uma gravação
+leva o alvo a `suspenso`, sem confirmação de novas linhas; após liberação de
+capacidade volta a `lendo`. Dados ainda não confirmados podem desaparecer no
+Docker por rotação/remoção. A fila sobrevive mesmo ao estado `removido` do alvo.
 
 ### Pipeline de processamento
 
-`stage.replace` × 3 (mascaramento, FR-022) → `stage.json` (`level`, `trace_id`, `span_id`) → `stage.structured_metadata` → `loki.write` (basic auth via gateway)
+Decodificação ordenada → `stage.replace` × 4 (mascaramento, FR-022) →
+`stage.json` (`level`, `trace_id`, `span_id`) → `stage.structured_metadata` →
+transação registro/checkpoint → emissor persistente (basic auth via gateway) →
+confirmação HTTP `204` → remoção transacional. Os estágios nessa fronteira
+devem ser síncronos, sem descarte nem buffers que separem progresso e conteúdo.
 
 ## Entity: Armazenamento central (Loki)
 

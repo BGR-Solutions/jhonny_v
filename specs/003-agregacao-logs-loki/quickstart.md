@@ -13,6 +13,7 @@ Cada cenário referencia os IDs de SC da [spec](./spec.md). Registre a saída de
 ## Prerequisites
 
 - Docker Engine + Docker Compose v2
+- Acesso às origens fixadas no Dockerfile do Alloy e espaço para o build Go inicial; a imagem oficial sem extensão não implementa a coleta durável.
 - `curl` no host
 - `.env` criado a partir de `.env.example`, com `LOKI_GATEWAY_USER`, `LOKI_GATEWAY_PASSWORD` (segredo forte, nunca versionado) e `DOCKER_GID` (`stat -c %g /var/run/docker.sock`) preenchidos; sem eles o `compose up` aborta
 - Para a camada core, `POSTGRES_PASSWORD`, `REDIS_PASSWORD` e `RABBITMQ_DEFAULT_PASS` devem conter senhas próprias não vazias. Clientes Redis precisam autenticar.
@@ -25,7 +26,7 @@ Nos comandos abaixo, `DC` é um atalho para `docker compose --env-file .env -f i
 
 1. Validar a composição consolidada: `DC config --quiet` (sem erros).
 2. Validar a configuração do Loki: `docker run --rm -v ./infra/loki:/c:ro grafana/loki:3.7.8 -config.file=/c/config.yaml -config.expand-env=true -verify-config` → `config is valid`.
-3. Validar a sintaxe do Alloy: `docker run --rm -v ./infra/alloy:/c:ro grafana/alloy:v1.20.1 fmt /c/config.alloy` (exit 0).
+3. Compilar o Alloy estendido (`DC build alloy`) e validar a configuração com o binário dessa imagem (`DC run --rm --no-deps alloy fmt /etc/alloy/config.alloy`, exit 0). A imagem oficial isolada não registra o componente nativo.
 4. Validar o Caddyfile com hash válido de senha descartável (exit 0):
    ```bash
    gateway_hash="$(docker run --rm caddy:2.11.4-alpine caddy hash-password --plaintext "$(openssl rand -hex 24)")"
@@ -84,6 +85,42 @@ Para a camada llm, use `--profile validation`, com `OLLAMA_API_BASE=http://ollam
 3. Consultar `{container="qs-seq"}` cobrindo toda a janela (`query_range` com `limit` suficiente), extrair os números `seq=N` e calcular os números únicos (`sort -n -u`).
 
 **Expected outcome**: os números únicos formam uma sequência contínua, do primeiro ao último retornado, sem nenhum número faltando. Linhas duplicadas são aceitáveis.
+
+#### Recuperação abrupta com produtor ausente
+
+O reinício gracioso acima não comprova FR-010. O aceite automatizado deve:
+
+1. Tornar o gateway indisponível e emitir uma sequência finita, identificada, em `stdout` e `stderr`.
+2. Aguardar confirmação **durável de cada registro** na fila (aumento genérico de tamanho do volume/contador global não identifica os registros do produtor).
+3. Remover o produtor, encerrar o Alloy com `SIGKILL` e recriá-lo sem apagar `alloy-data`.
+4. Restaurar o gateway e consultar todos os identificadores distintos. Nenhum registro confirmado pode faltar; duplicatas são aceitas.
+5. Repetir com fila já usada e testar que rejeição HTTP/timeout não remove pendências.
+
+O operador nunca deve usar `down -v` como procedimento de recuperação: isso
+destrói a fila. Também não deve limpar páginas/arquivos manualmente.
+
+#### Capacidade e degradação
+
+`ALLOY_QUEUE_MAX_BYTES` limita o conteúdo serializado pendente (default 256 MiB).
+Reservar folga para páginas/índices/transações do banco e para os arquivos Docker;
+esse valor não é quota física do volume. Quando cheio ou com falha de disco, o
+coletor suspende novas leituras/confirmações, conserva pendências e sinaliza
+degradação. Restaurar o destino ou liberar espaço permite drenar e retomar; não
+remover a fila. Corrigir credenciais/rejeições permanentes, inclusive timestamps
+antigos, em vez de esperar descarte automático.
+
+O limite é global entre produtores: um contêiner ruidoso pode pausar os demais.
+O arquivo bbolt conserva o máximo de espaço alocado mesmo após drenar, mas
+reutiliza páginas livres. Planejar disco pelo pico, não pela média de pendências.
+Se o Loki rejeitar histórico antigo ou fora da janela de ordenação, revisar suas
+janelas de aceitação para permitir o replay; não alterar timestamps nem apagar
+pendências para simular entrega. O contrato garante preservação, não progresso
+contra um destino que rejeita permanentemente os registros.
+
+Somente registros confirmados no banco estão cobertos pela garantia. Dados ainda
+no histórico Docker podem desaparecer por rotação durante a suspensão; perda do
+volume também fica fora do contrato. A confirmação do Loki não substitui sua
+retenção nem protege contra perda do volume do servidor.
 
 ### Scenario 7: Segurança do proxy (SC-008, SC-009)
 

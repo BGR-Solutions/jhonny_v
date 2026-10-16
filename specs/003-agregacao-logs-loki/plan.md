@@ -4,10 +4,11 @@
 
 **Input**: Feature specification from `/specs/003-agregacao-logs-loki/spec.md`
 
-**Gate de entrega (revisão de 2026-10-16)**: bloqueado quanto ao FR-010.
-Posições do Docker não são confirmadas transacionalmente com a persistência dos
-lotes. A aprovação exige arquitetura de checkpoint/replay coordenados e teste de
-encerramento abrupto; ver [research, Decision 16](./research.md#decision-16-política-de-entrega-e-histórico-checklist-q1-q5-q6).
+**Redesenho aprovado (2026-10-16)**: o usuário aprovou substituir o descarte
+do FR-026 por fila durável limitada, com confirmação transacional de registros
+mascarados/checkpoint e remoção somente após aceitação do Loki. O gate de entrega
+permanece bloqueado até a implementação e os testes abaixo; o WAL padrão isolado
+não atende ao contrato.
 
 ## SDD Feature Selection
 
@@ -18,7 +19,7 @@ Os comandos Specify seguintes selecionam esta feature pelo `.specify/feature.jso
 Criar o overlay `infra/compose.obs.yaml` com quatro serviços:
 
 - **`socket-proxy`**: proxy de socket do Docker (`wollomatic/socket-proxy`), allowlist só leitura, sem root.
-- **`alloy`**: coletor Grafana Alloy.
+- **`alloy`**: distribuição local do Grafana Alloy com componente nativo de coleta e entrega durável; a compilação mantém a versão upstream fixada.
 - **`loki`**: armazenamento, escutando só em loopback.
 - **`loki-gateway`**: Caddy com autenticação HTTP básica. Compartilha o namespace de rede do `loki` e é o único caminho de consulta e de ingestão.
 
@@ -45,6 +46,7 @@ Toda a abordagem foi prototipada localmente com as versões fixadas abaixo (ver 
 - Caddyfile.
 - Dockerfile: camada mínima de healthcheck do Loki.
 - Python ≥ 3.12, só nos testes de aceite.
+- Go, na extensão nativa compilada com o código-fonte fixado do Alloy e seu ferramental existente.
 - Markdown.
 
 **Primary Dependencies**:
@@ -57,7 +59,28 @@ Toda a abordagem foi prototipada localmente com as versões fixadas abaixo (ver 
 
 **Storage**:
 - Volume nomeado `loki-data`: chunks, índice TSDB e compactor.
-- Volume nomeado `alloy-data`: posições de leitura do coletor.
+- Volume nomeado `alloy-data`: banco transacional privado da fila e checkpoints, com sincronização durável habilitada. O limite padrão de 256 MiB refere-se ao conteúdo pendente serializado, não ao tamanho físico total do banco.
+
+### Redesenho de entrega: fronteira transacional
+
+1. Um único dono de decodificação por contêiner reconstrói as linhas de `stdout`/`stderr`. Conteúdo parcial fica somente em memória; não se confirma progresso além de linhas incompletas.
+2. Os estágios síncronos existentes do Alloy fazem mascaramento, extração JSON e metadados. Somente estágios sem descarte/buffer são permitidos nesta fronteira; a configuração inválida falha antes da leitura.
+3. Uma transação síncrona no banco privado (bbolt já presente no upstream) insere o registro processado e confirma seu recebimento/checkpoint. Erro ou falta de capacidade cancela a transação; não há confirmação durável nem avanço.
+4. O emissor lê somente conteúdo persistido e envia pelo gateway autenticado. Nenhuma transação de escrita permanece aberta durante chamadas HTTP. Somente HTTP `204` autoriza remoção transacional. Resultado ambíguo, erro de rede e rejeição preservam o conteúdo; queda entre aceitação e remoção produz duplicatas, não perda.
+5. Recuperação percorre toda a fila pendente sem depender de descoberta, nome ou existência do produtor. Ao reconectar ao Docker, relê conservadoramente o histórico retido: timestamps podem repetir ou retroceder e não são identidade para deduplicação.
+6. `ALLOY_QUEUE_MAX_BYTES` limita globalmente os bytes serializados pendentes (default 268435456), compartilhados pelos alvos do host. Fila cheia/falha de armazenamento suspende leitura e confirmações; métricas de pendências e estado degradado tornam o bloqueio observável. Um produtor ruidoso pode suspender os demais; isolamento por quota individual não faz parte deste contrato. Reserva de disco deve incluir páginas/índices/transações e o histórico Docker. O arquivo bbolt não encolhe após drenar: as páginas livres são reutilizadas, não devolvidas ao sistema operacional.
+
+**Implementação/build**: componente nativo aditivo em `infra/alloy/`, registrado e
+compilado numa árvore upstream obtida por arquivo com versão/checksum fixados.
+Não há plugin externo estável nem fork espelhado no repositório. A imagem local
+declara `build` e versão própria no Compose; o estágio de testes usa o `go test`
+do upstream. O binário resultante valida a configuração no CI.
+
+**Riscos e limites**: APIs internas do Alloy exigem revisão a cada atualização;
+fsync/transações não protegem contra destruição do volume; dados parciais ou
+não confirmados dependem do Docker; fila cheia pode coincidir com rotação;
+rejeição permanente exige intervenção e pode bloquear o envio FIFO. Não há
+promessa de perda zero fora dessas fronteiras nem saída operacional em arquivo.
 
 **Testing**:
 - Testes de aceite `pytest` em `infra/tests/`, executados contra a stack em execução e cobrindo os SC-001 a SC-013 (SC-014).
@@ -100,7 +123,7 @@ Toda a abordagem foi prototipada localmente com as versões fixadas abaixo (ver 
 | Regra (constituição) | Avaliação | Status |
 |----------------------|-----------|--------|
 | 2.1 / 3.4.1 Separação `infra/` e orquestração local | Tudo fica em `infra/`: overlay, `infra/alloy/`, `infra/loki/`, `infra/loki-gateway/` e `infra/tests/` | PASS |
-| 2.5 / 3.4.2 `build` × `image` declarado por serviço | `loki` usa `build` (Dockerfile mínimo FROM imagem fixada). `alloy`, `socket-proxy` e `loki-gateway` usam `image`. `env_file`, `volumes`, `networks`/`network_mode` e `depends_on` são explícitos em cada serviço | PASS |
+| 2.5 / 3.4.2 `build` × `image` declarado por serviço | `loki` e o Alloy estendido usam `build` local com versões fixadas; proxy e gateway usam imagens remotas. Nenhuma alteração de redes/portas é necessária | PASS (design) |
 | 2.6 Convenção `compose.*.yaml` | `infra/compose.obs.yaml` (não `.yml`) | PASS |
 | 3.1.2 / 3.1.4 `pyproject.toml` + `uv` | Testes de infra em `infra/pyproject.toml` com `uv`; sem `requirements.txt` | PASS |
 | 3.3.1 / 3.3.2 Sem logs em disco; `stdout`/`stderr` em JSON | Os quatro serviços logam em JSON no stdout/stderr, sem arquivo: Loki (`log_format: json`), Alloy (`format = "json"`), socket-proxy (`-logjson`) e Caddy (`format json`). Verificado no protótipo | PASS |
@@ -109,7 +132,7 @@ Toda a abordagem foi prototipada localmente com as versões fixadas abaixo (ver 
 | 3.4.4 Versões fixadas, sem `:latest` | Todas as imagens com tag exata | PASS |
 | 3.4.5 `healthcheck` + `depends_on: service_healthy` | Healthcheck nos 4 serviços. `loki-gateway` depende de `loki`; `alloy` depende de `loki-gateway` e `socket-proxy`; todos com `service_healthy` | PASS |
 | 3.4.6 Volumes nomeados para persistência | `loki-data` e `alloy-data` declarados com `name:` prefixado pelo projeto | PASS |
-| 3.4.7 `.dockerignore` | O contexto de build é `infra/loki/` (só Dockerfile + config); o `.dockerignore` da raiz não muda | PASS |
+| 3.4.7 `.dockerignore` | Contextos limitados aos diretórios Loki/Alloy; verificar exclusão de `.venv/`, `__pycache__/` e `secrets/` no contexto do coletor | A validar no build |
 | 3.5.1 Black + Ruff | Configurados em `infra/pyproject.toml` para os testes de aceite | PASS |
 | 3.5.3 / 3.5.4 pytest + CI | Testes de aceite `pytest` cobrem os SCs e rodam no workflow `.github/workflows/infra-obs.yaml`, que bloqueia o merge em caso de falha (decisão D1 do analyze) | PASS |
 | Princípio V (segurança por padrão) | O Loki não é exposto sem autenticação; o proxy de socket é uma allowlist só leitura, sem root; segredos conhecidos são mascarados no coletor | PASS |
@@ -118,7 +141,7 @@ Toda a abordagem foi prototipada localmente com as versões fixadas abaixo (ver 
 | 6.4 Bloqueios imediatos | Sem `requirements.txt`, sem logs em disco, sem segredos, sem rede implícita (todas declaradas) | PASS |
 
 - **Status pré-pesquisa**: PASS.
-- **Status pós-design**: PASS, com os itens de Complexity Tracking e sem exceções à constituição. A ressalva de CI foi removida pela decisão D1 do analyze (workflow mínimo). As decisões do checklist (sessão 2026-10-01) removeram as exceções anteriores: logs em texto do proxy (agora `wollomatic/socket-proxy`, com logs JSON), ausência de pytest e Loki sem autenticação.
+- **Status pós-design (2026-10-16)**: o desenho respeita isolamento, segredos externos, JSON no stdout/stderr e volume nomeado; o banco é estado de transporte, não destino de logs operacionais. A política FR-026 foi explicitamente aprovada pelo usuário. Aprovação de entrega continua condicionada a testes de atomicidade, capacidade, falhas HTTP, recuperação abrupta e CI verde; evidência antiga de reinício gracioso não fecha T041.
 
 ## Project Structure
 
@@ -147,7 +170,9 @@ infra/
 ├── compose.llm.yaml             # + bloco x-logging e `logging: *default-logging` em cada serviço (FR-019)
 ├── compose.obs.yaml             # NOVO: socket-proxy, alloy, loki, loki-gateway; rede docker-api; volumes loki-data/alloy-data
 ├── alloy/
-│   └── config.alloy             # NOVO: discovery → relabel → source.docker → process(mascaramento, json) → write (basic auth)
+│   ├── config.alloy             # discovery/relabel → componente durável com estágios síncronos
+│   ├── Dockerfile               # overlay nativo; origem/checksum e imagens fixados; alvo de testes
+│   └── durable/                 # componente Go, fila/checkpoint/emissor e testes unitários
 ├── loki/
 │   ├── Dockerfile               # NOVO: FROM grafana/loki:3.7.8 + busybox estático para healthcheck
 │   └── config.yaml              # NOVO: single-tenant, loopback :3101, TSDB v13, retenção por env, truncamento 256 KB, logs JSON
@@ -176,6 +201,7 @@ docs/milestones/v0.1-infra-core.md  # Promtail → Grafana Alloy
 |------|-------|--------------------------|
 | `infra/compose.obs.yaml` | Plataforma/Infra | Ciclo de vida, redes, volumes, portas, healthchecks, hardening e permissões do proxy |
 | `infra/alloy/config.alloy` | Plataforma/Observabilidade | Descoberta, rótulos, mascaramento, parsing JSON, metadados estruturados e entrega autenticada |
+| `infra/alloy/Dockerfile`, `infra/alloy/durable/` | Plataforma/Observabilidade | Build fixado da extensão nativa, atomicidade/durabilidade, limites de fila, replay e testes Go |
 | `infra/loki/config.yaml` | Plataforma/Observabilidade | Schema, armazenamento, retenção, limites, truncamento, `discover_log_levels` e formato de log |
 | `infra/loki/Dockerfile` | Plataforma/Infra | Só adiciona o binário de probe; nenhuma outra customização |
 | `infra/loki-gateway/Caddyfile` | Plataforma/Segurança | Autenticação, exceção `/ready`, proxy para o Loki e access log |
@@ -196,6 +222,7 @@ docs/milestones/v0.1-infra-core.md  # Promtail → Grafana Alloy
 | `DOCKER_GID` | **Sim** | — | `socket-proxy` (`user: "65534:${DOCKER_GID}"`) | `${VAR:?}`; um GID errado deixa o proxy sem acesso ao socket e o healthcheck falha |
 | `DOCKER_LOG_MAX_SIZE` | Não | `10m` | Bloco `x-logging` (core, llm, obs) | Formato do driver `json-file` |
 | `DOCKER_LOG_MAX_FILE` | Não | `3` | Bloco `x-logging` (core, llm, obs) | Inteiro ≥ 1 |
+| `ALLOY_QUEUE_MAX_BYTES` | Não | `268435456` | Componente durável do Alloy | Inteiro positivo; valor incapaz de comportar um registro suspende a aceitação, sem descarte |
 | `HOST_IP` | Não | `127.0.0.1` | Porta do gateway | Já existente |
 
 ## Complexity Tracking
@@ -203,6 +230,7 @@ docs/milestones/v0.1-infra-core.md  # Promtail → Grafana Alloy
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
 | `build` local para o Loki (`infra/loki/Dockerfile`) | A imagem oficial é distroless (sem shell nem cliente HTTP) e o binário não tem flag de health. Sem um probe, não dá para cumprir 3.4.5 nem o `depends_on: service_healthy` do FR-013 | `-verify-config` como healthcheck só valida o arquivo, não a prontidão. Um healthcheck externo (outro contêiner) não alimenta o `service_healthy` do próprio Loki |
+| `build` local do Alloy com componente nativo | A confirmação de origem, o conteúdo mascarado e o checkpoint precisam de uma única fronteira transacional; a API de canais padrão não expõe essa confirmação | Habilitar só `loki.write.wal` perdeu 40/40 registros no experimento de SIGKILL. Um serviço coletor externo substituiria o Alloy e ampliaria a topologia |
 | `loki-gateway` com `network_mode: service:loki` | O Docker Engine 28.0.4 do ambiente resolve por DNS o IP da rede errada em contêineres multi-rede, e portas publicadas nesses contêineres travaram (research, decisão 12). Compartilhar o namespace deixa o `loki` single-homed, com o Loki em loopback, inalcançável sem passar pelo gateway | Um gateway em contêiner próprio e multi-rede, com o Loki numa rede interna `loki-backend`, falhou no protótipo pelo bug de DNS |
 | Proxy de socket com `-allowfrom=0.0.0.0/0` | O DNS embutido do Docker não responde dentro de um contêiner ligado só a uma rede `internal`, então a restrição por hostname (`-allowfrom=alloy`) bloqueia o próprio coletor | Fixar IPs (`ipam`) acopla a configuração a sub-redes. O isolamento real vem da topologia: a rede `docker-api` é interna e tem só dois membros (SC-009) |
 | `DOCKER_GID` obrigatório | O proxy roda sem root e precisa do grupo dono do socket, cujo GID varia por host | Rodar o proxy como root contraria o hardening do Princípio V |
