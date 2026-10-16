@@ -74,7 +74,7 @@ class StackEnv:
     """
 
     user: str
-    password: str
+    password: str = field(repr=False)
     loki_port: int
     host_ip: str
     project: str

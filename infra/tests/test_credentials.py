@@ -12,6 +12,15 @@ from .conftest import ComposeFn, StackEnv, run, service_container
 CORE_SECRETS = ("POSTGRES_PASSWORD", "REDIS_PASSWORD", "RABBITMQ_DEFAULT_PASS")
 
 
+def test_stack_environment_repr_does_not_expose_gateway_secret() -> None:
+    """Tracebacks dos testes não devem divulgar credenciais efêmeras."""
+    value = uuid.uuid4().hex
+    config = StackEnv(
+        "test", value, 3100, "127.0.0.1", "test", {"LOKI_GATEWAY_PASSWORD": value}
+    )
+    assert value not in repr(config)
+
+
 @pytest.mark.parametrize("variable", CORE_SECRETS)
 @pytest.mark.parametrize("value", [None, ""])
 def test_core_rejects_missing_or_empty_secret(

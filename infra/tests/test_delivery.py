@@ -81,7 +81,9 @@ def test_logs_persist_when_loki_is_recreated(
     selector = f'{{container="{name}"}} |= "{marker}"'
     wait_for_lines(selector)
 
-    compose("rm", "-sf", "loki")
+    # O gateway compartilha o namespace do Loki: remover ambos antes de recriar
+    # evita manter conexões/namespace do proprietário removido (Docker 28).
+    compose("rm", "-sf", "loki-gateway", "loki")
     compose("up", "-d", "--wait", "loki", "loki-gateway", "alloy")
     wait_healthy([service_container(env, s) for s in ("loki", "loki-gateway")])
 
