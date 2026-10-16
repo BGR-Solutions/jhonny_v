@@ -1,0 +1,62 @@
+// Coleta de stdout/stderr de todos os contêineres do host pela API do Docker
+// (via socket-proxy, só leitura) e envio ao Loki pelo gateway autenticado.
+// Especificação: specs/003-agregacao-logs-loki/
+
+logging {
+	level  = "info"
+	format = "json"
+}
+
+discovery.docker "containers" {
+	host             = "tcp://socket-proxy:2375"
+	refresh_interval = "1s"
+}
+
+loki.source.docker_durable "containers" {
+	host            = "http://socket-proxy:2375"
+	targets         = discovery.docker.containers.targets
+	endpoint        = "http://loki:3100/loki/api/v1/push"
+	username        = sys.env("LOKI_GATEWAY_USER")
+	password        = sys.env("LOKI_GATEWAY_PASSWORD")
+	queue_max_bytes = sys.env("ALLOY_QUEUE_MAX_BYTES")
+	max_readers     = 128
+
+	// Mascaramento de segredos conhecidos (FR-022): só o grupo de captura é trocado.
+	stage.replace {
+		expression = "(?i)bearer\\s+([A-Za-z0-9._~+/=-]+)"
+		replace    = "<redacted>"
+	}
+
+	stage.replace {
+		expression = "\\b(sk-[A-Za-z0-9_-]{16,})"
+		replace    = "<redacted>"
+	}
+
+	stage.replace {
+		expression = "(?i)(?:password|passwd|pwd|secret|token|api_key|apikey)\"?\\s*[:=]\\s*\"((?:[^\"\\\\]|\\\\.)*)\""
+		replace    = "<redacted>"
+	}
+
+	stage.replace {
+		expression = "(?i)(?:password|passwd|pwd|secret|token|api_key|apikey)\"?\\s*[:=]\\s*([^\"\\s,&}]+)"
+		replace    = "<redacted>"
+	}
+
+	// Metadados estruturados (FR-007): extraídos de linhas JSON, sem virar rótulo.
+	// Linhas que não são JSON passam intactas, só sem os metadados (FR-008).
+	stage.json {
+		expressions = {
+			level    = "",
+			trace_id = "",
+			span_id  = "",
+		}
+	}
+
+	stage.structured_metadata {
+		values = {
+			level    = "",
+			trace_id = "",
+			span_id  = "",
+		}
+	}
+}
