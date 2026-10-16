@@ -274,7 +274,7 @@
 - [X] T039 Varredura final de conformidade:
   - `grep -rn ':latest' infra/` → vazio;
   - `git ls-files | grep requirements.txt` → vazio;
-  - `grep -nE 'min_backoff|max_backoff|max_backoff_retries' infra/alloy/config.alloy` → vazio, o que confirma os defaults de reenvio do FR-026;
+  - Evidência histórica, substituída por T043–T047: a ausência de `min_backoff|max_backoff|max_backoff_retries` na configuração confirmava os defaults antigos. O FR-026 atual exige retenção até confirmação e seus próprios testes, não esse grep;
   - `grep -rniE 'password|secret' infra/ .env.example` só retorna referências a variáveis, sem valores;
   - `grep -rni promtail infra docs/issues/v0.1/ISSUE-103.md docs/milestones/v0.1-infra-core.md` → nenhuma adoção.
 

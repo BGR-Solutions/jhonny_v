@@ -89,37 +89,6 @@ func TestQueueOversizeDoesNotSilentlyDrop(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	func TestFIFOAndCrashAfterAck(t *testing.T) {
-		path := filepath.Join(t.TempDir(), "queue.db")
-		q, err := openQueue(path, 4096)
-		if err != nil {
-			t.Fatal(err)
-		}
-		first, err := q.enqueue(context.Background(), []byte("first"), "one")
-		if err != nil {
-			t.Fatal(err)
-		}
-		second, err := q.enqueue(context.Background(), []byte("second"), "two")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if err := q.ack(second); err == nil {
-			t.Fatal("out-of-order ack must fail")
-		}
-		if err := q.ack(first); err != nil {
-			t.Fatal(err)
-		}
-		q.close()
-		q, err = openQueue(path, 4096)
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer q.close()
-		record, err := q.peek()
-		if err != nil || record.ID != second {
-			t.Fatal("committed ack was not recovered", record, err)
-		}
-	}
 	defer q.close()
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
 	defer cancel()
@@ -128,5 +97,37 @@ func TestQueueOversizeDoesNotSilentlyDrop(t *testing.T) {
 	}
 	if q.receipt() != 0 {
 		t.Fatal("uncommitted record advanced receipt")
+	}
+}
+
+func TestFIFOAndCrashAfterAck(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "queue.db")
+	q, err := openQueue(path, 4096)
+	if err != nil {
+		t.Fatal(err)
+	}
+	first, err := q.enqueue(context.Background(), []byte("first"), "one")
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := q.enqueue(context.Background(), []byte("second"), "two")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := q.ack(second); err == nil {
+		t.Fatal("out-of-order ack must fail")
+	}
+	if err := q.ack(first); err != nil {
+		t.Fatal(err)
+	}
+	q.close()
+	q, err = openQueue(path, 4096)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer q.close()
+	record, err := q.peek()
+	if err != nil || record.ID != second {
+		t.Fatal("committed ack was not recovered", record, err)
 	}
 }

@@ -86,8 +86,9 @@ promessa de perda zero fora dessas fronteiras nem saída operacional em arquivo.
 - Testes de aceite `pytest` em `infra/tests/`, executados contra a stack em execução e cobrindo os SC-001 a SC-013 (SC-014).
 - Projeto Python próprio em `infra/pyproject.toml`, gerenciado com `uv`.
 - Validações estáticas complementares: `docker compose config`, `loki -verify-config`, `alloy fmt` e `caddy validate`.
+- Testes nativos: `docker build --target native-test -t jhonny-alloy-native-test infra/alloy` executa `go test -race`, `go vet` e `gofmt` no upstream fixado, sem instalar outro runner de testes.
 - As evidências são registradas por ID de SC no [quickstart.md](./quickstart.md).
-- CI: workflow `.github/workflows/infra-obs.yaml` (GitHub Actions) executa lint, validações estáticas e a suíte completa contra a stack em pull requests e pushes que tocam `infra/**` (FR-027).
+- CI: workflow `.github/workflows/infra-obs.yaml` (GitHub Actions) executa lint, testes nativos, build do Alloy estendido, validações estáticas e a suíte completa contra a stack em pull requests e pushes que tocam `infra/**` (FR-027). O build frio do upstream exige o timeout de job configurado em 90 minutos; caches de módulos/compilação do BuildKit são compartilhados entre estágios no job.
 
 **Target Platform**: host local com Docker Engine e Docker Compose v2 (Linux, macOS ou Windows com Docker Desktop).
 

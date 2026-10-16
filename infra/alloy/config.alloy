@@ -12,40 +12,15 @@ discovery.docker "containers" {
 	refresh_interval = "1s"
 }
 
-discovery.relabel "containers" {
-	targets = []
+loki.source.docker_durable "containers" {
+	host            = "http://socket-proxy:2375"
+	targets         = discovery.docker.containers.targets
+	endpoint        = "http://loki:3100/loki/api/v1/push"
+	username        = sys.env("LOKI_GATEWAY_USER")
+	password        = sys.env("LOKI_GATEWAY_PASSWORD")
+	queue_max_bytes = sys.env("ALLOY_QUEUE_MAX_BYTES")
+	max_readers     = 128
 
-	rule {
-		source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
-		target_label  = "compose_project"
-	}
-
-	rule {
-		source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
-		target_label  = "compose_service"
-	}
-
-	rule {
-		source_labels = ["__meta_docker_container_name"]
-		regex         = "/(.*)"
-		target_label  = "container"
-	}
-
-	rule {
-		source_labels = ["__meta_docker_container_log_stream"]
-		target_label  = "stream"
-	}
-}
-
-loki.source.docker "containers" {
-	host             = "tcp://socket-proxy:2375"
-	targets          = discovery.docker.containers.targets
-	relabel_rules    = discovery.relabel.containers.rules
-	refresh_interval = "1s"
-	forward_to       = [loki.process.containers.receiver]
-}
-
-loki.process "containers" {
 	// Mascaramento de segredos conhecidos (FR-022): só o grupo de captura é trocado.
 	stage.replace {
 		expression = "(?i)bearer\\s+([A-Za-z0-9._~+/=-]+)"
@@ -82,20 +57,6 @@ loki.process "containers" {
 			level    = "",
 			trace_id = "",
 			span_id  = "",
-		}
-	}
-
-	forward_to = [loki.write.gateway.receiver]
-}
-
-// Defaults de reenvio do loki.write mantidos (FR-026).
-loki.write "gateway" {
-	endpoint {
-		url = "http://loki:3100/loki/api/v1/push"
-
-		basic_auth {
-			username = sys.env("LOKI_GATEWAY_USER")
-			password = sys.env("LOKI_GATEWAY_PASSWORD")
 		}
 	}
 }

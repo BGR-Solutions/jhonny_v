@@ -96,3 +96,8 @@ O limite é global entre os alvos do host: um contêiner ruidoso pode suspender
 outros leitores. Não há quota isolada por produtor. O banco reutiliza páginas
 após remoção, mas seu arquivo conserva o tamanho máximo alocado; drenar a fila
 não devolve esse espaço ao sistema operacional.
+
+`max_readers = 128` limita a concorrência na configuração distribuída. Se houver
+mais alvos ativos, o componente sinaliza degradação; os excedentes aguardam uma
+vaga. Dimensionar esse limite para o host antes de exigir os prazos SC-002/SC-003.
+A garantia dos registros já persistidos é independente desse limite.

@@ -117,6 +117,25 @@ janelas de aceitação para permitir o replay; não alterar timestamps nem apaga
 pendências para simular entrega. O contrato garante preservação, não progresso
 contra um destino que rejeita permanentemente os registros.
 
+Na interface interna do Alloy (`:12345/metrics`, sem publicar nova porta),
+acompanhar:
+
+- `loki_source_docker_durable_pending_records` e `_pending_bytes`: pendências confirmadas ainda não retiradas.
+- `loki_source_docker_durable_paused_sources`: leitores suspensos por capacidade/falha de persistência.
+- `loki_source_docker_durable_receipts_total{container,stream}`: recebimentos duráveis por leitor ativo; séries podem desaparecer ao remover o alvo e não substituem uma auditoria histórica.
+- `loki_source_docker_durable_delivery_errors_total`: tentativas sem confirmação; crescimento contínuo com fila pendente exige verificar destino, credenciais e rejeições.
+
+Para provar recuperação em teste, aguardar o número exato de recebimentos do
+produtor/stream, não o contador global da stack. O valor deve ser atualizado
+somente após o commit; os testes de transação validam essa fronteira.
+
+O componente limita leitores simultâneos por `max_readers` na configuração
+(default distribuído: 128). Alvos excedentes aguardam vaga e tornam o componente
+degradado; não têm garantia de latência enquanto a capacidade for insuficiente.
+Dimensionar esse limite para os contêineres do host e reiniciar o coletor após
+alterar a política. Mudanças de descoberta são dinâmicas; mudanças de fila,
+autenticação ou estágios exigem reinício para manter a fronteira transacional.
+
 Somente registros confirmados no banco estão cobertos pela garantia. Dados ainda
 no histórico Docker podem desaparecer por rotação durante a suspensão; perda do
 volume também fica fora do contrato. A confirmação do Loki não substitui sua

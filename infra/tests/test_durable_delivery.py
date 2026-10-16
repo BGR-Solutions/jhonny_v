@@ -125,3 +125,75 @@ def test_committed_queue_survives_sigkill_and_producer_removal(
     )
     assert all(raw_value not in line.line for line in stored)
     assert all("<redacted>" in line.line for line in stored)
+
+
+def test_bounded_queue_pauses_and_resumes_without_dropping(
+    request: pytest.FixtureRequest,
+    env: StackEnv,
+    compose: ComposeFn,
+    probe_container: ProbeFn,
+    wait_for_lines: WaitFn,
+) -> None:
+    """Fila cheia suspende confirmação; espaço liberado retoma leitura."""
+    alloy = service_container(env, "alloy")
+    marker = unique_marker("bounded")
+    count = 80
+    limit = 16_384
+
+    def restore() -> None:
+        compose("start", "loki-gateway")
+        compose("up", "-d", "--force-recreate", "--no-deps", "alloy")
+        wait_healthy([alloy, service_container(env, "loki-gateway")])
+
+    request.addfinalizer(restore)
+    compose(
+        "up",
+        "-d",
+        "--force-recreate",
+        "--no-deps",
+        "alloy",
+        env={"ALLOY_QUEUE_MAX_BYTES": str(limit)},
+    )
+    wait_healthy([alloy])
+    compose("stop", "loki-gateway")
+    try:
+        name = probe_container(
+            f'i=0; while [ "$i" -lt {count} ]; do '
+            f'echo "{marker} seq=$i {"x" * 512}"; '
+            "i=$((i+1)); done; sleep 3600"
+        )
+        deadline = time.monotonic() + 90
+        while True:
+            metrics = _metrics(alloy)
+            paused = re.search(
+                r"^loki_source_docker_durable_paused_sources" r"(?:\{[^\n]*\})? (\d+)",
+                metrics,
+                re.MULTILINE,
+            )
+            if paused and int(paused.group(1)) > 0:
+                break
+            assert time.monotonic() < deadline, "fila cheia não suspendeu a origem"
+            time.sleep(1)
+        pending_bytes = re.search(
+            r"^loki_source_docker_durable_pending_bytes(?:\{[^\n]*\})? (\d+)",
+            metrics,
+            re.MULTILINE,
+        )
+        assert pending_bytes and int(pending_bytes.group(1)) <= limit
+        assert _receipts(metrics, name, "stdout") < count
+    finally:
+        compose("start", "loki-gateway")
+        wait_healthy([service_container(env, "loki-gateway")])
+    wait_for_lines(
+        f'{{container="{name}"}} |= "{marker}"',
+        predicate=lambda lines: len(
+            {
+                int(match.group(1))
+                for line in lines
+                if (match := re.search(r"seq=(\d+)", line.line))
+            }
+        )
+        == count,
+        timeout=180,
+    )
+    assert _receipts(_metrics(alloy), name, "stdout") == count

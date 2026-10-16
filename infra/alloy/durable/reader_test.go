@@ -56,32 +56,32 @@ func TestDockerIncompleteRawFragmentNotCommitted(t *testing.T) {
 	if err != nil || calls != 0 {
 		t.Fatal("incomplete raw fragment must not reach durable queue", err, calls)
 	}
+}
 
-	func TestDockerTTYAndNonmonotonicTimestamps(t *testing.T) {
-		input := "2026-10-16T10:00:02Z later\n2026-10-16T10:00:01Z earlier\n"
-		var got []rawRecord
-		err := readDocker(bytes.NewBufferString(input), true, func(r rawRecord) error {
-			got = append(got, r)
-			return nil
-		})
-		if err != nil || len(got) != 2 {
-			t.Fatal(got, err)
-		}
-		if got[0].Line != "later" || got[1].Line != "earlier" || !got[1].Time.Before(got[0].Time) {
-			t.Fatal("receive order and source timestamps must not be rewritten")
-		}
+func TestDockerTTYAndNonmonotonicTimestamps(t *testing.T) {
+	input := "2026-10-16T10:00:02Z later\n2026-10-16T10:00:01Z earlier\n"
+	var got []rawRecord
+	err := readDocker(bytes.NewBufferString(input), true, func(r rawRecord) error {
+		got = append(got, r)
+		return nil
+	})
+	if err != nil || len(got) != 2 {
+		t.Fatal(got, err)
 	}
+	if got[0].Line != "later" || got[1].Line != "earlier" || !got[1].Time.Before(got[0].Time) {
+		t.Fatal("receive order and source timestamps must not be rewritten")
+	}
+}
 
-	func TestDockerTruncatedFrameIsNotCommitted(t *testing.T) {
-		wire := frame(1, "2026-10-16T10:00:00Z incomplete")
-		wire = wire[:len(wire)-1]
-		calls := 0
-		err := readDocker(bytes.NewReader(wire), false, func(r rawRecord) error {
-			calls++
-			return nil
-		})
-		if err == nil || calls != 0 {
-			t.Fatal("truncated Docker frame must not commit", err, calls)
-		}
+func TestDockerTruncatedFrameIsNotCommitted(t *testing.T) {
+	wire := frame(1, "2026-10-16T10:00:00Z incomplete")
+	wire = wire[:len(wire)-1]
+	calls := 0
+	err := readDocker(bytes.NewReader(wire), false, func(r rawRecord) error {
+		calls++
+		return nil
+	})
+	if err == nil || calls != 0 {
+		t.Fatal("truncated Docker frame must not commit", err, calls)
 	}
 }

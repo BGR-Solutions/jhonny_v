@@ -31,7 +31,7 @@ env:
 jobs:
   acceptance:
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    timeout-minutes: 90
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -66,12 +66,19 @@ jobs:
           uv run ruff check .
           uv run black --check .
 
+      - name: Native durable component tests
+        run: docker build --target native-test -t jhonny-alloy-native-test infra/alloy
+
+      - name: Build pinned custom Alloy
+        run: $DC build alloy
+
       - name: Static validation
         run: |
           $DC config --quiet
           docker run --rm -v ./infra/loki:/c:ro grafana/loki:3.7.8 \
             -config.file=/c/config.yaml -config.expand-env=true -verify-config
-          docker run --rm -v ./infra/alloy:/c:ro grafana/alloy:v1.20.1 fmt /c/config.alloy > /dev/null
+          $DC run --rm --no-deps alloy fmt /etc/alloy/config.alloy > /dev/null
+          $DC run --rm --no-deps alloy validate /etc/alloy/config.alloy
           gateway_hash="$(docker run --rm caddy:2.11.4-alpine \
             caddy hash-password --plaintext "$(openssl rand -hex 24)")"
           echo "::add-mask::${gateway_hash}"
