@@ -58,8 +58,14 @@ func TestQueueBoundBlocksWithoutAdvancingReceipt(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
 	defer cancel()
+	beforeStats := q.db.Stats()
+	writes := beforeStats.TxStats.GetWrite()
 	if _, err := q.enqueue(ctx, []byte("next"), "source"); !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("full queue must block: %v", err)
+	}
+	afterStats := q.db.Stats()
+	if afterStats.TxStats.GetWrite() != writes {
+		t.Fatal("backpressure must not continuously rewrite the full database")
 	}
 	if q.receipt() != id {
 		t.Fatal("uncommitted record advanced receipt")

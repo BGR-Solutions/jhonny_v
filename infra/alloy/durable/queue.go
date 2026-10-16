@@ -19,6 +19,7 @@ var (
 	queueBucket = []byte("pending")
 	metaBucket  = []byte("progress")
 	errEmpty    = errors.New("durable queue empty")
+	errCapacity = errors.New("durable queue at logical capacity")
 )
 
 type queuedRecord struct {
@@ -145,7 +146,7 @@ func (q *diskQueue) enqueue(ctx context.Context, payload []byte, source string) 
 			meta := tx.Bucket(metaBucket)
 			size := integer(meta.Get([]byte("bytes")))
 			if uint64(len(payload)) > q.limit || size > q.limit-uint64(len(payload)) {
-				return nil
+				return errCapacity
 			}
 			bucket := tx.Bucket(queueBucket)
 			var err error
@@ -172,7 +173,7 @@ func (q *diskQueue) enqueue(ctx context.Context, payload []byte, source string) 
 			}
 			return nil
 		})
-		if err != nil {
+		if err != nil && !errors.Is(err, errCapacity) {
 			q.failed.Store(true)
 			return 0, errors.New("durable commit failed; source receipt not confirmed")
 		}
