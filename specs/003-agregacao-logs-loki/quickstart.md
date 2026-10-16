@@ -15,6 +15,7 @@ Cada cenário referencia os IDs de SC da [spec](./spec.md). Registre a saída de
 - Docker Engine + Docker Compose v2
 - `curl` no host
 - `.env` criado a partir de `.env.example`, com `LOKI_GATEWAY_USER`, `LOKI_GATEWAY_PASSWORD` (segredo forte, nunca versionado) e `DOCKER_GID` (`stat -c %g /var/run/docker.sock`) preenchidos; sem eles o `compose up` aborta
+- Para a camada core, `POSTGRES_PASSWORD`, `REDIS_PASSWORD` e `RABBITMQ_DEFAULT_PASS` devem conter senhas próprias não vazias. Clientes Redis precisam autenticar.
 - `uv` instalado (testes de aceite, Scenario 16)
 - Variáveis do `.env` carregadas no shell: `set -a; . ./.env; set +a`
 
@@ -25,7 +26,14 @@ Nos comandos abaixo, `DC` é um atalho para `docker compose --env-file .env -f i
 1. Validar a composição consolidada: `DC config --quiet` (sem erros).
 2. Validar a configuração do Loki: `docker run --rm -v ./infra/loki:/c:ro grafana/loki:3.7.8 -config.file=/c/config.yaml -config.expand-env=true -verify-config` → `config is valid`.
 3. Validar a sintaxe do Alloy: `docker run --rm -v ./infra/alloy:/c:ro grafana/alloy:v1.20.1 fmt /c/config.alloy` (exit 0).
-4. Validar o Caddyfile: `docker run --rm -e LOKI_GATEWAY_USER=x -e LOKI_GATEWAY_PASSWORD_HASH=x -v ./infra/loki-gateway:/c:ro caddy:2.11.4-alpine caddy validate --config /c/Caddyfile --adapter caddyfile` (exit 0).
+4. Validar o Caddyfile com hash válido de senha descartável (exit 0):
+   ```bash
+   gateway_hash="$(docker run --rm caddy:2.11.4-alpine caddy hash-password --plaintext "$(openssl rand -hex 24)")"
+   docker run --rm -e LOKI_GATEWAY_USER=x -e LOKI_GATEWAY_PASSWORD_HASH="$gateway_hash" \
+     -v ./infra/loki-gateway:/c:ro caddy:2.11.4-alpine \
+     caddy validate --config /c/Caddyfile --adapter caddyfile
+   unset gateway_hash
+   ```
 5. Subir: `DC up -d --build`.
 
 ## Validation Scenarios

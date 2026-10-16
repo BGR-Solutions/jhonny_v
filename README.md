@@ -44,14 +44,17 @@ Armazena as especificações, planos, tarefas e demais artefatos produzidos pelo
    ```powershell
    Copy-Item .env.example .env
    ```
-2. Revise os valores locais necessários em `.env`.
+2. Revise os valores locais necessários em `.env`. Defina senhas próprias e
+   não vazias para `POSTGRES_PASSWORD`, `REDIS_PASSWORD` e
+   `RABBITMQ_DEFAULT_PASS`; sem elas o Compose recusa a configuração.
+   Clientes Redis precisam autenticar com `REDIS_PASSWORD`.
 3. Valide a composição consolidada:
    ```bash
-   docker compose -f infra/compose.yaml -f infra/compose.core.yaml config
+   docker compose --env-file .env -f infra/compose.yaml -f infra/compose.core.yaml config --quiet
    ```
 4. Inicie os serviços core:
    ```bash
-   docker compose -f infra/compose.yaml -f infra/compose.core.yaml up -d
+   docker compose --env-file .env -f infra/compose.yaml -f infra/compose.core.yaml up -d
    ```
 
 ### Camada de observabilidade (logs)
@@ -65,9 +68,11 @@ A camada `infra/compose.obs.yaml` coleta `stdout`/`stderr` de todos os contêine
    ```bash
    docker compose --env-file .env -f infra/compose.yaml -f infra/compose.core.yaml -f infra/compose.obs.yaml up -d --build --wait
    ```
-3. Consulte os logs com as credenciais do gateway:
+3. Consulte os logs substituindo `SEU_USUARIO` pelo `LOKI_GATEWAY_USER` definido
+   no `.env`. O `curl` solicitará a senha (`LOKI_GATEWAY_PASSWORD`) interativamente;
+   o Compose não exporta essas variáveis para o shell:
    ```bash
-   curl -G -u "$LOKI_GATEWAY_USER:$LOKI_GATEWAY_PASSWORD" http://127.0.0.1:3100/loki/api/v1/query_range \
+   curl -G -u 'SEU_USUARIO' http://127.0.0.1:3100/loki/api/v1/query_range \
      --data-urlencode 'query={compose_service="postgres"}'
    ```
 4. Rode os testes de aceite (requer [`uv`](https://docs.astral.sh/uv/) e a stack no ar):

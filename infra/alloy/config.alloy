@@ -58,7 +58,12 @@ loki.process "containers" {
 	}
 
 	stage.replace {
-		expression = "(?i)(?:password|passwd|pwd|secret|token|api_key|apikey)\"?\\s*[:=]\\s*\"?([^\"\\s,&}]+)"
+		expression = "(?i)(?:password|passwd|pwd|secret|token|api_key|apikey)\"?\\s*[:=]\\s*\"((?:[^\"\\\\]|\\\\.)*)\""
+		replace    = "<redacted>"
+	}
+
+	stage.replace {
+		expression = "(?i)(?:password|passwd|pwd|secret|token|api_key|apikey)\"?\\s*[:=]\\s*([^\"\\s,&}]+)"
 		replace    = "<redacted>"
 	}
 

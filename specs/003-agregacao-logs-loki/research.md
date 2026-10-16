@@ -166,10 +166,11 @@ Todas as decisões abaixo foram validadas num protótipo descartável (em `/tmp`
 
 ## Decision 14: Mascaramento de segredos (checklist Q2)
 
-- **Decision**: três `stage.replace` no `loki.process`, antes do `stage.json`, todos com `replace = "<redacted>"`:
+- **Decision**: quatro `stage.replace` no `loki.process`, antes do `stage.json`, todos com `replace = "<redacted>"`:
   1. `(?i)bearer\s+([A-Za-z0-9._~+/=-]+)`
   2. `\b(sk-[A-Za-z0-9_-]{16,})`
-  3. `(?i)(?:password|passwd|pwd|secret|token|api_key|apikey)"?\s*[:=]\s*"?([^"\s,&}]+)`
+  3. Valores entre aspas: `(?i)(?:password|passwd|pwd|secret|token|api_key|apikey)"?\s*[:=]\s*"((?:[^"\\]|\\.)*)"`; inclui espaços, vírgulas e escapes JSON no mesmo grupo.
+  4. Pares não delimitados: `(?i)(?:password|passwd|pwd|secret|token|api_key|apikey)"?\s*[:=]\s*([^"\s,&}]+)`; não captura o prefixo de um valor entre aspas. Mantém a cobertura anterior de sufixos, como `access_token`, `client_secret` e `db_password`.
 - **Rationale**: o `stage.replace` substitui só os grupos de captura e preserva a chave e a estrutura do JSON. Verificado:
   - `"password":"<redacted>"`;
   - `token=<redacted>`;
@@ -197,8 +198,14 @@ Todas as decisões abaixo foram validadas num protótipo descartável (em `/tmp`
   - **Timestamp**: o do Docker.
   - **Sem posição salva**: ingestão do histórico retido pelo Docker.
 - **Rationale**:
-  - O leitor salva a posição ao enfileirar a entrada, não ao confirmar o push. Por isso, um lote descartado é perdido, o que foi aceito para o ambiente local.
+  - O leitor salva a posição ao enfileirar a entrada, não ao confirmar o push. Um lote pendente em memória pode ser perdido em encerramento abrupto; essa limitação **não atende ao FR-010** e bloqueia a aprovação da garantia de entrega.
   - Linhas acima de cerca de 1 MiB são descartadas pelo leitor do Alloy (`line too big, skipping`). É uma limitação conhecida.
+- **Bloqueio identificado na revisão (2026-10-16)**:
+  - O Alloy v1.20.1 oferece `loki.write.wal`, mas os canais entre Docker source, process e writer não fornecem confirmação transacional de persistência para o checkpoint.
+  - O watcher pode iniciar no segmento mais recente quando não há marcador válido, ou no segmento seguinte ao marcado. Habilitar o WAL isoladamente não comprova replay de todo lote pendente.
+  - Evidência upstream fixada em v1.20.1: [checkpoint do Docker](https://github.com/grafana/alloy/blob/v1.20.1/internal/component/loki/source/docker/tailer.go#L349-L367) e [seleção do segmento para replay](https://github.com/grafana/alloy/blob/v1.20.1/internal/component/common/loki/wal/watcher.go#L161-L186).
+  - A coordenação durável de checkpoint/replay exige decisão arquitetural e validação de queda abrupta; não se deve declarar FR-010/SC-004 atendidos apenas com `compose restart` ou com a existência de arquivos WAL.
+  - Experimento local: gateway interrompido, 40 linhas numeradas emitidas, checkpoint salvo e WAL não vazio confirmados; produtor removido para impedir releitura; Alloy encerrado com `SIGKILL` e reiniciado com o mesmo volume. Após restaurar o gateway, **0/40 linhas** foram recuperadas em 120 s. O teste temporário e a opção de WAL foram retirados, sem alterar a suíte existente de reinício gracioso nem apresentar essa tentativa como correção.
 
 ## Decision 17: Testes de aceite (checklist Q8)
 

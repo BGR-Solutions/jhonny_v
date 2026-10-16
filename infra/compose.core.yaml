@@ -16,7 +16,7 @@ services:
       <<: *common-environment
       POSTGRES_DB: ${POSTGRES_DB:-jhonny_v}
       POSTGRES_USER: ${POSTGRES_USER:-jhonny}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD obrigatório}
     ports:
       - "${HOST_IP:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432"
     volumes:
@@ -37,8 +37,11 @@ services:
       - redis-server
       - --appendonly
       - "${REDIS_APPENDONLY_MODE:-yes}"
+      - --requirepass
+      - "${REDIS_PASSWORD:?REDIS_PASSWORD obrigatório}"
     environment:
       <<: *common-environment
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD obrigatório}
     ports:
       - "${HOST_IP:-127.0.0.1}:${REDIS_PORT:-6379}:6379"
     volumes:
@@ -46,7 +49,7 @@ services:
     networks:
       - jhonny-core
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", 'REDISCLI_AUTH="$$REDIS_PASSWORD" redis-cli ping | grep -qx PONG']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -58,7 +61,7 @@ services:
     environment:
       <<: *common-environment
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-jhonny}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-change_me_rabbitmq}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?RABBITMQ_DEFAULT_PASS obrigatório}
       RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST:-jhonny_v}
     ports:
       - "${HOST_IP:-127.0.0.1}:${RABBITMQ_PORT:-5672}:5672"

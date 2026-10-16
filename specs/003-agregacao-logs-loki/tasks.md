@@ -102,6 +102,7 @@
   - um probe emite uma linha de cada padrão (token `Bearer`, `sk-…`, `"password":"…"`, `token=…`, `api_key=…`), montando a palavra `Bearer` em runtime para evitar falso positivo de secret scanning;
   - todas as linhas aparecem com `<redacted>`;
   - uma busca `|~` pelos valores originais retorna 0 linhas.
+  - valores JSON com espaços, vírgulas e escapes são integralmente substituídos, preservando os demais campos.
 - [X] T013 [P] [US1] Teste de limites de linha em `infra/tests/test_line_limits.py` (SC-013, FR-023, FR-024):
   - uma linha de 300.000 `a` é armazenada com 262.144 caracteres;
   - o timestamp da entrada no Loki é igual ao de `docker logs -t`, com tolerância de 1 ms.
@@ -169,7 +170,7 @@
   - `discovery.docker` com `host = "tcp://socket-proxy:2375"` e `refresh_interval = "1s"` (ajustado na implementação; research, Decision 2);
   - `discovery.relabel`, com as regras para `compose_project`, `compose_service`, `container` (regex `/(.*)`) e `stream`;
   - `loki.source.docker` com `relabel_rules`;
-  - `loki.process` com os 3 `stage.replace` da Decision 14, todos com `<redacted>`;
+  - `loki.process` com os 4 `stage.replace` da Decision 14, todos com `<redacted>`;
   - `loki.write` com `url = "http://loki:3100/loki/api/v1/push"` e `basic_auth` via `sys.env`, sem sobrescrever os defaults de backoff (FR-026);
   - validar com `alloy fmt` (Setup 3 do quickstart).
 - [X] T023 [US1] Adicionar o serviço `alloy` em `infra/compose.obs.yaml` (FR-010, FR-013):
@@ -347,3 +348,7 @@ Task: "Criar infra/loki-gateway/Caddyfile"
 - Testes marcados `disruptive` reiniciam ou recriam serviços; rode-os isolados (`-m disruptive`).
 - Faça commit a cada tarefa ou grupo lógico, via `report_progress`.
 - Nunca versionar `.env` nem credenciais reais. Nos testes, monte strings parecidas com segredos em runtime.
+
+## Bloqueio da revisão de 2026-10-16
+
+- [ ] T041 [US1] Definir e aprovar em `specs/003-agregacao-logs-loki/plan.md` a coordenação durável de checkpoint/replay e implementá-la em `infra/alloy/`; validar perda zero após encerramento abrupto em `infra/tests/test_delivery.py`, incluindo lote pendente e produtor indisponível para releitura (FR-010; research, Decision 16). T015/T022 não comprovam essa garantia com reinício gracioso; a entrega permanece bloqueada até a validação.

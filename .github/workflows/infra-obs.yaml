@@ -9,11 +9,13 @@ on:
       - "infra/**"
       - ".env.example"
       - ".github/workflows/infra-obs.yaml"
+      - ".specify/workflows/speckit/workflow.yml"
   push:
     paths:
       - "infra/**"
       - ".env.example"
       - ".github/workflows/infra-obs.yaml"
+      - ".specify/workflows/speckit/workflow.yml"
 
 permissions:
   contents: read
@@ -44,6 +46,11 @@ jobs:
           echo "::add-mask::${gateway_secret}"
           echo "::add-mask::${master_key}"
           cp .env.example .env
+          for variable in POSTGRES_PASSWORD REDIS_PASSWORD RABBITMQ_DEFAULT_PASS; do
+            secret="$(openssl rand -hex 24)"
+            echo "::add-mask::${secret}"
+            sed -i "s|^${variable}=.*|${variable}=${secret}|" .env
+          done
           sed -i \
             -e "s|^LOKI_GATEWAY_USER=.*|LOKI_GATEWAY_USER=ci|" \
             -e "s|^LOKI_GATEWAY_PASSWORD=.*|LOKI_GATEWAY_PASSWORD=${gateway_secret}|" \

@@ -5,7 +5,7 @@ Testes `pytest` da camada de observabilidade (Loki + Grafana Alloy), rodados con
 ## Pré-requisitos
 
 - Docker Engine com Compose v2 e [`uv`](https://docs.astral.sh/uv/).
-- `.env` na raiz do repositório, criado a partir do `.env.example`, com `LOKI_GATEWAY_USER`, `LOKI_GATEWAY_PASSWORD`, `DOCKER_GID` (`stat -c %g /var/run/docker.sock`) e `LITELLM_MASTER_KEY` preenchidos.
+- `.env` na raiz do repositório, criado a partir do `.env.example`, com `POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `RABBITMQ_DEFAULT_PASS`, `LOKI_GATEWAY_USER`, `LOKI_GATEWAY_PASSWORD`, `DOCKER_GID` (`stat -c %g /var/run/docker.sock`) e `LITELLM_MASTER_KEY` preenchidos. Senhas devem ser próprias e não vazias; o arquivo não deve ser versionado.
 - Stack no ar, a partir da raiz:
 
   ```bash

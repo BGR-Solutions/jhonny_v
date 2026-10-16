@@ -4,6 +4,11 @@
 
 **Input**: Feature specification from `/specs/003-agregacao-logs-loki/spec.md`
 
+**Gate de entrega (revisão de 2026-10-16)**: bloqueado quanto ao FR-010.
+Posições do Docker não são confirmadas transacionalmente com a persistência dos
+lotes. A aprovação exige arquitetura de checkpoint/replay coordenados e teste de
+encerramento abrupto; ver [research, Decision 16](./research.md#decision-16-política-de-entrega-e-histórico-checklist-q1-q5-q6).
+
 ## SDD Feature Selection
 
 Os comandos Specify seguintes selecionam esta feature pelo `.specify/feature.json`, que agora é versionado (foi removido do `.specify/.gitignore`) e aponta para `specs/003-agregacao-logs-loki`. `SPECIFY_FEATURE_DIRECTORY` continua valendo como override.
