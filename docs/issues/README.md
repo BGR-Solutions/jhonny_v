@@ -29,18 +29,18 @@ Este diretório contém o detalhamento técnico e os critérios de aceite das is
 | **v0.2** | [**`#204`**](./v0.2/ISSUE-204.md) | Implementação da Skill Google Calendar | N/A |
 | **v0.2** | [**`#205`**](./v0.2/ISSUE-205.md) | Implementação da Skill Gmail | `ADR-0002` |
 | **v0.2** | [**`#206`**](./v0.2/ISSUE-206.md) | Exposição do Servidor MCP via SSE / Stdio | N/A |
-| **v0.3** | [**`#301`**](./v0.3/ISSUE-301.md) | Estrutura Base do `apps/agent-orchestrator` | N/A |
-| **v0.3** | [**`#302`**](./v0.3/ISSUE-302.md) | Integração do Orquestrador com Servidor MCP | N/A |
-| **v0.3** | [**`#303`**](./v0.3/ISSUE-303.md) | Construção do Grafo LangGraph (ReAct Loop) | `ADR-0001`, `ADR-0002` |
-| **v0.3** | [**`#304`**](./v0.3/ISSUE-304.md) | Implementação do Nó Human-in-the-Loop (HitL) | `ADR-0002` |
-| **v0.3** | [**`#305`**](./v0.3/ISSUE-305.md) | Exposição da API OpenAI-Compatible e SSE Streaming | N/A |
-| **v0.3** | [**`#306`**](./v0.3/ISSUE-306.md) | Persistência de Checkpoints com `PostgresSaver` | `ADR-0005` |
+| **v0.3** | [**`#301`**](./v0.3/ISSUE-301.md) | Integração da Imagem Docker do OpenJarvis no Compose Core | `ADR-0006` |
+| **v0.3** | [**`#302`**](./v0.3/ISSUE-302.md) | Integração do OpenJarvis com Servidor MCP | `ADR-0006` |
+| **v0.3** | [**`#303`**](./v0.3/ISSUE-303.md) | Configuração do Ciclo de Decisão do OpenJarvis via LiteLLM | `ADR-0001`, `ADR-0002`, `ADR-0006` |
+| **v0.3** | [**`#304`**](./v0.3/ISSUE-304.md) | Homologação de Human-in-the-Loop (HitL) no OpenJarvis | `ADR-0002`, `ADR-0006` |
+| **v0.3** | [**`#305`**](./v0.3/ISSUE-305.md) | Homologação da API OpenAI-Compatible e SSE do OpenJarvis | `ADR-0006` |
+| **v0.3** | [**`#306`**](./v0.3/ISSUE-306.md) | Persistência de Sessões e Estado do OpenJarvis | `ADR-0005`, `ADR-0006` |
 | **v0.4** | [**`#401`**](./v0.4/ISSUE-401.md) | Estrutura Base do `apps/worker` e Consumidor RabbitMQ | `ADR-0004` |
 | **v0.4** | [**`#402`**](./v0.4/ISSUE-402.md) | Contrato de Mensagens e Schemas de Tasks em Background | `ADR-0004` |
 | **v0.4** | [**`#403`**](./v0.4/ISSUE-403.md) | Implementação de Handlers para Resumo de E-mail e Agenda | N/A |
 | **v0.4** | [**`#404`**](./v0.4/ISSUE-404.md) | Implementação de Dead Letter Queues (DLQ) e Retentativas | `ADR-0004` |
 | **v0.4** | [**`#405`**](./v0.4/ISSUE-405.md) | Exportação de Métricas Prometheus e Traces no Worker | `ADR-0003` |
-| **v0.5** | [**`#501`**](./v0.5/ISSUE-501.md) | Configuração do Open WebUI para o Agent Orchestrator | N/A |
+| **v0.5** | [**`#501`**](./v0.5/ISSUE-501.md) | Configuração do Open WebUI para o OpenJarvis | `ADR-0006` |
 | **v0.5** | [**`#502`**](./v0.5/ISSUE-502.md) | Homologação da Interface Human-in-the-Loop na UI | `ADR-0002` |
 | **v0.5** | [**`#503`**](./v0.5/ISSUE-503.md) | Integração da Extensão VS Code ao Orquestrador | N/A |
 | **v0.5** | [**`#504`**](./v0.5/ISSUE-504.md) | Testes de Integração End-to-End (E2E) | N/A |

@@ -29,7 +29,9 @@ Como o assistente possui autonomia para interagir com o sistema de arquivos loca
 ---
 
 ## Decisão
-Adotar o padrão **Human-in-the-Loop (HitL)** utilizando nativamente os mecanismos de interrupção do **LangGraph**[cite: 7, 37, 105]. Ferramentas classificadas como críticas (ex: `write_file`, `delete_file`, `send_email`) exigirão obrigatoriamente um nó de aprovação antes da invocação no `apps/mcp-server`[cite: 14, 106].
+Adotar o padrão **Human-in-the-Loop (HitL)**: ferramentas classificadas como críticas (ex: `write_file`, `delete_file`, `send_email`) exigirão aprovação explícita antes da invocação no `apps/mcp-server`. Rejeições devem impedir a execução, e o pedido de aprovação deve apresentar ação e argumentos.
+
+**Revisão de 2026-10-25:** conforme a [ADR-0006](./0006-openjarvis-compose.md), o mecanismo será homologado na imagem do OpenJarvis pela [issue #304](../issues/v0.3/ISSUE-304.md). As opções acima registram a análise original; LangGraph, `interrupt_before` e nós de grafo deixam de ser requisitos de implementação. O comportamento de segurança e a durabilidade da pausa continuam obrigatórios. Este arquivo mantém o nome original para preservar links.
 
 ---
 
@@ -40,4 +42,4 @@ Adotar o padrão **Human-in-the-Loop (HitL)** utilizando nativamente os mecanism
 * **Transparência:** O usuário visualiza os argumentos que a ferramenta receberá antes de confirmar a execução[cite: 133].
 
 ### Negativas / Mitigações
-* **Aumento na Complexidade de Estado:** Exige persistência de histórico e checkpoints por `thread_id` para manter o grafo pausado[cite: 114, 209]. *Mitigação:* Uso do `PostgresSaver` para persistência relacional do grafo[cite: 37, 231, 238].
+* **Aumento na Complexidade de Estado:** exige persistência de histórico e estado pendente por `thread_id`. *Mitigação:* homologar o backend suportado pelo OpenJarvis na [issue #306](../issues/v0.3/ISSUE-306.md), incluindo retomada após reinício, sem impor `PostgresSaver`.

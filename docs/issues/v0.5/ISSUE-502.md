@@ -9,7 +9,7 @@ Validar a experiência do usuário quando o agente solicita aprovação explíci
 
 ## 📥 Tarefas
 - [ ] Formatar payload de interrupção enviado no SSE para apresentação limpa do pedido de aprovação na UI.
-- [ ] Validar botões/comandos de Confirmação e Rejeição disparando a retomada no `agent-orchestrator`.
+- [ ] Validar botões/comandos de Confirmação e Rejeição usando o contrato do OpenJarvis homologado na [issue #304](../v0.3/ISSUE-304.md), preservando a sessão e impedindo execução em caso de rejeição.
 
 ## ✅ Critérios de Aceite
 - O usuário consegue aprovar ou rejeitar uma ação crítica diretamente pelo chat sem falhas de estado.

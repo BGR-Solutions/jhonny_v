@@ -13,4 +13,5 @@ Expor o servidor MCP nos transportes Server-Sent Events (SSE) e Stdio, permitind
 - [ ] Instrumentar logs de conexão e desconexão de clientes MCP.
 
 ## ✅ Critérios de Aceite
-- Clientes MCP (como Inspector e Agent Orchestrator) conectam e descobrem as ferramentas via SSE.
+- Clientes MCP compatíveis, como o Inspector, conectam e descobrem as ferramentas via SSE.
+- A conexão do OpenJarvis é homologada na [issue #302](../v0.3/ISSUE-302.md), verificando o transporte suportado pela imagem sem alterar o contrato MCP silenciosamente.

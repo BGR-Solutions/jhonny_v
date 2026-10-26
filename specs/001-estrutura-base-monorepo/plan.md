@@ -4,6 +4,8 @@
 
 **Input**: Feature specification from `/specs/001-estrutura-base-monorepo/spec.md`
 
+> **Nota de evolução — 2026-10-25:** este plano registra o bootstrap original. A [ADR-0006](../../docs/adr/0006-openjarvis-compose.md) substitui o desenvolvimento do app de orquestração por uma imagem Docker do OpenJarvis em `infra/compose.core.yaml`, com configurações na futura pasta `infra/openjarvis/`. A árvore abaixo descreve o placeholder legado existente, não uma instrução para desenvolver o motor próprio. A revisão atual não altera pastas nem configurações operacionais.
+
 ## Summary
 
 Estabelecer uma base inicial de monorepo com áreas raiz previsíveis para aplicações, infraestrutura e documentação, um modelo central de variáveis de ambiente, uma política de ignore compatível com múltiplos ecossistemas e um ponto de entrada em camadas para serviços core locais. O desenho prioriza onboarding rápido, navegação clara e uma fundação extensível para as próximas issues de infraestrutura e aplicações.
@@ -26,7 +28,7 @@ Estabelecer uma base inicial de monorepo com áreas raiz previsíveis para aplic
 
 **Constraints**: Não introduzir código de aplicação nesta etapa; preservar e ampliar a navegação documental existente; não versionar segredos reais; manter separação entre arquivo Compose base e arquivo de serviços core para acomodar overlays futuros
 
-**Scale/Scope**: Um repositório com múltiplas aplicações futuras (`mcp-server`, `agent-orchestrator`, `worker`) e uma camada compartilhada de infraestrutura local para serviços centrais
+**Scale/Scope**: Um repositório com aplicações próprias futuras (`mcp-server`, `worker`) e uma camada compartilhada de infraestrutura local, que passa a prever o OpenJarvis como motor externo; o placeholder `agent-orchestrator` permanece como legado do bootstrap
 
 ## Constitution Check
 

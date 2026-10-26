@@ -29,7 +29,9 @@ A execução de certas tarefas solicitadas pelo usuário (ex: consolidação di�
 ---
 
 ## Decisão
-Adotar o **RabbitMQ** como broker de mensageria para o desacoplamento de tarefas em segundo plano[cite: 9, 185]. Tarefas não críticas ou de longa duração serão despachadas pelo `apps/agent-orchestrator` em filas duráveis e consumidas assincronamente pelo `apps/worker`[cite: 11, 183, 184].
+Adotar o **RabbitMQ** como broker de mensageria para o desacoplamento de tarefas em segundo plano[cite: 9, 185]. Tarefas de longa duração originadas no OpenJarvis serão despachadas por uma integração de publicação em filas duráveis e consumidas assincronamente pelo `apps/worker`, mantendo as aprovações obrigatórias para ações sensíveis.
+
+**Revisão de 2026-10-25:** a [ADR-0006](./0006-openjarvis-compose.md) substitui o orquestrador próprio pelo OpenJarvis, mas preserva o contrato `TaskEnvelope`, RabbitMQ, DLQ e retentativas. A [issue #402](../issues/v0.4/ISSUE-402.md) deve homologar o ponto de publicação; não se presume suporte AMQP nativo na imagem.
 
 ---
 

@@ -8,7 +8,7 @@
 ---
 
 ## Contexto e Problema
-A orquestração do assistente envolve chamadas distribuídas entre a Interface, o Agent Orchestrator, o LiteLLM Proxy, o Worker Assíncrono e o MCP Server[cite: 4, 12, 13]. Rastrear gargalos de latência ou falhas de execução entre o ciclo de raciocínio da LLM e a execução de ferramentas em máquinas com recursos limitados exige visibilidade de *distributed tracing*[cite: 78, 108].
+A orquestração do assistente envolve chamadas distribuídas entre a Interface, o OpenJarvis, o LiteLLM Proxy, o Worker Assíncrono e o MCP Server. Rastrear gargalos de latência ou falhas de execução entre o ciclo de raciocínio da LLM e a execução de ferramentas em máquinas com recursos limitados exige visibilidade de *distributed tracing*[cite: 78, 108].
 
 ---
 
@@ -16,7 +16,7 @@ A orquestração do assistente envolve chamadas distribuídas entre a Interface,
 
 1. **Apenas Logs Agregados no Loki:**
    * *Prós:* Simples e com baixíssimo consumo de I/O e CPU[cite: 22].
-   * *Contras:* Dificuldade em correlacionar o tempo de resposta exato de cada nó da árvore de decisão do LangGraph e sub-chamadas HTTP/AMQP[cite: 78].
+   * *Contras:* Dificuldade em correlacionar o tempo de resposta de cada etapa de decisão e das sub-chamadas HTTP/AMQP.
 
 2. **OpenTelemetry Tracing Sem Amostragem (100% dos Traces):**
    * *Prós:* Coleta completa de todos os Spans do sistema.
@@ -30,6 +30,8 @@ A orquestração do assistente envolve chamadas distribuídas entre a Interface,
 
 ## Decisão
 Adotar o **OpenTelemetry** com armazenamento no **Grafana Tempo**, aplicando políticas de amostragem dinâmica (*adaptive/probabilistic sampling*)[cite: 21, 109]. As aplicações injetará automaticamente o `trace_id` nos cabeçalhos de contexto e logs estruturados[cite: 77, 109].
+
+**Revisão de 2026-10-25:** a [ADR-0006](./0006-openjarvis-compose.md) mantém o requisito na adoção do OpenJarvis por imagem Docker. A [issue #301](../issues/v0.3/ISSUE-301.md) deve verificar logs JSON em `stdout`/`stderr`, ausência de logs em disco e propagação de `trace_id` e `span_id`. A capacidade da imagem não é presumida; lacunas de instrumentação bloqueiam a homologação.
 
 ---
 

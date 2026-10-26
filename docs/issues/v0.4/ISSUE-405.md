@@ -13,4 +13,4 @@ Instrumentar o microserviço Worker para emitir métricas de consumo de filas e 
 - [ ] Propagar o contexto do Trace ID extraído dos cabeçalhos da mensagem AMQP no OpenTelemetry.
 
 ## ✅ Critérios de Aceite
-- Traces iniciados no Agent Orchestrator continuam visíveis de forma contínua no Grafana Tempo durante a execução no Worker.
+- Traces iniciados no OpenJarvis preservam o contexto distribuído pela integração de publicação e pelo RabbitMQ até o Worker, ficando correlacionados no Grafana Tempo, conforme a [ADR-0006](../../adr/0006-openjarvis-compose.md).

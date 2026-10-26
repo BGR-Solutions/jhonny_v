@@ -25,7 +25,9 @@
 ---
 
 ## Decisão
-[cite_start]Adotar o **LiteLLM Proxy** como gateway centralizador e exclusivo para todas as chamadas de modelos de linguagem no ecossistema **`jhonny-v`**[cite: 9, 116]. [cite_start]O `apps/agent-orchestrator` comunicará estritamente com o LiteLLM, delegando a ele as regras de roteamento e resiliência entre o Ollama local e modelos Cloud[cite: 9, 10, 11, 117].
+[cite_start]Adotar o **LiteLLM Proxy** como gateway centralizador e exclusivo para todas as chamadas de modelos de linguagem no ecossistema **`jhonny-v`**[cite: 9, 116]. O OpenJarvis deverá comunicar-se estritamente com o LiteLLM, delegando a ele o roteamento entre Ollama local e modelos cloud, sem acesso direto aos provedores.
+
+**Revisão de 2026-10-25:** a [ADR-0006](./0006-openjarvis-compose.md) substitui o app de orquestração próprio por uma imagem Docker do OpenJarvis no Compose core. A configuração de endpoint, autenticação e aliases será homologada na [issue #303](../issues/v0.3/ISSUE-303.md). O LiteLLM permanece no overlay `infra/compose.llm.yaml`; a troca do motor não altera seus contratos de roteamento ou erro.
 
 ---
 

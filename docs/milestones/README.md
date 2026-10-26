@@ -28,8 +28,8 @@ Este diretório contém o roadmap cronológico e arquitetural do projeto **`jhon
                                           |
                                           v
 +-----------------------------------------------------------------------------------+
-|  v0.3: Agent Orchestrator (LangGraph Engine)                                      |
-|  - Motor de Decisão ReAct & Persistência PostgresSaver                            |
+|  v0.3: OpenJarvis (Imagem Docker no Compose Core)                                 |
+|  - Decisão, ferramentas MCP e persistência de sessões a homologar                 |
 |  - Suporte a Human-in-the-Loop (Aprovação de Ações Sensíveis)                     |
 |  - Exposição de API OpenAI-Compatible                                             |
 +-----------------------------------------+-----------------------------------------+
@@ -57,7 +57,7 @@ Este diretório contém o roadmap cronológico e arquitetural do projeto **`jhon
 | :--- | :--- | :--- | :--- |
 | **`v0.1`** | **Infra Core & Observabilidade** | Base de Execução e Telemetria | Compose completo, Proxy LLM, Postgres+pgvector, Stack LGTMP de logs e traces. |
 | **`v0.2`** | **MCP Server & Skills** | Capacidades de Execução | Servidor MCP estendido, ferramentas de SO, Google Calendar/Gmail e VS Code. |
-| **`v0.3`** | **Agent Orchestrator** | Cérebro / Orquestração ReAct | Grafo LangGraph, checkpointing no Postgres, Human-in-the-Loop, API REST. |
+| **`v0.3`** | **OpenJarvis** | Integração do motor de orquestração | Imagem Docker no Compose core, configurações em `infra/openjarvis/`, homologação de MCP, LiteLLM, persistência, HitL e API/SSE. |
 | **`v0.4`** | **Worker Assíncrono** | Resiliência & Background Jobs | Worker RabbitMQ, processamento de e-mails em lote, relatórios e agendamentos. |
 | **`v0.5`** | **Interfaces & Clients** | Experiência de Uso | Integração com Open WebUI, extensão VS Code e testes E2E. |
 
@@ -67,6 +67,8 @@ Este diretório contém o roadmap cronológico e arquitetural do projeto **`jhon
 
 - [**v0.1 - Infra Core & Observabilidade**](./v0.1-infra-core.md)
 - [**v0.2 - MCP Server & Skills**](./v0.2-mcp-server.md)
-- [**v0.3 - Agent Orchestrator**](./v0.3-agent-orchestrator.md)
+- [**v0.3 - OpenJarvis**](./v0.3-agent-orchestrator.md)
 - [**v0.4 - Worker Assíncrono**](./v0.4-worker-async.md)
 - [**v0.5 - Interfaces & Clients**](./v0.5-clients-integration.md)
+
+A [ADR-0006](../adr/0006-openjarvis-compose.md) registra a substituição do orquestrador próprio pelo OpenJarvis. A revisão é documental: o serviço e a pasta de configurações ainda não foram adicionados. A ordem das fases permanece inalterada, e as funcionalidades são requisitos a homologar, não capacidades presumidas da imagem.

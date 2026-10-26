@@ -5,10 +5,10 @@
 * **ADRs Vinculadas:** N/A
 
 ## 🎯 Descrição
-Configurar a comunicação do plugin/extensão do VS Code com o `agent-orchestrator`, preservando o contexto do workspace ativo.
+Configurar a comunicação do plugin/extensão do VS Code com o OpenJarvis, preservando o contexto do workspace ativo e os contratos de sessão e aprovação, conforme a [ADR-0006](../../adr/0006-openjarvis-compose.md).
 
 ## 📥 Tarefas
-- [ ] Configurar cliente HTTP/SSE no VS Code apontando para a API do orquestrador.
+- [ ] Configurar cliente HTTP/SSE no VS Code apontando para a URL homologada do OpenJarvis, com autenticação e sem depender do antigo hostname.
 - [ ] Passar metadados do workspace atual no cabeçalho das requisições para controle do `thread_id`.
 - [ ] Validar leitura e modificação de arquivos de código via agentes do MCP.
 

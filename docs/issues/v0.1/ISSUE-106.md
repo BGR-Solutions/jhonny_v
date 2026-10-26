@@ -5,7 +5,7 @@
 * **ADRs Vinculadas:** [`ADR-0005: Utilização do PostgreSQL com pgvector para Checkpoints e Vetores`](../../adr/0005-database-postgresql-pgvector.md)
 
 ## 🎯 Descrição
-Provisionar o contêiner do PostgreSQL 16 com a extensão `pgvector` para persistência de checkpoints do LangGraph e armazenamento de embeddings. A inicialização é automática, idempotente e validada por um profile isolado da issue.
+Provisionar o contêiner do PostgreSQL 16 com a extensão `pgvector` para persistência relacional de sessões/estado e armazenamento de embeddings. A inicialização é automática, idempotente e validada por um profile isolado da issue. A integração do OpenJarvis com esse backend será homologada na [issue #306](../v0.3/ISSUE-306.md), sem presumir schemas ou bibliotecas LangGraph, conforme a [ADR-0006](../../adr/0006-openjarvis-compose.md).
 
 ## 📥 Tarefas
 - [ ] Adicionar serviço `postgres` utilizando a imagem `pgvector/pgvector:pg16` no Compose.

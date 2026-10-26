@@ -3,6 +3,7 @@
 ## Decision 1: Modelo de composição da infraestrutura LLM
 
 - **Decision**: Criar `infra/compose.llm.yaml` como overlay dedicado ao LiteLLM Proxy, mantendo `infra/compose.yaml` como base compartilhada.
+- **Compatibilidade com a ADR-0006 (2026-10-25)**: O OpenJarvis será integrado por imagem no `infra/compose.core.yaml`, mas continuará consumindo modelos pelo LiteLLM deste overlay. A [adoção do OpenJarvis](../../docs/adr/0006-openjarvis-compose.md) não move o proxy para o core nem altera o contrato de roteamento.
 - **Rationale**: Preserva a organização modular por responsabilidade, facilita ativação seletiva da stack de LLM e evita inflar o arquivo de serviços core.
 - **Alternatives considered**:
   - Incluir LiteLLM em `compose.core.yaml` — rejeitado por misturar responsabilidades de core infra com integração de modelos.

@@ -1,5 +1,7 @@
 # Tasks: Estrutura Base do Monorepo e Documentação Inicial
 
+> **Histórico preservado — 2026-10-25:** as tarefas concluídas abaixo refletem o bootstrap, incluindo a criação do placeholder `apps/agent-orchestrator/`. A [ADR-0006](../../docs/adr/0006-openjarvis-compose.md) substitui seu desenvolvimento futuro pela integração do OpenJarvis via Compose core, com configurações em `infra/openjarvis/` a criar posteriormente. Não reabrir essas tarefas nem interpretar seus caminhos como nova arquitetura; nesta revisão, apenas a documentação muda.
+
 **Input**: Design documents from `/specs/001-estrutura-base-monorepo/`
 
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/

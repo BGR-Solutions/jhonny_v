@@ -1,9 +1,11 @@
 # Research: Estrutura Base do Monorepo e Documentação Inicial
 
+> **Revisão documental — 2026-10-25:** as decisões abaixo registram o bootstrap original. A [ADR-0006](../../docs/adr/0006-openjarvis-compose.md) atualiza a topologia planejada: MCP Server e Worker seguem como apps próprios, enquanto OpenJarvis será uma imagem Docker no Compose core, com configurações na futura pasta `infra/openjarvis/`. O placeholder antigo permanece fisicamente inalterado.
+
 ## Decision 1: Topologia raiz do monorepo
 
 - **Decision**: Estruturar o repositório com `apps/`, `infra/` e `docs/` na raiz, mantendo `docs/` como hub de navegação e antecipando subdiretórios de aplicações previstos no roadmap.
-- **Rationale**: Essa divisão espelha diretamente os requisitos da issue e evita ambiguidade entre código de aplicação, infraestrutura compartilhada e documentação. Também reduz retrabalho nas próximas issues, que já projetam aplicações separadas para `mcp-server`, `agent-orchestrator` e `worker`.
+- **Rationale**: Essa divisão espelha diretamente os requisitos da issue e evita ambiguidade entre código de aplicação, infraestrutura compartilhada e documentação. No bootstrap, foram previstos placeholders para MCP Server, Agent Orchestrator e Worker; o planejamento atual mantém apenas MCP Server e Worker como aplicações próprias e transfere o motor para a integração do OpenJarvis.
 - **Alternatives considered**:
   - Adicionar `packages/` ou `libs/` já nesta issue — rejeitado por falta de necessidade imediata.
   - Concentrar tudo em `docs/` até existirem apps reais — rejeitado porque não resolve a estrutura física pedida pela issue.
@@ -34,7 +36,8 @@
 
 ## Decision 5: Escopo dos serviços core
 
-- **Decision**: Planejar `compose.core.yaml` para conter apenas os serviços compartilhados de base local do ecossistema — banco de dados, cache e mensageria — deixando LLM proxy, observabilidade e outras stacks especializadas para arquivos e issues futuras.
+- **Decision original**: Planejar `compose.core.yaml` para conter apenas os serviços compartilhados de base local do ecossistema — banco de dados, cache e mensageria — deixando LLM proxy, observabilidade e outras stacks especializadas para arquivos e issues futuras.
+- **Atualização pela ADR-0006**: O core passa a prever também a imagem Docker do OpenJarvis. LiteLLM continua em `infra/compose.llm.yaml`; a revisão documental não adiciona serviços ao Compose atual.
 - **Rationale**: A milestone já separa esses temas em entregas independentes. Limitar o escopo dos serviços core evita inflar a primeira configuração operacional do monorepo e preserva clareza sobre o que toda aplicação futura poderá reutilizar.
 - **Alternatives considered**:
   - Incluir observabilidade e serviços de IA já no core — rejeitado para manter a issue pequena e coerente com o roadmap.

@@ -16,9 +16,13 @@ Este diretório é o hub central de documentação do monorepo **`jhonny_v`**. A
 
 ## Relação com a estrutura do monorepo
 
-- `apps/`: futuras aplicações do ecossistema
-- `infra/`: infraestrutura compartilhada, serviços core e operação local
+- `apps/`: aplicações próprias (MCP Server e Worker), com o placeholder legado do orquestrador ainda preservado
+- `infra/`: infraestrutura compartilhada, serviços core e operação local; inclui o planejamento do OpenJarvis via imagem em `compose.core.yaml` e configurações na futura pasta `openjarvis/`
 - `docs/`: contexto arquitetural, backlog técnico e roadmap
 - `specs/`: artefatos do fluxo Spec-Driven Development
 
 Consulte também o [README principal](../README.md) para a visão geral da arquitetura e as instruções de desenvolvimento.
+
+## Direção arquitetural: OpenJarvis
+
+A [ADR-0006](./adr/0006-openjarvis-compose.md) substitui o planejamento de um motor próprio em LangGraph pela integração do OpenJarvis. Os requisitos funcionais continuam como critérios de homologação, não como capacidades já comprovadas da imagem. Esta revisão é somente documental e preserva diretórios, Compose e código atuais.
