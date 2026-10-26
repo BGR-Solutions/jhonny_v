@@ -1,0 +1,56 @@
+user root;
+worker_processes 1;
+pid /run/obs/nginx.pid;
+error_log stderr warn;
+events { worker_connections 256; }
+http {
+    log_format structured escape=json '{"level":"info","service":"logs-gateway","status":$status,"method":"$request_method"}';
+    access_log /dev/stdout structured;
+    client_body_temp_path /run/obs/client;
+    proxy_temp_path /run/obs/proxy;
+    client_max_body_size 2m;
+    proxy_connect_timeout 1s;
+    resolver 127.0.0.11 valid=5s ipv6=off;
+    upstream log_store {
+        zone log_store 64k;
+        server loki:3100 resolve;
+    }
+    server {
+        listen 8080;
+        root /run/obs/never-static;
+        auth_basic "local logs";
+        auth_basic_user_file /run/secrets/read.htpasswd;
+        location = /loki/api/v1/query_range { try_files /__never_exists__ @read; }
+        location = /loki/api/v1/labels { try_files /__never_exists__ @read; }
+        location = /loki/api/v1/series { try_files /__never_exists__ @read; }
+        location ~ ^/loki/api/v1/label/[a-zA-Z_][a-zA-Z0-9_]*/values$ { try_files /__never_exists__ @read; }
+        location @read {
+            if ($request_method != GET) { return 405; }
+            add_header Allow GET always;
+            proxy_pass http://log_store;
+            proxy_set_header Authorization "";
+            proxy_buffering off;
+        }
+        location / { auth_basic off; return 404; }
+    }
+    server {
+        listen 8081;
+        root /run/obs/never-static;
+        auth_basic "internal log writer";
+        auth_basic_user_file /run/secrets/write.htpasswd;
+        location = /loki/api/v1/push { try_files /__never_exists__ @write; }
+        location @write {
+            if ($request_method != POST) { return 405; }
+            add_header Allow POST always;
+            proxy_pass http://log_store;
+            proxy_set_header Authorization "";
+        }
+        location / { auth_basic off; return 404; }
+    }
+    server {
+        listen 127.0.0.1:8082;
+        access_log off;
+        location = /ready { proxy_pass http://log_store/ready; }
+        location / { return 404; }
+    }
+}

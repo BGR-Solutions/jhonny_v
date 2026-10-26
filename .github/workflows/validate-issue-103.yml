@@ -1,0 +1,91 @@
+name: Validate issue 103
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: issue-103-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  quality:
+    name: Python quality and Go lifecycle
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with:
+          version: "0.12.1"
+          enable-cache: false
+      - name: Require Linux Docker and Compose
+        run: |
+          docker version --format '{{.Server.Os}}' | grep -qx linux
+          docker compose version
+      - name: Restore locked development dependencies
+        run: uv sync --project infra --extra dev --locked
+      - name: Lint, formatting and strict types
+        run: |
+          uv run --project infra --no-sync ruff check infra/tests
+          uv run --project infra --no-sync black --check infra/tests
+          uv run --project infra --no-sync mypy --strict infra/tests
+      - name: Go formatting, race tests and vet in pinned builder
+        run: |
+          docker run --rm \
+            --mount "type=bind,source=${GITHUB_WORKSPACE}/infra/obs-tools,target=/src,readonly" \
+            --workdir /src \
+            golang:1.27.2@sha256:820153096fda4de6ac1b7194d12e416b7dd8f4e9a33d17e0345b111b945162d8 \
+            sh -ec 'test -z "$(gofmt -l *.go)"; go test -race ./...; go vet ./...'
+
+  docker:
+    name: Docker Linux (${{ matrix.suite }})
+    needs: quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ matrix.suite == 'retention' && 50 || 30 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [integration, retention]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with:
+          version: "0.12.1"
+          enable-cache: false
+      - name: Require Linux Docker and Compose
+        run: |
+          docker version --format '{{.Server.Os}}' | grep -qx linux
+          docker compose version
+      - name: Restore locked development dependencies
+        run: uv sync --project infra --extra dev --locked
+      - name: Build pinned local images
+        run: |
+          docker build --target loki -t jhonny-v/loki-health:3.7.9-1 infra/obs-tools
+          docker build --target alloy -t jhonny-v/alloy-health:1.21.2-1 infra/obs-tools
+          docker build --target nginx -t jhonny-v/nginx-obs:1.30.6-1 infra/obs-tools
+          docker pull python:3.12.12-alpine3.22@sha256:848ba4413eb897e225159b8fc1b02094576cbae4aa73fc13142608ae2c8c0e32
+      - name: Run required suite with fixture-owned resources
+        run: |
+          uv run --project infra --no-sync pytest infra/tests \
+            -m "${{ matrix.suite == 'retention' && 'retention' || 'not retention' }}" \
+            --strict-markers --tb=short -o junit_family=xunit1 \
+            --junitxml=reports/issue-103-${{ matrix.suite }}.xml
+      - name: Preserve sanitized test results and retention measurements
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: issue-103-${{ matrix.suite }}
+          path: reports/issue-103-${{ matrix.suite }}.xml
+          if-no-files-found: error
+          retention-days: 14
