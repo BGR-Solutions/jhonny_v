@@ -49,7 +49,7 @@ Nenhum dashboard externo/importado permanece no provisionamento padrão. Assim, 
 | CPU por contêiner | cAdvisor ausente | Ativar `metrics-containers` ou um profile `full-cloud-linux*` |
 | Utilização e temperatura da GPU | Exporter ou hardware ausente | Ativar exatamente um profile `metrics-gpu-*` compatível |
 
-O profile `issue-109` é neutro quanto a GPU e inicia Prometheus, Grafana, Loki, Promtail, Tempo, Docker exporter e node-exporter. Após dois ciclos de coleta (cerca de 30 segundos), todos os probes marcados como obrigatórios para esse profile devem retornar séries. Os painéis opcionais acima permanecem com estado vazio, sem causar falha.
+O profile `issue-109` é neutro quanto a GPU e inicia Prometheus, Grafana, Loki, Grafana Alloy, Tempo, Docker exporter e node-exporter. A escolha de Alloy acompanha a [issue #103](./ISSUE-103.md), substituindo Promtail. Após dois ciclos de coleta (cerca de 30 segundos), todos os probes marcados como obrigatórios para esse profile devem retornar séries. Os painéis opcionais acima permanecem com estado vazio, sem causar falha.
 
 ## 🧪 Validação
 

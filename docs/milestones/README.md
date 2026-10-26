@@ -16,7 +16,7 @@ Este diretório contém o roadmap cronológico e arquitetural do projeto **`jhon
 +-----------------------------------------------------------------------------------+
 |  v0.1: Infra Core & Observabilidade                                               |
 |  - Docker Compose, LiteLLM, Ollama, PostgreSQL (pgvector), Redis, RabbitMQ        |
-|  - Stack LGTMP (Loki, Grafana, Tempo, Prometheus, Promtail)                       |
+|  - Stack LGTMP (Loki, Grafana, Tempo, Prometheus; coleta via Alloy)                |
 +-----------------------------------------+-----------------------------------------+
                                           |
                                           v
