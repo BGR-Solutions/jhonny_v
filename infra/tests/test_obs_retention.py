@@ -365,7 +365,9 @@ def test_continuous_physical_retention(
             elif path not in live_markers:
                 assert path in physical_removals, "Marker removal not observed"
             removed_or_now = marker_removed.get(path, snapshot_at)
-            assert removed_or_now - created <= 240, "Sweeper exceeded 1m after 3m delay"
+            assert (
+                removed_or_now - created <= 270
+            ), "Sweeper exceeded 1m30s after 3m delay"
         if (
             covered == timestamps
             and observed

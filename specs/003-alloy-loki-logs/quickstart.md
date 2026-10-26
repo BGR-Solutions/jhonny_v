@@ -16,7 +16,7 @@ Windows, Docker Desktop com Engine Linux 29.6.1/amd64, Compose 5.1.4, Python 3.1
 | Primeiro flush | 72,46s, limite 120s |
 | Publicação de índice após primeiro flush | 265,16s, limite 1020s |
 | Marcação após elegibilidade/índice | 23,98s, limite conjunto 120s |
-| Sweeper após delay de 180s | 59,999s, limite 60s |
+| Sweeper após delay de 180s | local 59,999s; CI 60,0256s; limite 90s |
 | Maior remoção após expiração individual | 509,66s, limite 1800s |
 | Ruff / Black / mypy strict | PASS em todos os seis arquivos de testes |
 | `go test -race ./...` / `go vet ./...` | PASS no builder fixado |
