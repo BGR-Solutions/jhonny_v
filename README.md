@@ -39,7 +39,7 @@ O OpenJarvis substituirá o desenvolvimento do `agent-orchestrator` próprio. Se
 
 A mudança preserva como requisitos as integrações com MCP Server, LiteLLM, RabbitMQ/Worker, persistência, aprovações humanas e API/streaming para clientes. A compatibilidade da imagem ainda precisa ser homologada; veja a [ADR-0006](./docs/adr/0006-openjarvis-compose.md) e a [milestone v0.3](./docs/milestones/v0.3-agent-orchestrator.md).
 
-**Estado desta revisão:** somente documentação. Nenhuma pasta foi criada, removida ou movida; Compose e código não foram alterados. O [placeholder legado](./apps/agent-orchestrator/README.md) continua presente, e o quickstart abaixo ainda não inicia o OpenJarvis.
+**Estado da adoção do OpenJarvis:** permanece somente documental, sem implementação do motor ou movimentação de aplicações. O [placeholder legado](./apps/agent-orchestrator/README.md) continua presente, e o quickstart abaixo ainda não inicia o OpenJarvis. A camada de logs da issue #103 é independente dessa adoção.
 
 ## Quickstart do ambiente local
 
@@ -60,6 +60,22 @@ A mudança preserva como requisitos as integrações com MCP Server, LiteLLM, Ra
    ```bash
    docker compose -f infra/compose.yaml -f infra/compose.core.yaml up -d
    ```
+
+## Logs locais com Alloy e Loki
+
+A [camada de observabilidade](./infra/compose.obs.yaml) contém Alloy, Loki, gateway autenticado e proxy restrito da API Docker. Ela é iniciada com o Compose base, sem depender de serviços core, Grafana, MCP Server, Worker ou OpenJarvis:
+
+```powershell
+docker compose --env-file .\.env -f .\infra\compose.yaml -f .\infra\compose.obs.yaml up -d --wait --wait-timeout 120
+```
+
+**Antes de executar:** construa as imagens locais e provisione os segredos privados seguindo o [quickstart da issue #103](./specs/003-alloy-loki-logs/quickstart.md). Não há credenciais padrão. O preflight recusa material ausente, inconsistente ou com permissões indevidas; no Windows, evidência de ACL do bind real é obrigatória.
+
+- Consulta somente em `127.0.0.1:3100` por padrão, com Basic Auth; ingestão e administração não são publicadas.
+- Descoberta restrita ao projeto Compose; stdout/stderr, mensagens originais e contexto preservados. IDs de contêiner/tracing não são labels indexadas.
+- Retenção padrão de 14 dias, em volume nomeado, sem tratar retenção como quota de disco. Não usar `down -v` na stack do operador.
+- Validação local: 29 testes de regressão e um cenário contínuo de limpeza física passaram. CI Linux remoto e ACL Windows do operador ainda estão pendentes; a issue não está encerrada.
+- O [contrato operacional](./specs/003-alloy-loki-logs/contracts/logging-contract.md) descreve autenticação, retentativas, janela fora de ordem e limites; o [workflow](./.github/workflows/validate-issue-103.yml) exige integração e retenção sem skips implícitos.
 
 ## Navegação da documentação
 

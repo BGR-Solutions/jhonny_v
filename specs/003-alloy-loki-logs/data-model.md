@@ -24,6 +24,7 @@ Não há chave de unicidade de produção: mensagens iguais podem ser eventos di
 `Projeto 1:N Serviço 1:N Instância 1:N Eventos`. Elegibilidade exige projeto exato e serviço Compose reconhecível. A instância passa por `descoberta → elegível → coletando → parada/removida`; metadados dos eventos já ingeridos continuam identificando a instância antiga.
 
 Docker daemon é externo à stack de logs, compartilhado e administrado por operador autorizado. Labels de projeto não são identidade criptográfica nem limite contra usuário com controle do daemon.
+Listagem `/networks` fornece metadados necessários à descoberta; o proxy não permite inspeção individual nem alterações de redes. Labels de projeto não são identidade criptográfica nem limite contra usuário com controle do daemon.
 
 ## Estado técnico do Alloy
 
@@ -38,7 +39,7 @@ Docker daemon é externo à stack de logs, compartilhado e administrado por oper
 - Evento: `emitido → lido → envio pendente → aceito → consultável → expirado → removido`.
 - Aceitação HTTP e visibilidade de consulta são etapas distintas; testes aguardam consultas, não apenas status de push.
 - Política padrão 336h, configurável em múltiplos de 24h, mínimo 24h. Expiração é avaliada pelo horário do evento; limpeza assíncrona deve cumprir a meta local de 30m após expiração.
-- Deadline individual: timestamp do evento + política + 30m. Em v3.7.9 o compactor avalia expiração pelo timestamp mais recente do chunk; amplitude entre primeiro/último evento, flush e atualização de índice fazem parte do orçamento do [plano](./plan.md). Um chunk com evento ainda válido não pode ser apagado antecipadamente. Medir esses estados em operação contínua, inclusive escrita atrasada/fora de ordem aceita; flush/restart de teste não substitui a comprovação.
+- Deadline individual: timestamp do evento + política + 30m. Em v3.7.9 o compactor avalia expiração pelo timestamp mais recente do chunk; amplitude entre primeiro/último evento, flush e atualização de índice fazem parte do orçamento do [plano](./plan.md). O desenho autorizado usa max_chunk_age=3m, amplitude qualificada <=4m e janela fora de ordem aproximada de 90s, sem desabilitá-la. Um chunk com evento ainda válido não pode ser apagado antecipadamente. Ressync de índice=30s, cache de listagem=1m e query_timeout=1m precedem a deleção física com delay=3m. Medir esses estados em operação contínua, inclusive escrita atrasada/fora de ordem de 60s; flush/restart de teste não substitui a comprovação.
 - Persistência pressupõe preservação do volume. `down -v` ou remoção de volume não está coberta.
 
 ## Credenciais e acesso
@@ -50,6 +51,8 @@ Docker daemon é externo à stack de logs, compartilhado e administrado por oper
 | Alloy cliente Docker | GET/HEAD allowlist via proxy privado | Sem senha; identidade delimitada pela rede privada e confiança no daemon |
 
 Nunca persistir Authorization, hashes ou senhas em eventos de teste, metadados ou configurações versionadas. Credencial de escrita não deve servir para consulta, nem a de leitura para push.
+
+Fronteira de publicação: somente gateway participa de obs-edge não interna, com 8080 publicada em loopback. As três redes de dados permanecem internas e Loki/Alloy/proxy não participam da borda. O operador com controle do daemon continua sendo identidade confiável.
 
 ## Estado de inicialização
 

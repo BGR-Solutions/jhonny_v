@@ -1,6 +1,66 @@
 # Research: Alloy e Loki para a issue #103
 
-**Data:** 2026-10-25. Pesquisa documental, sem pull/build/execução de imagens. Evidência de capacidade não substitui validação runtime.
+**Pesquisa inicial:** 2026-10-25, somente documental. As execuções posteriores estão registradas abaixo; pesquisa de capacidade não substitui evidência runtime.
+
+## Evidência de implementação — 2026-10-26
+
+### US3: recuperação comprovada e revisão autorizada do orçamento
+
+#### Desenho vigente autorizado após investigar o índice
+
+Regressão com o desenho vigente: `pytest infra/tests -m "not retention"` passou em **29 testes / 881,85s**, incluindo reinícios, interrupção, matriz HTTP, parsing, descoberta e observador. Ruff/Black e mypy strict passaram em seis arquivos; `go test -race ./...` e `go vet ./...` passaram novamente no builder fixado. O teste US2 agora espera multiplicidade exata de todas as linhas, inclusive duas ocorrências da mensagem repetida, dentro do mesmo limite de 60s; esperar apenas IDs de outras mensagens era proxy insuficiente.
+
+Retenção contínua: **PASS em 1227,19s**, com quatro timestamps cobertos por dois chunks antigos físicos e dois arquivos de marcadores observados/removidos. Amplitude máxima 214,32s; primeiro flush 72,46s; publicação de índice 265,16s após flush; marcação 23,98s após elegibilidade/índice; maior etapa de sweeper 59,9988s após delay de 180s; maior remoção física 509,66s após expiração individual, limite 1800s. Controles válidos e identidade/restart count de Loki preservados; nenhum flush/restart ou mudança de intervalos no teste principal. A medição certifica a amostra/carga, não todas as fases de rotação ou sobrecarga.
+
+Entrega local: workflow com ações fixadas em commits consultados na API oficial e uv 0.12.1; `actionlint v1.7.7` passou no builder Linux, após ausência da ferramenta no host. `uv lock --check` e `git diff --check` passaram. Compose core/LLM validaram com `--no-interpolate --no-env-resolution --quiet`, sem resolver/expor segredos ou iniciar serviços. Não houve mudança de core/LLM/apps. **Pendências bloqueantes:** CI Linux remota ainda não executada, ACL do bind Windows real ainda não certificada. Nenhum commit/push/fechamento de issue realizado.
+
+Precisão de medição: o primeiro observador do sweeper usava snapshot a cada 10s seguido de consulta, e falhou ao observar 246,8s desde a criação de um marcador. Essa amostra não distinguia atraso real de atraso da observação. Um helper efêmero, sem rede e com volume somente leitura, agora registra remoções em JSON com amostragem de 50ms; seu teste controlado comprovou observação em até 0,5s após unlink. Não modifica dados, intervalos ou deadline; é removido por ID antes da limpeza do volume. O orçamento de sweeper continua 1m após delay de 3m, sem tolerância adicional.
+
+- **Decision:** preservar prazo individual de 30m. Operador autorizou alterar max_chunk_age=3m, compaction_interval=30s, apply_retention_interval=1m, retention_delete_delay=3m, tsdb_shipper.resync_interval=30s e query_timeout=1m explícito, antes de qualquer edição funcional. Orçamento: amplitude 4m + flush 2m + índice 17m + compactação/retenção conjuntas 2m + delete delay 3m + sweeper 1m + reserva 1m = 30m.
+- **Rationale:** o teste refutou índice <=3m. [HeadManager](https://github.com/grafana/loki/blob/v3.7.9/pkg/storage/stores/shipper/indexshipper/tsdb/head_manager.go) fixa rotação de 15m e checagem de 1m; [shipper](https://github.com/grafana/loki/blob/v3.7.9/pkg/storage/stores/shipper/indexshipper/shipper.go) fixa upload em 1m e permite ressync configurável. [tables_manager](https://github.com/grafana/loki/blob/v3.7.9/pkg/compactor/tables_manager.go) compacta durante a própria aplicação de retenção; budget conjunto evita dupla contagem, não omite dependência.
+- **Cache safety:** [listagem em cache](https://github.com/grafana/loki/blob/v3.7.9/pkg/storage/stores/shipper/indexshipper/storage/cached_client.go) dura 1m; ressync=30s mais query_timeout=1m ficam abaixo de delete delay=3m. CacheTTL de arquivos (24h default) controla descarte de arquivos sem uso, não frequência de atualização; não confundir esses mecanismos. Preservação de controles e ausência de erros de consulta continuam obrigatórias.
+- **Behavior/risk:** mais I/O e janela de escrita fora de ordem aproximadamente 90s em vez de 150s, aceitos explicitamente pelo operador. O atraso de 60s passou no teste. Sem mudança de aplicações, rede, dependências ou deadline. Saltos arbitrários de timestamp/sobrecarga não são certificados pela amostra. Retenção tem aceite local na amostra medida, não certificação de CI remota ou dos mounts do operador.
+- **Alternatives considered:** aumentar formalmente o deadline para 45m foi rejeitado em favor de investigar 30m; preservar todos os intervalos deixou orçamento incompatível com rotação TSDB; forçar flush/restart ou mudar somente a assertion violaria o contrato.
+
+#### Histórico das revisões anteriores (substituídas pelo desenho vigente)
+
+**Segunda revisão autorizada:** o cenário contínuo mediu amplitude de 322,7s. A [condição shouldFlushChunk de Loki v3.7.9](https://github.com/grafana/loki/blob/v3.7.9/pkg/ingester/flush.go) usa `to.Sub(from) > MaxChunkAge` na rotina periódica; não é teto rígido de append. Operador escolheu preservar configuração, reservar 6m para amplitude e reduzir a reserva para 8m, mantendo flush 2m e total 30m. Alternativa rejeitada: max_chunk_age=4m para antecipar corte, com mais chunks. O teto revisado precisa de prova sob a carga declarada a cada 30s e não certifica saltos arbitrários de timestamp. Análise constitucional: sem mudança de produção, rede, dependência ou deadline individual; a etapa física permanece bloqueante.
+
+- **Decision:** manter os intervalos de produção e o deadline individual de 30m; realocar o orçamento de flush de 1m para 2m e a reserva de 10m para 9m. Operador escolheu essa revisão após o teste medir 90,7s até o primeiro chunk físico. O cenário de limpeza continua pendente, sem aceite por esta observação parcial.
+- **Rationale:** idle=1m seguido de uma checagem de 30s não garante flush em 1m. O orçamento completo continua somando 30m; não aumentar deadline nem introduzir flush/restart forçado.
+- **Alternatives considered:** reduzir idle para 15s e checagem para 10s aumentaria chunks/operações de disco; operador preferiu preservar configuração e comportamento. Pausar foi oferecido.
+- **Fixture:** consulta de amostras antigas usa somente no teste `query_ingesters_within: 0s` e `query_store_max_look_back_period: -1ns`. A [implementação de intervalos do Loki v3.7.9](https://github.com/grafana/loki/blob/v3.7.9/pkg/querier/intervals.go) compara a sentinela infinita com `time.Duration(-1)`, não qualquer duração negativa. `-1s` não equivale a infinito. As quatro amostras antigas e o controle foram confirmados antes de expirar com a sentinela exata; nenhuma alteração de lookback em produção.
+- **Recovery evidence:** restart Loki preservou 20 IDs confirmados e restart Alloy retomou novos eventos. O teste de interrupção passou separadamente em 103,75s: 20 eventos durante 30s sem Loki e um evento posterior ficaram visíveis no prazo de 60s após recuperação. Gateway emitiu JSON de POST com status 502 durante a falha. [Alloy v1.21.2 registra retentativas em debug](https://github.com/grafana/alloy/blob/v1.21.2/internal/component/common/loki/client/shards.go), não warn; manter logging info e comprovar diagnóstico explícito no gateway, conforme SC-006, sem forçar nível debug ou aceitar sucesso falso.
+- **Constitution/risk check incremental:** sem nova dependência, segredo, rede, app ou mudança de contrato público. Mantidos testes prévios, comprovação física, prazo individual e bloqueio até medição completa. Checklists do revisor permanecem intactos; T040 sincronizada com o orçamento autorizado. A análise de consistência deve preceder a alteração da assertion de flush.
+
+T001: manifests consultados com `docker buildx imagetools inspect`, sem trocar tags. Docker Desktop Linux 29.6.1, amd64, Compose 5.1.4. O Engine estava parado e foi iniciado pelo operador; nenhum serviço existente foi reiniciado pelo agente.
+
+| Base | Digest do índice consultado | Arquiteturas relevantes |
+|------|----------------------------|-------------------------|
+| grafana/alloy:v1.21.2 | sha256:89a5a320168387336b9ac3c850609c3ba7757eadd4ae5f1d819deb35e9854b18 | linux/amd64, linux/arm64 |
+| grafana/loki:3.7.9 | sha256:0db216b630ae1f348a1584c67f3cead8b4c1fc839169a39501db664744158e28 | linux/amd64, linux/arm64 |
+| nginx:1.30.6-alpine | sha256:47928bf67eb62a1863cb08d9ecb52d3e704304ba614eaee17884204677702951 | linux/amd64; demais plataformas no índice |
+| golang:1.27.2 | sha256:820153096fda4de6ac1b7194d12e416b7dd8f4e9a33d17e0345b111b945162d8 | linux/amd64; demais plataformas no índice |
+| python:3.12.12-alpine3.22 (origens de teste) | sha256:848ba4413eb897e225159b8fc1b02094576cbae4aa73fc13142608ae2c8c0e32 | linux/amd64; demais plataformas no índice |
+
+O builder foi baixado por digest e `docker run --rm <builder> go version` retornou `go1.27.2 linux/amd64`. Isso comprova somente disponibilidade e execução do builder, não funcionamento da stack nem certificação de outras arquiteturas.
+
+Validação incremental executada:
+
+- Três targets locais reconstruídos com sucesso após ampliar os testes Go; bases permanecem fixadas nos digests acima.
+- `go test -race ./...` e `go vet ./...` no builder fixado: PASS. Casos incluem HTTP, retenção, credenciais, ownership, TERM/INT/QUIT, recolhimento/drenagem, exit não zero, leitura/escrita com falha, linha longa e bloqueio de saída limitado. RED adicional comprovado para owner indevido e severidade/errno antes da correção.
+- Ruff/Black/mypy strict nos quatro arquivos Python de infraestrutura: PASS no checkpoint anterior à última ampliação do harness; executar novamente ao consolidar.
+- Matriz real dos listeners de leitura/escrita: PASS; 401 antes de método, 405/Allow após autenticação, 404 para rotas desconhecidas e erro upstream preservado.
+- Allowlist Docker: PASS contra daemon Unix simulado exclusivo do teste, inclusive GET/HEAD de redes e recusa de POST/endpoints administrativos sem atingir o daemon real.
+- SC-001/SC-002: PASS, 200 IDs de duas origens/dois fluxos e descoberta posterior dentro de 60s. Esses cenários não certificam parsing, recuperação ou retenção.
+- Diagnósticos de aplicação são capturados por `docker logs` de contêineres próprios após espera do processo; progresso do Compose não é saída do aplicativo e não deve ser filtrado como se fosse log de produção.
+
+### Revisão incremental: publicação em redes internas
+
+- **Decision:** manter obs-docker/obs-ingest/obs-storage internas e adicionar obs-edge não interna exclusivamente ao gateway, preservando publicação de 8080 somente em 127.0.0.1. Decisão aprovada pelo operador durante implementação, antes da alteração operacional.
+- **Rationale/evidence:** Engine 29.6.1 / Compose 5.1.4: quatro serviços atingiram saúde, mas `compose port logs-gateway 8080` retornou `invalid IP:0`. Reprodução independente com rede criada por `docker network create --internal` e NGINX fixado, `-p 127.0.0.1::80`: `NetworkSettings.Ports={"80/tcp":[]}` apesar de `HostConfig.PortBindings` conter o pedido. Contêiner e rede de reprodução foram removidos pelos seus IDs/nomes exclusivos. Portanto saúde e pedido de bind não comprovam acesso pelo host.
+- **Alternatives considered:** remover internal das redes de dados amplia conectividade de Loki/Alloy/proxy; host networking elimina fronteiras/portabilidade. Rede de borda exclusiva preserva as fronteiras de dados. Parar sem correção foi oferecido; operador escolheu revisar plano/análise e adicionar a borda.
+- **Validation required:** topologia exata e HTTP real via loopback; nenhuma porta 8081/8082/3100/12345/2375 publicada diretamente. Essa decisão de desenho não certifica os testes restantes.
 
 ## 1. Coletor suportado e versões
 
@@ -11,6 +71,8 @@
 
 ## 2. Docker API em vez de arquivos do host
 
+Revisão operacional aprovada: permitir adicionalmente GET/HEAD do endpoint exato `/networks`, com prefixo de versão opcional. A versão fixada do Alloy em execução retornou `Unable to refresh target groups` / `error while computing network labels` ao receber 404 do proxy; a descoberta depende da listagem de redes. Confirmado também na implementação [Docker discovery do Prometheus](https://github.com/prometheus/prometheus/blob/main/discovery/moby/docker.go), chamada `getNetworksLabels` anterior ao processamento dos alvos. Não liberar `/networks/<id>`, mutações ou endpoints administrativos. Listagem expõe metadados de redes do daemon ao coletor confiável; não constitui autorização por projeto. Alternativa de manter a allowlist impede descoberta; trocar o mecanismo amplia desnecessariamente o escopo.
+
 - **Decision:** `discovery.docker` → filtro por projeto → `loki.source.docker` → `loki.process` → `loki.write`. Acesso por proxy GET/HEAD com allowlist de endpoints, não socket direto no Alloy.
 - **Rationale:** a API entrega stdout/stderr sem montar logs físicos do Docker; compatível com daemon Linux da VM no Desktop. A origem já remove o envelope Docker de transporte; não usar `stage.docker`, destinado ao formato json-file em disco.
 - **Alternatives considered:** mount de `/var/lib/docker/containers` acopla caminhos/driver; socket direto tem poderes excessivos; Tecnativa `0.5.0` é alternativa funcional, mas habilitar `CONTAINERS` é mais amplo que a allowlist de endpoints requerida e introduz outro tipo de proxy. Reusar uma imagem derivada NGINX em dois serviços separados reduz variedade de bases; o launcher da seção 8 resolve a emissão dos diagnósticos.
@@ -18,6 +80,8 @@
 - **Limit:** filtro de projeto controla ingestão, não autorização multiusuário no daemon. Inspect pode conter ambiente sensível: rede privada, sem logging de payload e confiança explícita no operador Docker.
 
 ## 3. Fluxo e cardinalidade
+
+Evidência US2: o RED inicial falhou por ausência de parse_status; depois o teste identificou service_name criado automaticamente por Loki. A configuração discover_service_name=[] corrigiu a raiz dessa label extra. Os testes passaram com linhas preservadas, contextos originais, índice exato e filtros por metadados antes/depois de recriação. A implementação [structured_metadata da release v1.21.2](https://github.com/grafana/alloy/blob/v1.21.2/internal/component/loki/process/stages/structured_metadata.go) lê labels de entrada e as remove do índice. O [JSON stage da release](https://github.com/grafana/alloy/blob/v1.21.2/internal/component/loki/process/stages/json.go) decodifica objetos, portanto a classificação de arrays/primitivos/null usa mustFromJson em template, sem modificar a linha; casos válidos/inválidos comprovados no runtime.
 
 - **Decision:** promover `__meta_docker_container_log_stream` em regras do source. Indexar apenas projeto/serviço/fluxo/status de parsing; identidade de instância em structured metadata. Manter linha original; extrair JSON sem output stage.
 - **Rationale:** source remove labels internas; assumir preservação automática do fluxo quebraria FR-004. IDs de contêiner/tracing não devem multiplicar streams indexados. Structured metadata requer schema v13/TSDB.
@@ -34,7 +98,7 @@
 
 ## 5. Retenção e armazenamento
 
-- **Decision:** Loki TSDB v13, filesystem, índice 24h, retenção 336h configurável com mínimo adotado de 24h; compactor/markers/WAL no mesmo volume persistente. Revisão U2: max_chunk_age=5m, chunk_idle_period=1m, flush_check_period=30s, chunk_retain_period=0s, compaction_interval=1m, apply_retention_interval=2m e delete delay=5m. Prazo de aceite permanece 30m após expiração individual em ambiente local saudável, sujeito ao orçamento e comprovação do plano.
+- **Decision (histórico U2):** Loki TSDB v13, filesystem, índice 24h, retenção 336h configurável com mínimo adotado de 24h; compactor/markers/WAL no mesmo volume persistente. O desenho inicial usava max_chunk_age=5m, chunk_idle_period=1m, flush_check_period=30s, chunk_retain_period=0s, compaction_interval=1m, apply_retention_interval=2m e delete delay=5m. Os intervalos foram substituídos pelo desenho vigente autorizado no início deste documento; prazo individual permanece 30m.
 - **Rationale:** o índice 24h é requisito de retenção; varredura/deleção é assíncrona, portanto expiração não promete remoção instantânea. Prazo de 30m é meta do projeto a validar, não SLA documentado do fornecedor.
 - **Alternatives considered:** bucket externo/cluster fora do escopo; retenção infinita conflita com decisão de 14 dias; teste com menos de 24h depende de comportamentos e limites não necessários.
 - **Evidence:** [retention](https://grafana.com/docs/loki/latest/operations/storage/retention/), [storage](https://grafana.com/docs/loki/latest/configure/storage/).

@@ -1,0 +1,106 @@
+logging {
+  level  = "info"
+  format = "json"
+}
+
+discovery.docker "project" {
+  host             = "tcp://docker-log-proxy:2375"
+  refresh_interval = "5s"
+  filter {
+    name   = "label"
+    values = ["com.docker.compose.project=" + sys.env("COMPOSE_PROJECT_NAME")]
+  }
+}
+
+discovery.relabel "project" {
+  targets = discovery.docker.project.targets
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    regex         = ".+"
+    action        = "keep"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    regex         = sys.env("COMPOSE_PROJECT_NAME")
+    action        = "keep"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    target_label  = "project"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_id"]
+    target_label  = "container_id"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    replacement   = "$1"
+    target_label  = "container_name"
+  }
+}
+
+discovery.relabel "source_rules" {
+  targets = []
+  rule {
+    source_labels = ["project"]
+    regex         = sys.env("COMPOSE_PROJECT_NAME")
+    action        = "keep"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_log_stream"]
+    target_label  = "stream"
+  }
+}
+
+loki.source.docker "project" {
+  host          = "tcp://docker-log-proxy:2375"
+  targets       = discovery.relabel.project.output
+  relabel_rules = discovery.relabel.source_rules.rules
+  forward_to    = [loki.process.events.receiver]
+}
+
+loki.process "events" {
+  forward_to = [loki.write.local.receiver]
+
+  stage.template {
+    source   = "parse_status"
+    template = "text_or_invalid_json"
+  }
+  stage.template {
+    source   = "parse_status"
+    template = "{{ $decoded := mustFromJson .Entry }}json"
+  }
+  stage.labels {
+    values = { parse_status = "parse_status" }
+  }
+  stage.structured_metadata {
+    values = {
+      container_id   = "container_id",
+      container_name = "container_name",
+    }
+  }
+  stage.label_keep {
+    values = ["project", "service", "stream", "parse_status"]
+  }
+}
+
+loki.write "local" {
+  endpoint {
+    url                 = "http://logs-gateway:8081/loki/api/v1/push"
+    batch_wait          = "1s"
+    batch_size          = "1MiB"
+    remote_timeout      = "5s"
+    min_backoff_period  = "1s"
+    max_backoff_period  = "5s"
+    max_backoff_retries = 30
+    basic_auth {
+      username      = sys.env("OBS_WRITE_USER")
+      password_file = "/run/secrets/write-password"
+    }
+  }
+}

@@ -1,0 +1,140 @@
+x-obs: &obs
+  restart: unless-stopped
+  pull_policy: never
+  tmpfs:
+    - /run/obs:mode=0700
+
+x-health: &health
+  interval: 5s
+  timeout: 3s
+  retries: 12
+  start_period: 30s
+
+services:
+  docker-log-proxy:
+    <<: *obs
+    image: jhonny-v/nginx-obs:1.30.6-1
+    build:
+      context: ./obs-tools
+      target: nginx
+    command: ["run", "--service", "docker-log-proxy"]
+    env_file: []
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./docker-log-proxy/nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+    networks: [obs-docker]
+    depends_on: {}
+    mem_limit: 128m
+    healthcheck:
+      <<: *health
+      test: ["CMD", "/usr/local/bin/obs-tools", "probe", "http://127.0.0.1:2375/_ping"]
+  loki:
+    <<: *obs
+    image: jhonny-v/loki-health:3.7.9-1
+    build:
+      context: ./obs-tools
+      target: loki
+    env_file:
+      - path: ../.env
+        required: false
+    environment:
+      LOKI_RETENTION_PERIOD: ${LOKI_RETENTION_PERIOD:-336h}
+    volumes:
+      - type: bind
+        source: ./loki/config.yaml
+        target: /etc/loki/config.yaml
+        read_only: true
+      - loki-data:/loki
+    networks: [obs-storage]
+    depends_on: {}
+    mem_limit: 1g
+    healthcheck:
+      <<: *health
+      test: ["CMD", "/usr/local/bin/obs-tools", "probe", "http://127.0.0.1:3100/ready"]
+  logs-gateway:
+    <<: *obs
+    image: jhonny-v/nginx-obs:1.30.6-1
+    build:
+      context: ./obs-tools
+      target: nginx
+    command: ["run", "--service", "logs-gateway"]
+    env_file: []
+    environment:
+      OBS_READ_USER: ${OBS_READ_USER:?Provide a reader username}
+      OBS_WRITE_USER: ${OBS_WRITE_USER:?Provide a writer username}
+    volumes:
+      - type: bind
+        source: ./logs-gateway/nginx.conf.template
+        target: /etc/nginx/templates/nginx.conf.template
+        read_only: true
+      - type: bind
+        source: ${OBS_SECRETS_DIR:-../secrets/observability}
+        target: /run/secrets
+        read_only: true
+        bind:
+          create_host_path: false
+    ports:
+      - "127.0.0.1:${LOKI_PORT:-3100}:8080"
+    networks: [obs-ingest, obs-storage, obs-edge]
+    depends_on:
+      loki:
+        condition: service_healthy
+    mem_limit: 128m
+    healthcheck:
+      <<: *health
+      test: ["CMD", "/usr/local/bin/obs-tools", "probe", "http://127.0.0.1:8082/ready"]
+  alloy:
+    <<: *obs
+    image: jhonny-v/alloy-health:1.21.2-1
+    build:
+      context: ./obs-tools
+      target: alloy
+    env_file:
+      - path: ../.env
+        required: false
+    environment:
+      COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:-jhonny_v}
+      OBS_WRITE_USER: ${OBS_WRITE_USER:?Provide a writer username}
+    volumes:
+      - type: bind
+        source: ./alloy/config.alloy
+        target: /etc/alloy/config.alloy
+        read_only: true
+      - type: bind
+        source: ${OBS_SECRETS_DIR:-../secrets/observability}
+        target: /run/secrets
+        read_only: true
+        bind:
+          create_host_path: false
+      - alloy-data:/var/lib/alloy
+    networks: [obs-docker, obs-ingest]
+    depends_on:
+      docker-log-proxy:
+        condition: service_healthy
+      logs-gateway:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      <<: *health
+      test: ["CMD", "/usr/local/bin/obs-tools", "probe", "http://127.0.0.1:12345/-/ready"]
+
+networks:
+  obs-docker:
+    internal: true
+  obs-ingest:
+    internal: true
+  obs-storage:
+    internal: true
+  obs-edge:
+    internal: false
+volumes:
+  loki-data: {}
+  alloy-data: {}

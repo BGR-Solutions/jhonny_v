@@ -246,3 +246,10 @@ compose.override.yml
 compose.override.yaml
 infra/compose.override.yml
 infra/compose.override.yaml
+
+# Observability credentials and local validation output
+secrets/
+*.test
+*.out
+infra/obs-tools/obs-tools
+infra/test-results/

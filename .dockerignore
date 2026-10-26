@@ -18,3 +18,7 @@ coverage/
 docs/_build/
 secrets/
 specs/
+*.test
+*.out
+infra/obs-tools/obs-tools
+infra/test-results/
